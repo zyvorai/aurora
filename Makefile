@@ -9,7 +9,9 @@ venv:
 
 env:
 	@test -f .env || cp .env.example .env
+	@grep '^NEXT_PUBLIC_' .env > apps/web/.env.local 2>/dev/null || echo 'NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api/v1' > apps/web/.env.local
 	@echo "Created .env from .env.example (edit if needed)."
+	@echo "Synced NEXT_PUBLIC_* to apps/web/.env.local for Next.js."
 
 check-infra:
 	@echo "Checking Docker..."
@@ -48,6 +50,9 @@ init-db: venv check-infra
 
 api: venv
 	cd apps/api && .venv/bin/uvicorn gtm_api.main:app --reload --port 8000
+
+api-stable: venv
+	cd apps/api && .venv/bin/uvicorn gtm_api.main:app --host 127.0.0.1 --port 8000
 
 web:
 	cd apps/web && npm run dev

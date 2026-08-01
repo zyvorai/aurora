@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from openai import APIConnectionError, APIError as OpenAIAPIError
 from sqlalchemy.exc import OperationalError
 
 from gtm_api.config import get_settings
@@ -73,6 +74,35 @@ async def llm_service_error_handler(_request: Request, exc: LLMServiceError):
     return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
+@app.exception_handler(APIConnectionError)
+async def openai_connection_error_handler(_request: Request, _exc: APIConnectionError):
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": (
+                "Cannot reach the LLM provider. For Ollama, run `ollama serve` and check "
+                "http://127.0.0.1:11434/api/tags"
+            ),
+        },
+    )
+
+
+@app.exception_handler(OpenAIAPIError)
+async def openai_api_error_handler(_request: Request, exc: OpenAIAPIError):
+    message = str(exc)
+    if "signal: killed" in message.lower():
+        message = (
+            "Ollama ran out of memory loading the chat model. "
+            "Try a smaller model (e.g. AGENT_MODEL_PRODUCT_UNDERSTANDING=llama3.1:8b) or free RAM, then retry."
+        )
+    elif "exceed_context_size" in message or "context size" in message.lower():
+        message = (
+            "Prompt exceeds the model context window. "
+            "Set OLLAMA_NUM_CTX=8192 in .env (or higher if RAM allows) and restart the API."
+        )
+    return JSONResponse(status_code=503, content={"detail": message})
+
+
 app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(products.router, prefix=settings.api_prefix)
 app.include_router(marketing.router, prefix=settings.api_prefix)
@@ -85,7 +115,8 @@ async def health():
     llm_health = await check_llm_health()
     db_ready = db_health.get("db_ready", False)
     llm_ready = llm_health.get("llm_ready", False)
-    status = "healthy" if db_ready and llm_ready else "degraded"
+    llm_core_ready = llm_health.get("llm_core_ready", llm_ready)
+    status = "healthy" if db_ready and llm_core_ready else "degraded"
     return {
         "status": status,
         "service": settings.app_name,

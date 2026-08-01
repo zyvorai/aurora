@@ -1,0 +1,497 @@
+'use client';
+
+import ProductProfileView from './ProductProfileView';
+
+type Result = Record<string, unknown>;
+
+function Card({ title, children, className = '' }: { title?: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-gtm-card border border-gtm-border rounded-lg p-5 ${className}`}>
+      {title && <h3 className="font-semibold mb-4 text-[var(--text-primary)]">{title}</h3>}
+      {children}
+    </div>
+  );
+}
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <Card title="Something went wrong">
+      <div className="flex gap-3 items-start rounded-md bg-red-500/10 border border-red-500/30 p-4">
+        <span className="text-red-400 text-lg leading-none">!</span>
+        <p className="text-sm text-red-200/90 leading-relaxed">{message}</p>
+      </div>
+    </Card>
+  );
+}
+
+function Badge({ children, variant = 'default' }: { children: React.ReactNode; variant?: 'success' | 'warning' | 'default' }) {
+  const styles = {
+    success: 'bg-green-500/10 text-green-400 border-green-500/30',
+    warning: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+    default: 'bg-gtm-accent/10 text-gtm-accent border-gtm-accent/30',
+  };
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium border ${styles[variant]}`}>
+      {children}
+    </span>
+  );
+}
+
+function StatCard({ label, value, highlight }: { label: string; value: number | string; highlight?: boolean }) {
+  return (
+    <div
+      className={`rounded-lg border p-4 ${
+        highlight ? 'border-gtm-accent/40 bg-gtm-accent/5' : 'border-gtm-border bg-gtm-bg/50'
+      }`}
+    >
+      <p className="text-2xl font-bold tabular-nums">{value}</p>
+      <p className="text-xs text-[var(--text-secondary)] mt-1 uppercase tracking-wide">{label}</p>
+    </div>
+  );
+}
+
+function CitationsList({ citations }: { citations: Array<{ chunk_id?: string; document_title?: string; excerpt?: string; url?: string }> }) {
+  if (!citations?.length) return null;
+  return (
+    <div className="mt-4 pt-4 border-t border-gtm-border">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-3">Sources</h4>
+      <ul className="space-y-2">
+        {citations.map((c, i) => (
+          <li key={c.chunk_id ?? i} className="text-sm rounded-md bg-gtm-bg border border-gtm-border p-3">
+            <p className="font-medium text-gtm-accent">{c.document_title || 'Document'}</p>
+            {c.excerpt && <p className="text-[var(--text-secondary)] mt-1 line-clamp-2">{c.excerpt}</p>}
+            {c.url && (
+              <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-xs text-gtm-accent hover:underline mt-1 inline-block">
+                View source
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function AnalyticsView({ data }: { data: Result }) {
+  const funnel = (data.funnel as Record<string, number>) || {};
+  const funnelSteps = [
+    { key: 'visitors', label: 'Visitors' },
+    { key: 'content_views', label: 'Content views' },
+    { key: 'conversations', label: 'Conversations' },
+    { key: 'qualified_leads', label: 'Qualified leads' },
+    { key: 'artifacts_created', label: 'Artifacts' },
+    { key: 'agent_runs', label: 'Agent runs' },
+  ];
+  const topQuestions = (data.top_questions as Array<{ question: string }>) || [];
+  const knowledgeGaps = (data.knowledge_gaps as Array<{ query: string }>) || [];
+  const metrics = (data.metrics as Record<string, number>) || {};
+  const maxFunnel = Math.max(...funnelSteps.map((s) => funnel[s.key] ?? 0), 1);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Analytics</h3>
+        <Badge>Period: {String(data.period || '—')}</Badge>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {funnelSteps.map((step) => (
+          <StatCard
+            key={step.key}
+            label={step.label}
+            value={funnel[step.key] ?? 0}
+            highlight={step.key === 'artifacts_created' && (funnel[step.key] ?? 0) > 0}
+          />
+        ))}
+      </div>
+
+      <Card title="Conversion funnel">
+        <div className="space-y-3">
+          {funnelSteps.map((step) => {
+            const val = funnel[step.key] ?? 0;
+            const pct = maxFunnel > 0 ? Math.round((val / maxFunnel) * 100) : 0;
+            return (
+              <div key={step.key}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-[var(--text-secondary)]">{step.label}</span>
+                  <span className="font-medium tabular-nums">{val}</span>
+                </div>
+                <div className="h-2 rounded-full bg-gtm-bg overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-gtm-accent/80 to-gtm-accent transition-all"
+                    style={{ width: `${Math.max(pct, val > 0 ? 8 : 0)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {Object.keys(metrics).length > 0 && (
+        <Card title="Event metrics">
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            {Object.entries(metrics).map(([k, v]) => (
+              <div key={k} className="flex justify-between border-b border-gtm-border/50 pb-2">
+                <dt className="text-[var(--text-secondary)] capitalize">{k.replace(/_/g, ' ')}</dt>
+                <dd className="font-medium tabular-nums">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </Card>
+      )}
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Card title="Top questions">
+          {topQuestions.length ? (
+            <ul className="space-y-2 text-sm">
+              {topQuestions.map((q, i) => (
+                <li key={i} className="flex gap-2 text-[var(--text-secondary)]">
+                  <span className="text-gtm-accent font-mono text-xs">{i + 1}.</span>
+                  {q.question}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--text-secondary)]">No queries recorded yet.</p>
+          )}
+        </Card>
+        <Card title="Knowledge gaps">
+          {knowledgeGaps.length ? (
+            <ul className="space-y-2 text-sm">
+              {knowledgeGaps.map((g, i) => (
+                <li key={i} className="flex gap-2 text-amber-200/80">
+                  <span className="text-amber-400">?</span>
+                  {g.query}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--text-secondary)]">No ungrounded blocks detected.</p>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function StrategyView({ data }: { data: Result }) {
+  const personas = (data.personas as Array<Record<string, unknown>>) || [];
+  const calendar = (data.content_calendar as Array<Record<string, unknown>>) || [];
+  const objections = (data.objection_handling as Array<Record<string, unknown>>) || [];
+  const keywords = (data.seo_keywords as string[]) || [];
+  const valueProps = (data.value_propositions as string[]) || [];
+  const messaging = data.messaging_hierarchy as Record<string, unknown> | undefined;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 flex-wrap">
+        <h3 className="text-lg font-semibold">GTM Strategy</h3>
+        {data.artifact_id && <Badge>Artifact saved</Badge>}
+      </div>
+
+      {Boolean(data.gtm_strategy) && (
+        <Card title="Strategy overview">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.gtm_strategy)}</p>
+        </Card>
+      )}
+      {Boolean(data.icp) && (
+        <Card title="Ideal customer profile">
+          <p className="text-sm leading-relaxed">{String(data.icp)}</p>
+        </Card>
+      )}
+      {Boolean(data.positioning) && (
+        <Card title="Positioning">
+          <p className="text-sm font-medium text-gtm-accent">{String(data.positioning)}</p>
+        </Card>
+      )}
+      {personas.length > 0 && (
+        <Card title="Personas">
+          <div className="grid sm:grid-cols-2 gap-3">
+            {personas.map((persona, i) => (
+              <div key={i} className="rounded-md border border-gtm-border bg-gtm-bg p-4 space-y-2">
+                <p className="font-semibold">{String(persona.name || persona.title || `Persona ${i + 1}`)}</p>
+                {persona.title && persona.name && (
+                  <p className="text-xs text-[var(--text-secondary)]">{String(persona.title)}</p>
+                )}
+                {Array.isArray(persona.pain_points) && (
+                  <ul className="text-xs text-[var(--text-secondary)] list-disc list-inside">
+                    {(persona.pain_points as string[]).slice(0, 4).map((p) => (
+                      <li key={p}>{p}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+      {messaging && Object.keys(messaging).length > 0 && (
+        <Card title="Messaging hierarchy">
+          <dl className="space-y-2 text-sm">
+            {Object.entries(messaging).map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-xs uppercase text-gtm-accent">{k.replace(/_/g, ' ')}</dt>
+                <dd className="text-[var(--text-secondary)] mt-0.5">{String(v)}</dd>
+              </div>
+            ))}
+          </dl>
+        </Card>
+      )}
+      {valueProps.length > 0 && (
+        <Card title="Value propositions">
+          <ul className="list-disc list-inside text-sm space-y-1 text-[var(--text-secondary)]">
+            {valueProps.map((v) => (
+              <li key={v}>{v}</li>
+            ))}
+          </ul>
+        </Card>
+      )}
+      {keywords.length > 0 && (
+        <Card title="SEO keywords">
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((kw) => (
+              <span key={kw} className="px-2 py-1 text-xs rounded bg-gtm-bg border border-gtm-border">
+                {kw}
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
+      {objections.length > 0 && (
+        <Card title="Objection handling">
+          <div className="space-y-3">
+            {objections.map((o, i) => (
+              <div key={i} className="text-sm border-l-2 border-gtm-accent/50 pl-3">
+                <p className="font-medium">{String(o.objection || o.question)}</p>
+                <p className="text-[var(--text-secondary)] mt-1">{String(o.response || o.answer)}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+      {calendar.length > 0 && (
+        <Card title="Content calendar">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-[var(--text-secondary)] border-b border-gtm-border">
+                  <th className="pb-2 pr-4">Week</th>
+                  <th className="pb-2 pr-4">Topic</th>
+                  <th className="pb-2 pr-4">Channel</th>
+                  <th className="pb-2">Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {calendar.map((row, i) => (
+                  <tr key={i} className="border-b border-gtm-border/50">
+                    <td className="py-2 pr-4">{String(row.week ?? i + 1)}</td>
+                    <td className="py-2 pr-4">{String(row.topic ?? '—')}</td>
+                    <td className="py-2 pr-4">{String(row.channel ?? '—')}</td>
+                    <td className="py-2">{String(row.content_type ?? '—')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function QueryView({ data }: { data: Result }) {
+  const citations = (data.citations as Array<{ chunk_id?: string; document_title?: string; excerpt?: string; url?: string }>) || [];
+  return (
+    <Card title="Answer">
+      <div className="flex gap-2 mb-3 flex-wrap">
+        <Badge variant={data.grounded ? 'success' : 'warning'}>
+          {data.grounded ? 'Grounded' : 'Low confidence'}
+        </Badge>
+        {typeof data.confidence === 'number' && (
+          <Badge>{Math.round((data.confidence as number) * 100)}% confidence</Badge>
+        )}
+      </div>
+      <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.answer)}</p>
+      <CitationsList citations={citations} />
+    </Card>
+  );
+}
+
+function ContentView({ data }: { data: Result }) {
+  return (
+    <Card title={String(data.title || 'Generated content')}>
+      <div className="flex gap-2 mb-3">
+        <Badge variant={data.grounded ? 'success' : 'warning'}>{data.grounded ? 'Grounded' : 'Draft'}</Badge>
+        <Badge>{String(data.status || 'draft')}</Badge>
+      </div>
+      <article className="prose prose-invert prose-sm max-w-none">
+        <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.content)}</p>
+      </article>
+      <CitationsList citations={(data.citations as []) || []} />
+    </Card>
+  );
+}
+
+function OutreachView({ data }: { data: Result }) {
+  const followUps = (data.follow_up_sequence as Array<Record<string, unknown>>) || [];
+  return (
+    <div className="space-y-4">
+      <Card title={`Outreach — ${String(data.company_name || 'Prospect')}`}>
+        {Boolean(data.product_fit) && (
+          <p className="text-sm text-[var(--text-secondary)] mb-4">{String(data.product_fit)}</p>
+        )}
+        {Array.isArray(data.pain_points) && (data.pain_points as string[]).length > 0 && (
+          <div className="mb-4">
+            <h4 className="text-xs uppercase text-gtm-accent mb-2">Likely pain points</h4>
+            <ul className="list-disc list-inside text-sm text-[var(--text-secondary)]">
+              {(data.pain_points as string[]).map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <h4 className="text-xs uppercase text-gtm-accent mb-2">Email draft</h4>
+        <div className="rounded-md bg-gtm-bg border border-gtm-border p-4 text-sm whitespace-pre-wrap leading-relaxed">
+          {String(data.email_draft)}
+        </div>
+      </Card>
+      {followUps.length > 0 && (
+        <Card title="Follow-up sequence">
+          <div className="space-y-3">
+            {followUps.map((f, i) => (
+              <div key={i} className="border border-gtm-border rounded-md p-3">
+                <p className="text-xs text-gtm-accent">Day {String(f.day ?? i + 1)} — {String(f.subject ?? '')}</p>
+                <p className="text-sm text-[var(--text-secondary)] mt-2 whitespace-pre-wrap">{String(f.body ?? '')}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function ArchitectView({ data }: { data: Result }) {
+  return (
+    <div className="space-y-4">
+      <Card title="Solution architect">
+        <div className="mb-3">
+          <Badge variant={data.grounded ? 'success' : 'warning'}>
+            {data.grounded ? 'Grounded' : 'Review needed'}
+          </Badge>
+        </div>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.answer)}</p>
+        <CitationsList citations={(data.citations as []) || []} />
+      </Card>
+      {Boolean(data.deployment_plan) && (
+        <Card title="Deployment plan">
+          <p className="text-sm whitespace-pre-wrap text-[var(--text-secondary)]">{String(data.deployment_plan)}</p>
+        </Card>
+      )}
+      {'security_notes' in data && Boolean(data.security_notes) && (
+        <Card title="Security considerations">
+          <p className="text-sm whitespace-pre-wrap text-[var(--text-secondary)]">{String(data.security_notes)}</p>
+        </Card>
+      )}
+      {Boolean(data.architecture_diagram) && (
+        <Card title="Architecture (Mermaid)">
+          <pre className="text-xs font-mono bg-gtm-bg p-4 rounded overflow-x-auto text-[var(--text-secondary)]">
+            {String(data.architecture_diagram)}
+          </pre>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function ProposalView({ data }: { data: Result }) {
+  const sections = [
+    { key: 'proposal_content', title: 'Proposal' },
+    { key: 'sow', title: 'Statement of work' },
+    { key: 'roi_analysis', title: 'ROI analysis' },
+    { key: 'pricing', title: 'Pricing' },
+    { key: 'timeline', title: 'Timeline' },
+  ];
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">{String(data.title || 'Proposal')}</h3>
+      {sections.map(({ key, title }) =>
+        data[key] ? (
+          <Card key={key} title={title}>
+            <p className="text-sm whitespace-pre-wrap leading-relaxed text-[var(--text-secondary)]">
+              {String(data[key])}
+            </p>
+          </Card>
+        ) : null,
+      )}
+    </div>
+  );
+}
+
+function JobStatusView({ data }: { data: Result }) {
+  const ok = data.status === 'completed' || data.status === 'ready';
+  return (
+    <Card title={ok ? 'Completed' : 'Status'}>
+      <div className={`flex gap-3 items-center rounded-md p-4 border ${ok ? 'bg-green-500/10 border-green-500/30' : 'bg-gtm-bg border-gtm-border'}`}>
+        <span className={`text-2xl ${ok ? 'text-green-400' : 'text-gtm-accent'}`}>{ok ? '✓' : '…'}</span>
+        <div>
+          <p className="font-medium">{String(data.message || data.status || 'Done')}</p>
+          {data.job_id && <p className="text-xs text-[var(--text-secondary)] mt-1">Job {String(data.job_id)}</p>}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export default function ResultPanel({ result }: { result: Result }) {
+  if ('error' in result && result.error) {
+    return <ErrorBanner message={String(result.error)} />;
+  }
+
+  if ('funnel' in result && 'period' in result) {
+    return <AnalyticsView data={result} />;
+  }
+
+  if ('gtm_strategy' in result) {
+    return <StrategyView data={result} />;
+  }
+
+  if ('deployment_plan' in result || 'architecture_diagram' in result) {
+    return <ArchitectView data={result} />;
+  }
+
+  if ('answer' in result && !('reply' in result)) {
+    return <QueryView data={result} />;
+  }
+
+  if ('content' in result && 'artifact_id' in result) {
+    return <ContentView data={result} />;
+  }
+
+  if ('email_draft' in result) {
+    return <OutreachView data={result} />;
+  }
+
+  if ('proposal_content' in result) {
+    return <ProposalView data={result} />;
+  }
+
+  if ('profile' in result && result.status === 'ready') {
+    return (
+      <Card title="Product profile ready">
+        <ProductProfileView profile={(result.profile as Record<string, unknown>) || {}} />
+      </Card>
+    );
+  }
+
+  if ('message' in result && ('job_id' in result || 'status' in result)) {
+    return <JobStatusView data={result} />;
+  }
+
+  return (
+    <Card title="Result">
+      <p className="text-sm text-[var(--text-secondary)]">Action completed successfully.</p>
+    </Card>
+  );
+}

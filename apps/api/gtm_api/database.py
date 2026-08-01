@@ -8,7 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from gtm_api.config import get_settings
 
 settings = get_settings()
-engine = create_async_engine(settings.database_url, echo=settings.debug, pool_pre_ping=True)
+engine = create_async_engine(
+    settings.database_url,
+    echo=settings.debug,
+    pool_pre_ping=True,
+    pool_recycle=1800,
+)
 async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 DB_SETUP_HINT = (
@@ -36,5 +41,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             yield session
             await session.commit()
         except Exception:
-            await session.rollback()
+            try:
+                await session.rollback()
+            except Exception:
+                pass
             raise

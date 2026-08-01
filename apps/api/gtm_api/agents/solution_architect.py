@@ -15,7 +15,8 @@ from gtm_api.services.citation_gate import (
     build_context_from_results,
     verify_grounding,
 )
-from gtm_api.services.embeddings import embedding_service
+from gtm_api.services.chunking import compact_profile, truncate_to_token_budget
+from gtm_api.services.embeddings import LLMServiceError, embedding_service
 from gtm_api.services.vector_store import vector_store
 from gtm_api.tenant import record_usage
 
@@ -59,9 +60,9 @@ async def retrieve_architect_context(state: ArchitectState) -> ArchitectState:
         uuid.UUID(state["tenant_id"]),
         uuid.UUID(state["product_id"]),
         vector,
-        limit=8,
+        limit=4,
     )
-    state["docs_context"] = build_context_from_results(results)
+    state["docs_context"] = build_context_from_results(results, max_content_tokens=300)
     state["_search_results"] = results  # type: ignore
     return state
 
@@ -71,15 +72,33 @@ async def generate_architect_response(state: ArchitectState) -> ArchitectState:
 
     prompt = ARCHITECT_PROMPT.format(
         question=state["question"],
-        context=state.get("extra_context", ""),
-        profile=json.dumps(state["profile"], indent=2),
-        docs=state["docs_context"],
+        context=truncate_to_token_budget(state.get("extra_context", ""), 150),
+        profile=json.dumps(compact_profile(state["profile"]), indent=2),
+        docs=truncate_to_token_budget(state["docs_context"], 1500),
     )
 
-    response = await llm.ainvoke([
-        {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
-        {"role": "user", "content": prompt},
-    ])
+    try:
+        response = await llm.ainvoke([
+            {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
+            {"role": "user", "content": prompt},
+        ])
+    except Exception as exc:
+        message = str(exc)
+        if "exceed_context_size" in message or "context size" in message.lower():
+            raise LLMServiceError(
+                "Architect prompt exceeds the model context window. "
+                "Set OLLAMA_NUM_CTX=8192 in .env and restart the API.",
+                provider="ollama",
+            ) from exc
+        if "connection" in message.lower():
+            raise LLMServiceError(
+                "Cannot reach Ollama. Run `ollama serve` and retry.",
+                provider="ollama",
+            ) from exc
+        raise LLMServiceError(
+            f"Architect request failed: {message}",
+            provider=settings.resolved_llm_provider(),
+        ) from exc
 
     try:
         content = response.content
@@ -106,28 +125,27 @@ def build_architect_graph() -> StateGraph:
     return graph
 
 
-async def run_solution_architect(
-    db: AsyncSession,
-    product: Product,
+async def invoke_solution_architect(
+    product_id: uuid.UUID,
     tenant_id: uuid.UUID,
+    profile: dict,
     question: str,
     context: str | None = None,
 ) -> dict:
+    """Run architect graph without holding a DB connection."""
     graph = build_architect_graph()
     app = graph.compile()
 
     result = await app.ainvoke({
-        "product_id": str(product.id),
+        "product_id": str(product_id),
         "tenant_id": str(tenant_id),
-        "profile": product.profile or {},
+        "profile": profile,
         "question": question,
         "extra_context": context or "",
         "docs_context": "",
         "result": {},
         "tokens_used": 0,
     })
-
-    await record_usage(db, tenant_id, tokens=result.get("tokens_used", 0), agent_runs=1)
 
     search_results = result.get("_search_results", [])  # type: ignore
     answer = result["result"].get("answer", "")
@@ -137,9 +155,26 @@ async def run_solution_architect(
         "answer": answer,
         "architecture_diagram": result["result"].get("architecture_diagram"),
         "deployment_plan": result["result"].get("deployment_plan"),
+        "security_notes": result["result"].get("security_notes"),
+        "tokens_used": result.get("tokens_used", 0),
         "citations": [
             {"chunk_id": c.chunk_id, "document_title": c.document_title, "excerpt": c.excerpt, "url": c.url}
             for c in (grounding.citations if grounding else [])
         ],
         "grounded": grounding.grounded if grounding else False,
     }
+
+
+async def run_solution_architect(
+    db: AsyncSession,
+    product: Product,
+    tenant_id: uuid.UUID,
+    question: str,
+    context: str | None = None,
+) -> dict:
+    payload = await invoke_solution_architect(
+        product.id, tenant_id, product.profile or {}, question, context
+    )
+    await record_usage(db, tenant_id, tokens=payload.pop("tokens_used", 0), agent_runs=1)
+    payload.pop("security_notes", None)
+    return payload

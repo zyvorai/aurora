@@ -31,7 +31,10 @@ class SearchResult:
 
 class VectorStore:
     def __init__(self) -> None:
-        self.client = AsyncQdrantClient(url=settings.qdrant_url)
+        self.client = AsyncQdrantClient(
+            url=settings.qdrant_url,
+            check_compatibility=False,
+        )
 
     @property
     def collection(self) -> str:
@@ -97,9 +100,9 @@ class VectorStore:
                 FieldCondition(key="provenance", match=MatchValue(value=provenance_filter))
             )
 
-        results = await self.client.search(
+        response = await self.client.query_points(
             collection_name=self.collection,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=Filter(must=must_conditions),
             limit=limit,
         )
@@ -113,7 +116,7 @@ class VectorStore:
                 url=r.payload.get("url"),
                 metadata={k: v for k, v in r.payload.items() if k not in ("content",)},
             )
-            for r in results
+            for r in response.points
         ]
 
     async def delete_product_chunks(

@@ -30,11 +30,11 @@ Target Persona: {persona}
 
 Return JSON with:
 - company_name: detected company name
-- company_analysis: {industry, size_signals, tech_stack, ai_adoption}
+- company_analysis: {{industry, size_signals, tech_stack, ai_adoption}}
 - pain_points: list of likely pain points for this company
 - product_fit: why our product fits their needs
 - email_draft: personalized email to the {persona} (150-250 words)
-- follow_up_sequence: list of 3 {day, subject, body} follow-up emails
+- follow_up_sequence: list of 3 {{day, subject, body}} follow-up emails
 """
 
 

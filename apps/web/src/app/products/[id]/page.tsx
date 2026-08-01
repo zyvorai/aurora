@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { products, type Product, type Artifact } from '@/lib/api';
+import ProductProfileView from '@/components/ProductProfileView';
+import ResultPanel from '@/components/ResultPanel';
 import ChatWidget from '@/components/ChatWidget';
 
 type Tab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'analytics';
@@ -134,19 +136,17 @@ export default function ProductPage() {
             <div className="flex flex-wrap gap-3">
               <button onClick={() => runAction('ingest')} disabled={loading}
                 className="px-4 py-2 bg-gtm-accent text-gtm-bg font-medium rounded-md disabled:opacity-50">
-                {loading ? 'Processing...' : 'Crawl & Ingest'}
+                {loading ? 'Processing… (may take a few minutes)' : 'Crawl & Ingest'}
               </button>
               <button onClick={() => runAction('understand')} disabled={loading}
                 className="px-4 py-2 border border-gtm-border rounded-md hover:border-gtm-accent disabled:opacity-50">
-                Build Product Profile
+                {loading ? 'Building profile…' : 'Build Product Profile'}
               </button>
             </div>
-            {product.profile && (
+            {product.profile && Object.keys(product.profile).length > 0 && (
               <div className="bg-gtm-card border border-gtm-border rounded-lg p-6">
-                <h3 className="font-semibold mb-3">Product Profile</h3>
-                <pre className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap font-mono overflow-auto max-h-96">
-                  {JSON.stringify(product.profile, null, 2)}
-                </pre>
+                <h3 className="font-semibold mb-4">Product Profile</h3>
+                <ProductProfileView profile={product.profile} />
               </div>
             )}
             {artifacts.length > 0 && (
@@ -181,7 +181,7 @@ export default function ProductPage() {
           <div className="animate-fade-up">
             <button onClick={() => runAction('strategy')} disabled={loading}
               className="px-6 py-3 bg-gtm-accent text-gtm-bg font-medium rounded-md disabled:opacity-50 mb-6">
-              Generate GTM Strategy
+              {loading ? 'Generating strategy… (local LLM may take several minutes)' : 'Generate GTM Strategy'}
             </button>
           </div>
         )}
@@ -282,17 +282,8 @@ export default function ProductPage() {
         )}
 
         {result && (
-          <div className="mt-6 bg-gtm-card border border-gtm-border rounded-lg p-6 animate-fade-up">
-            <h3 className="font-semibold mb-3">Result</h3>
-            {'answer' in result && !('reply' in result) && <p className="mb-4 whitespace-pre-wrap">{result.answer as string}</p>}
-            {'reply' in result && <p className="mb-4 whitespace-pre-wrap">{result.reply as string}</p>}
-            {'content' in result && <p className="mb-4 whitespace-pre-wrap">{result.content as string}</p>}
-            {'email_draft' in result && <p className="mb-4 whitespace-pre-wrap">{result.email_draft as string}</p>}
-            {'proposal_content' in result && <p className="mb-4 whitespace-pre-wrap">{result.proposal_content as string}</p>}
-            {'gtm_strategy' in result && <p className="mb-4 whitespace-pre-wrap">{result.gtm_strategy as string}</p>}
-            <pre className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap font-mono overflow-auto max-h-64">
-              {JSON.stringify(result, null, 2)}
-            </pre>
+          <div className="mt-6 animate-fade-up">
+            <ResultPanel result={result} />
           </div>
         )}
       </main>

@@ -17,7 +17,8 @@ from gtm_api.services.citation_gate import (
     extract_citations_from_response,
     verify_grounding,
 )
-from gtm_api.services.embeddings import embedding_service
+from gtm_api.services.chunking import compact_profile, truncate_to_token_budget
+from gtm_api.services.embeddings import LLMServiceError, embedding_service
 from gtm_api.services.vector_store import vector_store
 from gtm_api.tenant import record_usage
 
@@ -34,14 +35,14 @@ Documentation Sources:
 Return a JSON object with:
 - gtm_strategy: overall go-to-market strategy (2-3 paragraphs)
 - icp: ideal customer profile description
-- personas: list of {name, title, pain_points, goals, messaging} objects
+- personas: list of {{name, title, pain_points, goals, messaging}} objects
 - positioning: positioning statement
-- messaging_hierarchy: {primary, secondary, proof_points} object
+- messaging_hierarchy: {{primary, secondary, proof_points}} object
 - value_propositions: list of value propositions
-- objection_handling: list of {objection, response} objects
-- competitive_comparison: list of {competitor, our_advantage} objects
+- objection_handling: list of {{objection, response}} objects
+- competitive_comparison: list of {{competitor, our_advantage}} objects
 - seo_keywords: list of target SEO keywords
-- content_calendar: list of {week, topic, channel, content_type} for 4 weeks
+- content_calendar: list of {{week, topic, channel, content_type}} for 4 weeks
 """
 
 
@@ -62,23 +63,45 @@ async def retrieve_strategy_context(state: StrategyState) -> StrategyState:
         uuid.UUID(state["tenant_id"]),
         uuid.UUID(state["product_id"]),
         vector,
-        limit=8,
+        limit=4,
     )
-    state["context"] = build_context_from_results(results)
+    state["context"] = build_context_from_results(results, max_content_tokens=350)
     return state
 
 
 async def generate_strategy(state: StrategyState) -> StrategyState:
     llm = get_chat_model("marketing_strategy", temperature=0.3)
 
+    profile_json = json.dumps(compact_profile(state["profile"]), indent=2)
+    context = truncate_to_token_budget(state["context"], 1800)
+
     prompt = STRATEGY_PROMPT.format(
-        profile=json.dumps(state["profile"], indent=2),
-        context=state["context"],
+        profile=profile_json,
+        context=context,
     )
-    response = await llm.ainvoke([
-        {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
-        {"role": "user", "content": prompt},
-    ])
+    try:
+        response = await llm.ainvoke([
+            {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
+            {"role": "user", "content": prompt},
+        ])
+    except Exception as exc:
+        message = str(exc)
+        if "exceed_context_size" in message or "context size" in message.lower():
+            raise LLMServiceError(
+                "Strategy prompt exceeds the model context window. "
+                "Set OLLAMA_NUM_CTX=8192 in .env or reduce ingested content, then retry.",
+                provider="ollama",
+            ) from exc
+        if "connection" in message.lower() or "connect" in type(exc).__name__.lower():
+            raise LLMServiceError(
+                "Cannot reach Ollama during strategy generation. "
+                "Run `ollama serve` and verify http://127.0.0.1:11434/api/tags, then retry.",
+                provider="ollama",
+            ) from exc
+        raise LLMServiceError(
+            f"Strategy generation failed: {message}",
+            provider=settings.resolved_llm_provider(),
+        ) from exc
 
     try:
         content = response.content
@@ -105,6 +128,27 @@ def build_strategy_graph() -> StateGraph:
     return graph
 
 
+async def invoke_marketing_strategy(
+    product_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    profile: dict,
+    focus_areas: list[str] | None = None,
+) -> dict:
+    """Run strategy LangGraph without holding a DB connection (LLM can take many minutes)."""
+    graph = build_strategy_graph()
+    app = graph.compile()
+
+    return await app.ainvoke({
+        "product_id": str(product_id),
+        "tenant_id": str(tenant_id),
+        "profile": profile,
+        "context": "",
+        "focus_areas": focus_areas or [],
+        "strategy": {},
+        "tokens_used": 0,
+    })
+
+
 async def run_marketing_strategy(
     db: AsyncSession,
     product: Product,
@@ -112,18 +156,12 @@ async def run_marketing_strategy(
     user_id: uuid.UUID,
     focus_areas: list[str] | None = None,
 ) -> Artifact:
-    graph = build_strategy_graph()
-    app = graph.compile()
-
-    result = await app.ainvoke({
-        "product_id": str(product.id),
-        "tenant_id": str(tenant_id),
-        "profile": product.profile or {},
-        "context": "",
-        "focus_areas": focus_areas or [],
-        "strategy": {},
-        "tokens_used": 0,
-    })
+    result = await invoke_marketing_strategy(
+        product.id,
+        tenant_id,
+        product.profile or {},
+        focus_areas,
+    )
 
     strategy = result["strategy"]
     content = json.dumps(strategy, indent=2)

@@ -39,11 +39,26 @@ require_docker() {
   docker info >/dev/null 2>&1 || die "Docker is not running. Start Docker Desktop first."
 }
 
+sync_web_env() {
+  local web_env="$ROOT/apps/web/.env.local"
+  if [[ -f "$ROOT/.env" ]]; then
+    grep '^NEXT_PUBLIC_' "$ROOT/.env" >"$web_env" 2>/dev/null || true
+    if [[ -s "$web_env" ]]; then
+      log "Synced NEXT_PUBLIC_* to apps/web/.env.local"
+    fi
+  fi
+  if [[ ! -f "$web_env" ]] || [[ ! -s "$web_env" ]]; then
+    echo 'NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api/v1' >"$web_env"
+    log "Created apps/web/.env.local with default API URL"
+  fi
+}
+
 ensure_env() {
   if [[ ! -f "$ROOT/.env" ]]; then
     log "Creating .env from .env.example"
     cp "$ROOT/.env.example" "$ROOT/.env"
   fi
+  sync_web_env
 }
 
 ensure_install() {
@@ -122,7 +137,7 @@ start_apps() {
     warn "Port 8000 in use — API may already be running"
   else
     start_background "api" "$ROOT/apps/api" \
-      "$VENV/bin/uvicorn" gtm_api.main:app --reload --port 8000
+      "$VENV/bin/uvicorn" gtm_api.main:app --host 127.0.0.1 --port 8000
   fi
 
   if port_in_use 3000; then

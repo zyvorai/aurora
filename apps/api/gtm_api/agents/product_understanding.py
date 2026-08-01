@@ -14,7 +14,7 @@ from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
     build_context_from_results,
 )
-from gtm_api.services.embeddings import embedding_service
+from gtm_api.services.embeddings import LLMServiceError, embedding_service
 from gtm_api.services.knowledge_graph import knowledge_graph
 from gtm_api.services.vector_store import vector_store
 from gtm_api.tenant import record_usage
@@ -30,7 +30,7 @@ Return a JSON object with these fields:
 - target_personas: list of target buyer personas
 - competitors: list of known competitors (only if explicitly mentioned)
 - pricing: pricing information (only if explicitly mentioned, else null)
-- faqs: list of {question, answer} objects
+- faqs: list of {{question, answer}} objects
 - architecture: architecture description if available
 - use_cases: list of use cases
 - pain_points: list of customer pain points addressed
@@ -70,10 +70,23 @@ async def extract_profile(state: ProductUnderstandingState) -> ProductUnderstand
     llm = get_chat_model("product_understanding", temperature=0.1)
 
     prompt = EXTRACTION_PROMPT.format(context=state["context"])
-    response = await llm.ainvoke([
-        {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
-        {"role": "user", "content": prompt},
-    ])
+    try:
+        response = await llm.ainvoke([
+            {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
+            {"role": "user", "content": prompt},
+        ])
+    except Exception as exc:
+        message = str(exc)
+        if "signal: killed" in message.lower():
+            raise LLMServiceError(
+                "Ollama ran out of memory loading the profile model. "
+                "Set AGENT_MODEL_PRODUCT_UNDERSTANDING=llama3.1:8b in .env and restart the API.",
+                provider="ollama",
+            ) from exc
+        raise LLMServiceError(
+            f"Profile extraction failed: {message}",
+            provider=get_settings().resolved_llm_provider(),
+        ) from exc
 
     try:
         content = response.content

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import get_current_user, require_permission
-from gtm_api.database import get_db
+from gtm_api.database import async_session_factory, get_db
 from gtm_api.models import User
 from gtm_api.schemas import (
     ArchitectRequest,
@@ -22,13 +22,13 @@ from gtm_api.schemas import (
 )
 from gtm_api.agents.sales_agent import run_sales_chat
 from gtm_api.agents.outreach import run_outreach
-from gtm_api.agents.solution_architect import run_solution_architect
+from gtm_api.agents.solution_architect import invoke_solution_architect, run_solution_architect
 from gtm_api.agents.proposal_generator import run_proposal_generator
 from gtm_api.agents.supervisor import run_supervisor
 from gtm_api.services.analytics import get_analytics
 from gtm_api.services.learning import refresh_product
 from gtm_api.services.enterprise import get_audit_trail, add_suppression
-from gtm_api.tenant import get_product_for_tenant, get_tenant_context
+from gtm_api.tenant import get_product_for_tenant, get_tenant_context, record_usage
 
 router = APIRouter(tags=["agents"])
 
@@ -81,11 +81,22 @@ async def solution_architect(
     product_id: uuid.UUID,
     req: ArchitectRequest,
     user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
 ):
-    ctx = await get_tenant_context(user, db)
-    product = await get_product_for_tenant(db, product_id, ctx.tenant_id)
-    result = await run_solution_architect(db, product, ctx.tenant_id, req.question, req.context)
+    async with async_session_factory() as db:
+        ctx = await get_tenant_context(user, db)
+        product = await get_product_for_tenant(db, product_id, ctx.tenant_id)
+        profile = dict(product.profile or {})
+        tenant_id = ctx.tenant_id
+        pid = product.id
+
+    result = await invoke_solution_architect(pid, tenant_id, profile, req.question, req.context)
+    tokens_used = result.pop("tokens_used", 0)
+    result.pop("security_notes", None)
+
+    async with async_session_factory() as db:
+        await record_usage(db, tenant_id, tokens=tokens_used, agent_runs=1)
+        await db.commit()
+
     return ArchitectResponse(**result)
 
 

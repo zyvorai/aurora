@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from gtm_api.schemas import Citation
 from gtm_api.services.vector_store import SearchResult
+from gtm_api.services.chunking import truncate_to_token_budget
 
 
 @dataclass
@@ -15,14 +16,20 @@ class GroundingResult:
     blocked_claims: list[str]
 
 
-def build_context_from_results(results: list[SearchResult]) -> str:
+def build_context_from_results(
+    results: list[SearchResult],
+    max_content_tokens: int | None = None,
+) -> str:
     parts = []
     for i, r in enumerate(results, 1):
+        content = r.content
+        if max_content_tokens is not None:
+            content = truncate_to_token_budget(content, max_content_tokens)
         parts.append(
             f"[Source {i}] (chunk_id: {r.chunk_id})\n"
             f"Title: {r.document_title}\n"
             f"URL: {r.url or 'N/A'}\n"
-            f"Content: {r.content}\n"
+            f"Content: {content}\n"
         )
     return "\n---\n".join(parts)
 

@@ -1,5 +1,6 @@
 """Marketing, content, and approval routes."""
 
+import json
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,8 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import content_hash, get_current_user, require_permission
-from gtm_api.database import get_db
-from gtm_api.models import Approval, ApprovalStatus, Artifact, User
+from gtm_api.database import async_session_factory, get_db
+from gtm_api.models import Approval, ApprovalStatus, Artifact, ArtifactType, User
 from gtm_api.schemas import (
     ApprovalRequest,
     ApprovalResponse,
@@ -20,10 +21,10 @@ from gtm_api.schemas import (
     PublishRequest,
     PublishResponse,
 )
-from gtm_api.agents.marketing_strategy import run_marketing_strategy
+from gtm_api.agents.marketing_strategy import invoke_marketing_strategy
 from gtm_api.agents.content_studio import run_content_generation
 from gtm_api.services.publishing import publish_artifact
-from gtm_api.tenant import audit_log, get_product_for_tenant, get_tenant_context
+from gtm_api.tenant import audit_log, get_product_for_tenant, get_tenant_context, record_usage
 
 router = APIRouter(tags=["marketing"])
 
@@ -33,15 +34,46 @@ async def generate_strategy(
     product_id: uuid.UUID,
     req: StrategyRequest = StrategyRequest(),
     user: User = Depends(require_permission("write")),
-    db: AsyncSession = Depends(get_db),
 ):
-    ctx = await get_tenant_context(user, db)
-    product = await get_product_for_tenant(db, product_id, ctx.tenant_id)
-    artifact = await run_marketing_strategy(db, product, ctx.tenant_id, user.id, req.focus_areas)
-    strategy = artifact.metadata_ or {}
+    async with async_session_factory() as db:
+        ctx = await get_tenant_context(user, db)
+        product = await get_product_for_tenant(db, product_id, ctx.tenant_id)
+        if not product.profile:
+            raise HTTPException(
+                status_code=400,
+                detail="Product profile is empty. Run Crawl & Ingest, then Build Product Profile first.",
+            )
+        profile = dict(product.profile)
+        tenant_id = ctx.tenant_id
+        user_id = user.id
+        product_name = product.name
+        pid = product.id
+
+    # LLM step runs without an open DB connection (can take several minutes).
+    result = await invoke_marketing_strategy(pid, tenant_id, profile, req.focus_areas)
+    strategy = result["strategy"]
+    content = json.dumps(strategy, indent=2)
+
+    async with async_session_factory() as db:
+        artifact = Artifact(
+            product_id=pid,
+            tenant_id=tenant_id,
+            artifact_type=ArtifactType.STRATEGY,
+            title=f"GTM Strategy - {product_name}",
+            content=content,
+            content_hash=content_hash(content),
+            status=ApprovalStatus.DRAFT,
+            metadata_=strategy,
+            created_by=user_id,
+        )
+        db.add(artifact)
+        await record_usage(db, tenant_id, tokens=result.get("tokens_used", 0), agent_runs=1)
+        await db.commit()
+        await db.refresh(artifact)
+        artifact_id = artifact.id
 
     return StrategyResponse(
-        artifact_id=artifact.id,
+        artifact_id=artifact_id,
         gtm_strategy=strategy.get("gtm_strategy", ""),
         icp=strategy.get("icp", ""),
         personas=strategy.get("personas", []),

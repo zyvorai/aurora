@@ -3,7 +3,7 @@
 import pytest
 from gtm_api.auth import hash_password, verify_password, slugify, content_hash
 from gtm_api.config import get_settings
-from gtm_api.services.chunking import chunk_text, estimate_tokens
+from gtm_api.services.chunking import chunk_text, compact_profile, estimate_tokens, truncate_to_token_budget
 from gtm_api.services.llm import get_chat_model, get_provider
 
 
@@ -34,6 +34,20 @@ class TestChunking:
 
     def test_estimate_tokens(self):
         assert estimate_tokens("hello world test") == 3
+
+    def test_truncate_to_token_budget(self):
+        text = " ".join(["word"] * 100)
+        assert estimate_tokens(truncate_to_token_budget(text, 20)) <= 21
+        assert "...[truncated]" in truncate_to_token_budget(text, 20)
+
+    def test_compact_profile(self):
+        profile = compact_profile({
+            "summary": "x" * 5000,
+            "features": list(range(20)),
+            "field_status": {"a": "inferred"},
+        })
+        assert "field_status" not in profile
+        assert len(profile["features"]) <= 8
 
 
 class TestEnterprise:
@@ -81,7 +95,7 @@ class TestLLMFactory:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         get_settings.cache_clear()
         ollama_settings = get_settings()
-        assert ollama_settings.get_agent_model("product_understanding") == "qwen2.5-coder:14b"
+        assert ollama_settings.get_agent_model("product_understanding") == "llama3.1:8b"
 
         monkeypatch.setenv("LLM_PROVIDER", "openai")
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")

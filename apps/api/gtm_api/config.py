@@ -7,13 +7,13 @@ from typing import ClassVar
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_OLLAMA_AGENT_MODELS: dict[str, str] = {
-    "product_understanding": "qwen2.5-coder:14b",
-    "marketing_strategy": "deepseek-r1:8b",
+    "product_understanding": "llama3.1:8b",
+    "marketing_strategy": "llama3.1:8b",
     "content_studio": "llama3.1:8b",
     "sales_agent": "llama3.1:8b",
     "outreach": "gemma2:9b",
-    "solution_architect": "deepseek-r1:8b",
-    "proposal_generator": "deepseek-r1:8b",
+    "solution_architect": "llama3.1:8b",
+    "proposal_generator": "llama3.1:8b",
 }
 
 DEFAULT_OPENAI_AGENT_MODELS: dict[str, str] = {
@@ -80,6 +80,7 @@ class Settings(BaseSettings):
     ollama_default_model: str = "llama3.1:8b"
     ollama_embedding_model: str = "nomic-embed-text"
     ollama_embedding_dimensions: int = 768
+    ollama_num_ctx: int = 8192
 
     # OpenAI (production / premium) — backward compatible
     openai_api_key: str = ""

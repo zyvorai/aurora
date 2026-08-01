@@ -10,7 +10,7 @@ class TestConfig:
         settings = get_settings()
         models = settings.get_all_agent_models()
         assert models["sales_agent"] == "llama3.1:8b"
-        assert models["product_understanding"] == "qwen2.5-coder:14b"
+        assert models["product_understanding"] == "llama3.1:8b"
         assert len(models) >= 7
 
     def test_openai_agent_env_override(self, monkeypatch):
