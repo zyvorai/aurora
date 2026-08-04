@@ -1,6 +1,5 @@
 """Sales Agent LangGraph agent (Phase 4)."""
 
-import json
 import uuid
 from typing import TypedDict
 
@@ -13,11 +12,9 @@ from gtm_api.services.llm import get_chat_model
 from gtm_api.models import Conversation, Lead, Product
 from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
-    build_context_from_results,
     verify_grounding,
 )
-from gtm_api.services.embeddings import embedding_service
-from gtm_api.services.vector_store import vector_store
+from gtm_api.services.mcp import gather_decision_context
 from gtm_api.tenant import record_usage
 
 settings = get_settings()
@@ -42,6 +39,7 @@ class SalesState(TypedDict):
     message: str
     history: list[dict]
     context: str
+    sources_used: list[str]
     reply: str
     citations: list
     grounded: bool
@@ -51,27 +49,34 @@ class SalesState(TypedDict):
 
 
 async def retrieve_sales_context(state: SalesState) -> SalesState:
-    vector = await embedding_service.embed_query(state["message"])
-    results = await vector_store.search(
+    if state.get("context"):
+        return state
+
+    decision_ctx = await gather_decision_context(
+        state["message"],
         uuid.UUID(state["tenant_id"]),
         uuid.UUID(state["product_id"]),
-        vector,
-        limit=5,
+        profile=state.get("profile"),
     )
-    state["context"] = build_context_from_results(results)
-    state["_search_results"] = results  # type: ignore
+    state["context"] = decision_ctx.to_prompt_section()
+    state["sources_used"] = decision_ctx.sources_used
+    state["_search_results"] = decision_ctx.search_results  # type: ignore
     return state
 
 
 async def generate_reply(state: SalesState) -> SalesState:
     llm = get_chat_model("sales_agent", temperature=0.2)
 
-    messages = [{"role": "system", "content": SALES_SYSTEM + f"\n\nProduct Profile:\n{json.dumps(state['profile'], indent=2)}"}]
+    messages = [{"role": "system", "content": SALES_SYSTEM}]
     for msg in state.get("history", [])[-10:]:
         messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({
         "role": "user",
-        "content": f"{state['message']}\n\nRelevant Documentation:\n{state['context']}",
+        "content": (
+            f"{state['message']}\n\n"
+            f"Multi-source context (sources: {', '.join(state.get('sources_used', []))}):\n"
+            f"{state['context']}"
+        ),
     })
 
     response = await llm.ainvoke(messages)
@@ -137,6 +142,15 @@ async def run_sales_chat(
     graph = build_sales_graph()
     app = graph.compile()
 
+    decision_ctx = await gather_decision_context(
+        message,
+        tenant_id,
+        product.id,
+        db=db,
+        product=product,
+        profile=product.profile or {},
+    )
+
     agent_result = await app.ainvoke({
         "product_id": str(product.id),
         "tenant_id": str(tenant_id),
@@ -144,13 +158,15 @@ async def run_sales_chat(
         "profile": product.profile or {},
         "message": message,
         "history": history,
-        "context": "",
+        "context": decision_ctx.to_prompt_section(),
+        "sources_used": decision_ctx.sources_used,
         "reply": "",
         "citations": [],
         "grounded": False,
         "lead_score": 0.0,
         "suggested_actions": [],
         "tokens_used": 0,
+        "_search_results": decision_ctx.search_results,
     })
 
     history.append({"role": "user", "content": message})
@@ -177,4 +193,5 @@ async def run_sales_chat(
         "grounded": agent_result["grounded"],
         "lead_score": agent_result["lead_score"],
         "suggested_actions": agent_result["suggested_actions"],
+        "sources_used": agent_result.get("sources_used", []),
     }

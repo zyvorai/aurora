@@ -119,6 +119,16 @@ class VectorStore:
             for r in response.points
         ]
 
+    async def delete_points(self, point_ids: list[str]) -> None:
+        if not point_ids:
+            return
+        from qdrant_client.models import PointIdsList
+
+        await self.client.delete(
+            collection_name=self.collection,
+            points_selector=PointIdsList(points=point_ids),
+        )
+
     async def delete_product_chunks(
         self, tenant_id: uuid.UUID, product_id: uuid.UUID
     ) -> None:

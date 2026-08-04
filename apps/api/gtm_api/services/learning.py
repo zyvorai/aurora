@@ -16,6 +16,8 @@ async def check_source_changes(
     db: AsyncSession,
     source: Source,
 ) -> bool:
+    if not source.url:
+        return False
     try:
         page = await fetch_single_page(source.url)
         return page.content_hash != source.content_hash

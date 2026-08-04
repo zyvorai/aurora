@@ -1,27 +1,8 @@
+import { resolveApiBase } from './api-base';
+
 const DEFAULT_TIMEOUT_MS = 60_000;
 /** Agent/LLM calls (ingest, profile, strategy) — no client timeout; local models can take 15+ min. */
 const AGENT_TIMEOUT_MS = 0;
-
-function isLocalDevHost(hostname: string): boolean {
-  return (
-    hostname === 'localhost'
-    || hostname === '127.0.0.1'
-    || /^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname)
-    || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)
-  );
-}
-
-/** Direct API URL in dev — avoids Next.js rewrite proxy ECONNRESET on long ingest. */
-function resolveApiBase(): string {
-  const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
-  if (configured) return configured;
-
-  if (typeof window !== 'undefined' && isLocalDevHost(window.location.hostname)) {
-    return 'http://127.0.0.1:8000/api/v1';
-  }
-
-  return '/api';
-}
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -58,9 +39,9 @@ async function request<T>(path: string, options: RequestInit & { timeoutMs?: num
         'Request timed out. Local LLM steps can take 10–20 minutes on first run — retry or check .logs/api.log.',
       );
     }
-    if (err instanceof TypeError) {
+  if (err instanceof TypeError) {
       throw new Error(
-        'Connection to API lost. Ensure the API is running (make start) and Ollama is up (ollama serve). Check .logs/api.log.',
+        'Cannot reach the API at ' + resolveApiBase() + '. Run: make stop && make start',
       );
     }
     throw err;
@@ -68,7 +49,7 @@ async function request<T>(path: string, options: RequestInit & { timeoutMs?: num
     if (timer) clearTimeout(timer);
   }
 
-  if (!response.ok) {
+    if (!response.ok) {
     let detail = response.statusText;
     try {
       const body = await response.json();
@@ -76,6 +57,11 @@ async function request<T>(path: string, options: RequestInit & { timeoutMs?: num
       if (typeof detail !== 'string') detail = JSON.stringify(detail);
     } catch {
       // ignore parse errors
+    }
+    if (response.status === 404 && path.includes('/brief')) {
+      throw new Error(
+        'Brief API not found. Restart the API to load Wave 0 routes: make stop && make start',
+      );
     }
     throw new Error(detail || `Request failed (${response.status})`);
   }
@@ -100,6 +86,31 @@ export interface Product {
   profile?: Record<string, unknown> | null;
   profile_status: string;
   created_at: string;
+}
+
+export interface ProductSource {
+  id: string;
+  source_type: string;
+  url?: string | null;
+  display_name?: string | null;
+  storage_key?: string | null;
+  mime_type?: string | null;
+  file_size_bytes?: number | null;
+  status: string;
+  pages_discovered: number;
+  pages_processed: number;
+  error_message?: string | null;
+  metadata?: Record<string, unknown>;
+  last_crawled_at?: string | null;
+  created_at: string;
+}
+
+export interface IngestResult {
+  job_ids: string[];
+  status: string;
+  message: string;
+  sources_queued: number;
+  results?: Array<Record<string, unknown>>;
 }
 
 export interface Artifact {
@@ -152,8 +163,109 @@ export const products = {
     });
   },
 
-  ingest(id: string): Promise<{ job_id: string; status: string; message: string }> {
-    return request(`/products/${id}/ingest`, { method: 'POST', body: '{}', timeoutMs: AGENT_TIMEOUT_MS });
+  ingest(
+    id: string,
+    options?: { source_ids?: string[]; force?: boolean; async_mode?: boolean },
+  ): Promise<IngestResult> {
+    const asyncMode = options?.async_mode ?? false;
+    return request(`/products/${id}/ingest`, {
+      method: 'POST',
+      body: JSON.stringify({ ...options, async_mode: asyncMode }),
+      timeoutMs: asyncMode ? DEFAULT_TIMEOUT_MS : AGENT_TIMEOUT_MS,
+    });
+  },
+
+  listSources(id: string, options?: { timeoutMs?: number }): Promise<ProductSource[]> {
+    return request<ProductSource[]>(`/products/${id}/sources`, {
+      ...(options?.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
+    });
+  },
+
+  addSource(
+    id: string,
+    data: {
+      source_type: string;
+      url?: string;
+      display_name?: string;
+      metadata?: Record<string, unknown>;
+      github_token?: string;
+    },
+  ): Promise<ProductSource> {
+    return request(`/products/${id}/sources`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async uploadSource(
+    id: string,
+    file: File,
+    source_type: string,
+    display_name?: string,
+  ): Promise<ProductSource> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('source_type', source_type);
+    if (display_name) form.append('display_name', display_name);
+
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const response = await fetch(`${resolveApiBase()}/products/${id}/sources/upload`, {
+      method: 'POST',
+      headers,
+      body: form,
+    });
+    if (!response.ok) {
+      let detail = response.statusText;
+      try {
+        const body = await response.json();
+        detail = body.detail ?? detail;
+      } catch { /* ignore */ }
+      throw new Error(typeof detail === 'string' ? detail : 'Upload failed');
+    }
+    return response.json();
+  },
+
+  addDatabaseSource(
+    id: string,
+    data: {
+      engine: string;
+      host: string;
+      port?: number;
+      database: string;
+      username: string;
+      password: string;
+      tables: string[];
+      display_name?: string;
+    },
+  ): Promise<ProductSource> {
+    return request(`/products/${id}/sources/database`, {
+      method: 'POST',
+      body: JSON.stringify({ ...data, read_only: true }),
+    });
+  },
+
+  testDatabaseConnection(
+    id: string,
+    data: {
+      engine: string;
+      host: string;
+      port?: number;
+      database: string;
+      username: string;
+      password: string;
+    },
+  ): Promise<{ tables: string[] }> {
+    return request(`/products/${id}/sources/database/test`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteSource(productId: string, sourceId: string): Promise<void> {
+    return request(`/products/${productId}/sources/${sourceId}`, { method: 'DELETE' });
   },
 
   understand(id: string): Promise<{ profile: Record<string, unknown>; status: string }> {
@@ -165,6 +277,7 @@ export const products = {
     citations: Array<{ chunk_id: string; document_title: string; excerpt: string; url?: string }>;
     confidence: number;
     grounded: boolean;
+    sources_used?: string[];
   }> {
     return request(`/products/${id}/query`, {
       method: 'POST',
@@ -197,6 +310,7 @@ export const products = {
     grounded: boolean;
     lead_score?: number;
     suggested_actions?: string[];
+    sources_used?: string[];
   }> {
     return request(`/products/${id}/chat`, {
       method: 'POST',
@@ -246,4 +360,234 @@ export const products = {
   refresh(id: string): Promise<Record<string, unknown>> {
     return request(`/products/${id}/refresh`, { method: 'POST', body: '{}' });
   },
+
+  brief(id: string): Promise<ExecutiveBrief> {
+    return request<ExecutiveBrief>(`/products/${id}/brief`);
+  },
+
+  startOutboundSprint(
+    id: string,
+    params: {
+      focus_industries?: string[];
+      max_leads?: number;
+      campaign_name?: string;
+      company_url?: string;
+      target_persona?: string;
+    } = {},
+  ): Promise<WorkflowRunAccepted> {
+    return request<WorkflowRunAccepted>(`/products/${id}/workflows/outbound_sprint`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  pollWorkflow(runId: string): Promise<WorkflowRunStatus> {
+    return request<WorkflowRunStatus>(`/workflows/runs/${runId}`);
+  },
+
+  pipelineLeads(id: string): Promise<PipelineLead[]> {
+    return request<PipelineLead[]>(`/products/${id}/pipeline-leads`);
+  },
+
+  discoverLeads(
+    id: string,
+    params: { focus_industries?: string[]; max_leads?: number; csv_import?: string } = {},
+  ): Promise<{ discovered_count: number; accounts: Array<Record<string, unknown>> }> {
+    return request(`/products/${id}/discover-leads`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  qualifyLeads(
+    id: string,
+    params: { focus_industries?: string[] } = {},
+  ): Promise<{ qualified_count: number; tier_a: number; leads: Array<Record<string, unknown>> }> {
+    return request(`/products/${id}/qualify-leads`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  opportunities(id: string, stage?: string): Promise<Opportunity[]> {
+    const qs = stage ? `?stage=${encodeURIComponent(stage)}` : '';
+    return request<Opportunity[]>(`/products/${id}/opportunities${qs}`);
+  },
+
+  createOpportunity(
+    id: string,
+    data: { name: string; company?: string; stage?: string; amount?: number },
+  ): Promise<Opportunity> {
+    return request<Opportunity>(`/products/${id}/opportunities`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateOpportunityStage(
+    productId: string,
+    opportunityId: string,
+    stage: string,
+  ): Promise<Opportunity> {
+    return request<Opportunity>(
+      `/products/${productId}/opportunities/${opportunityId}/stage`,
+      { method: 'PATCH', body: JSON.stringify({ stage }) },
+    );
+  },
+
+  pipelineSummary(id: string): Promise<PipelineSummary> {
+    return request<PipelineSummary>(`/products/${id}/pipeline-summary`);
+  },
+
+  startTechnicalEval(
+    id: string,
+    params: {
+      opportunity_name: string;
+      company?: string;
+      question: string;
+      scope: string;
+      include_pricing?: boolean;
+    },
+  ): Promise<WorkflowRunAccepted> {
+    return request<WorkflowRunAccepted>(`/products/${id}/workflows/technical_eval`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  startGenerateProposal(
+    id: string,
+    params: { scope: string; include_pricing?: boolean; opportunity_id?: string },
+  ): Promise<WorkflowRunAccepted> {
+    return request<WorkflowRunAccepted>(`/products/${id}/workflows/generate_proposal`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  insights(id: string): Promise<ProductInsights> {
+    return request<ProductInsights>(`/products/${id}/insights`);
+  },
+
+  refreshInsights(id: string, force = false): Promise<Record<string, unknown>> {
+    return request(`/products/${id}/refresh-insights?force=${force}`, { method: 'POST', body: '{}' });
+  },
+
+  accountHealth(id: string): Promise<AccountHealthRecord[]> {
+    return request<AccountHealthRecord[]>(`/products/${id}/account-health`);
+  },
 };
+
+export interface PipelineLead {
+  account_id: string;
+  company_name: string;
+  domain?: string | null;
+  industry?: string | null;
+  score: number;
+  tier: string;
+  explanation?: string | null;
+  factors?: Record<string, unknown>;
+}
+
+export interface ExecutiveBrief {
+  product_id: string;
+  product_name: string;
+  profile_status: string;
+  gtm_readiness: {
+    ingest_started: boolean;
+    ingest_complete: boolean;
+    profile_built: boolean;
+    strategy_ready: boolean;
+    outreach_ready: boolean;
+  };
+  kpis: {
+    leads: number;
+    conversations: number;
+    artifacts: number;
+    agent_runs: number;
+  };
+  funnel: Record<string, number>;
+  metrics: Record<string, number>;
+  narrative: string;
+  risks: string[];
+  updated_at: string;
+  compute_tier: string;
+  narrative_llm?: string;
+}
+
+export interface WorkflowRunAccepted {
+  workflow_run_id: string;
+  status: string;
+  poll_url: string;
+}
+
+export interface WorkflowRunStatus {
+  id: string;
+  workflow_name: string;
+  status: string;
+  steps: Array<{ name: string; status: string; error?: string }>;
+  output_data: Record<string, unknown>;
+  error_message?: string | null;
+}
+
+export interface Opportunity {
+  id: string;
+  name: string;
+  company?: string | null;
+  stage: string;
+  amount?: number | null;
+  probability: number;
+  lead_id?: string | null;
+  proposal_artifact_id?: string | null;
+  architect_artifact_id?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface PipelineSummary {
+  total: number;
+  by_stage: Record<string, number>;
+  weighted_pipeline: number;
+}
+
+const OPPORTUNITY_STAGES = [
+  'discovery',
+  'qualification',
+  'technical_eval',
+  'proposal',
+  'negotiation',
+  'closed_won',
+  'closed_lost',
+] as const;
+
+export { OPPORTUNITY_STAGES };
+
+export interface ProductInsights {
+  period: string;
+  metrics: Record<string, unknown>;
+  funnel: Record<string, number>;
+  pipeline: {
+    by_stage: Record<string, number>;
+    total_opportunities: number;
+    weighted_value: number;
+  };
+  campaigns: { total: number; active: number };
+  compute_tier: string;
+  narrative_llm?: string | null;
+  narrative_fresh?: boolean;
+  narrative_updated_at?: string | null;
+  top_questions?: Array<{ question: string }>;
+  knowledge_gaps?: Array<{ query: string }>;
+}
+
+export interface AccountHealthRecord {
+  id: string;
+  opportunity_id: string;
+  health_score: number;
+  status: string;
+  metrics: Record<string, unknown>;
+  playbook: Record<string, unknown>;
+  cs_brief: Record<string, unknown>;
+  last_cs_brief_at?: string | null;
+}

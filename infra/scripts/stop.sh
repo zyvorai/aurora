@@ -3,15 +3,20 @@
 #
 # Usage:
 #   ./infra/scripts/stop.sh              # stop app processes + docker compose
-#   ./infra/scripts/stop.sh --processes  # stop uvicorn/next/workers only
+#   ./infra/scripts/stop.sh --processes  # stop uvicorn/next/workers only (keeps Docker)
 #   ./infra/scripts/stop.sh --infra      # stop docker compose only
 #   ./infra/scripts/stop.sh --clean      # stop everything + remove docker volumes
 #   ./infra/scripts/stop.sh --help
+#
+# Tip: close http://localhost:3000 browser tabs before stopping to avoid tab freezes
+# (Next.js HMR websocket). Use: make stop-apps to stop processes but leave Docker up.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="$ROOT/infra/docker-compose.yml"
+# shellcheck source=lib/dev-process.sh
+source "$ROOT/infra/scripts/lib/dev-process.sh"
 
 STOP_PROCESSES=true
 STOP_INFRA=true
@@ -25,46 +30,13 @@ log() { printf '==> %s\n' "$*"; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
 
 stop_processes() {
-  log "Stopping local dev processes..."
-
-  # Graceful stop by port (API + web)
-  for port in 8000 3000; do
-    pids=$(lsof -ti tcp:"$port" 2>/dev/null || true)
-    if [[ -n "$pids" ]]; then
-      log "Stopping process(es) on port $port: $pids"
-      kill $pids 2>/dev/null || true
-    fi
-  done
-
-  # Fallback: match known dev commands from this repo
-  patterns=(
-    "uvicorn gtm_api.main:app"
-    "next dev"
-    "gtm_workers.main"
-    "arq.worker"
-  )
-  for pattern in "${patterns[@]}"; do
-    pids=$(pgrep -f "$pattern" 2>/dev/null || true)
-    if [[ -n "$pids" ]]; then
-      log "Stopping '$pattern': $pids"
-      kill $pids 2>/dev/null || true
-    fi
-  done
-
-  sleep 1
-
-  # Force kill anything still listening
-  for port in 8000 3000; do
-    pids=$(lsof -ti tcp:"$port" 2>/dev/null || true)
-    if [[ -n "$pids" ]]; then
-      warn "Force-killing process(es) still on port $port: $pids"
-      kill -9 $pids 2>/dev/null || true
-    fi
-  done
-
-  if [[ -d "$ROOT/.run" ]]; then
-    rm -f "$ROOT/.run"/*.pid 2>/dev/null || true
+  log "Stopping local dev processes (graceful shutdown)..."
+  if lsof -ti tcp:3000 >/dev/null 2>&1; then
+    warn "Next.js detected on :3000 — close that browser tab, then waiting 3s..."
+    sleep 3
   fi
+  dev_stop_all_apps "$ROOT"
+  warn "If a localhost:3000 tab freezes, close that tab (Cmd+W) — do not wait for reload."
 }
 
 stop_infra() {

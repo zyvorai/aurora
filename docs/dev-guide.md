@@ -33,6 +33,7 @@ This will:
 - Wait for Postgres
 - Initialize database tables
 - Start API (`:8000`) and web (`:3000`) in the background
+- **Start ARQ workers** when `ENABLE_REDIS_WORKERS=true` (default in full deployment) — required for **Ingest selected** in the Sources panel
 
 **3. Open the app:**
 
@@ -45,8 +46,30 @@ This will:
 
 **4. Stop when done:**
 
+Close any **http://localhost:3000** browser tabs first (avoids Next.js HMR tab freezes), then:
+
 ```bash
 make stop
+```
+
+Use `make stop-apps` to stop API/web/workers only and keep Docker running.
+
+---
+
+## Source ingest (Forge → Sources)
+
+See **[source-management.md](./source-management.md)** for full details.
+
+| UI | Workers needed? |
+|----|-----------------|
+| **Ingest selected** / **Ingest all** | Yes (async queue) |
+| **Crawl & Ingest** (Overview button) | No (sync in API) |
+
+**How to know ingest is running:** watch the Sources table — status moves `pending` → `crawling` → `processing` → `completed`, and the **Pages** column updates. Message **“Queued N source(s)”** with status stuck on `pending` and `0/0` means workers are not processing the queue.
+
+```bash
+tail -f .logs/workers.log    # crawl_complete when a source finishes
+make workers                 # foreground workers if not auto-started
 ```
 
 ---
@@ -103,18 +126,22 @@ make start
 
 | Flag | Short | Effect |
 |------|-------|--------|
-| `--infra` | `-i` | Docker + DB init only (no API/web) |
+| `--infra` | `-i` | Docker + DB init only (no API/web/workers) |
 | `--apps` | `-a` | API + web only (infra must already be running) |
-| `--workers` | `-w` | Also start ARQ background workers |
+| `--workers` | `-w` | Force-start ARQ background workers |
+| `--no-workers` | | Skip workers even when `ENABLE_REDIS_WORKERS=true` |
 | `--skip-install` | | Skip pip/npm install checks |
 | `--help` | `-h` | Show usage |
+
+By default, **`make start` auto-starts workers** when `.env` has `DEPLOYMENT_PROFILE=full` (or anything other than `minimal`) and `ENABLE_REDIS_WORKERS` is not `false`.
 
 **Examples:**
 
 ```bash
 ./infra/scripts/start.sh --infra          # just Docker + init-db
 ./infra/scripts/start.sh --apps           # API + web (infra already up)
-./infra/scripts/start.sh --workers        # full start + workers
+./infra/scripts/start.sh --workers        # force workers on
+./infra/scripts/start.sh --no-workers     # API + web only, no async ingest worker
 ./infra/scripts/start.sh --skip-install   # faster restart when deps exist
 ```
 
@@ -124,7 +151,7 @@ make start
 |------|---------|
 | `.logs/api.log` | FastAPI / uvicorn output |
 | `.logs/web.log` | Next.js dev server output |
-| `.logs/workers.log` | ARQ worker output (with `--workers`) |
+| `.logs/workers.log` | ARQ worker output (async source ingest) |
 | `.run/api.pid` | API process ID |
 | `.run/web.pid` | Web process ID |
 | `.run/workers.pid` | Workers process ID |
@@ -134,6 +161,7 @@ make start
 ```bash
 tail -f .logs/api.log
 tail -f .logs/web.log
+tail -f .logs/workers.log
 ```
 
 ---
@@ -141,6 +169,8 @@ tail -f .logs/web.log
 ### `make stop` → `infra/scripts/stop.sh`
 
 Stops dev processes and Docker. **Data volumes are preserved.**
+
+**Before stopping:** close **http://localhost:3000** browser tabs (or the tab may hang when the Next.js dev server shuts down).
 
 ```bash
 make stop
@@ -150,17 +180,19 @@ make stop
 
 | Flag | Short | Effect |
 |------|-------|--------|
-| `--processes` | `-p` | Stop uvicorn / Next.js / workers only |
+| `--processes` | `-p` | Stop uvicorn / Next.js / workers only (**keeps Docker**) |
 | `--infra` | `-i` | `docker compose down` only |
 | `--clean` | `-c` | Stop everything **and delete all Docker volumes** |
 | `--help` | `-h` | Show usage |
+
+Shutdown is **graceful** for Next.js (SIGINT + up to 25s wait) before force-kill. Use `make stop-apps` for a lighter restart without tearing down Postgres/Redis.
 
 **What gets stopped:**
 
 | Target | Method |
 |--------|--------|
 | Port 8000 | API (uvicorn) |
-| Port 3000 | Web (Next.js) |
+| Port 3000 | Web (Next.js) — graceful shutdown to close HMR websockets |
 | `gtm_workers.main`, `arq.worker` | Background workers |
 | Docker Compose | Postgres, Qdrant, Neo4j, Redis, MinIO, Ollama |
 
@@ -168,8 +200,9 @@ make stop
 
 ```bash
 make stop                              # processes + infra (keep data)
+make stop-apps                         # processes only (keep Docker)
 make clean                             # processes + infra + DELETE volumes
-./infra/scripts/stop.sh --processes    # kill API/web only
+./infra/scripts/stop.sh --processes    # same as make stop-apps
 ./infra/scripts/stop.sh --infra        # docker down only
 ```
 
@@ -183,8 +216,9 @@ All commands run from the **repository root**.
 
 | Target | Description |
 |--------|-------------|
-| `make start` | Full background start (infra + DB + API + web) |
+| `make start` | Full background start (infra + DB + API + web + workers when enabled in `.env`) |
 | `make stop` | Stop processes + Docker (keep data) |
+| `make stop-apps` | Stop API/web/workers only (keep Docker) |
 | `make clean` | Stop everything + remove Docker volumes |
 | `make setup` | First-time bootstrap: env + infra + install + init-db |
 | `make env` | Create `.env` from `.env.example` |
@@ -383,11 +417,46 @@ make api          # uses .venv automatically
 ### Port already in use (8000 or 3000)
 
 ```bash
+make stop-apps    # graceful stop; keeps Docker
+# or full stop:
 make stop
-# or force-kill:
-lsof -ti tcp:8000 | xargs kill
-lsof -ti tcp:3000 | xargs kill
 ```
+
+Avoid `kill -9` on port 3000 while a browser tab is open — it can freeze the tab.
+
+---
+
+### Browser tab freezes after `make stop`
+
+**Cause:** Next.js dev HMR websocket lost connection (especially in Cursor’s embedded browser).
+
+**Fix:**
+1. **Before** `make stop`, close the `localhost:3000` tab (Cmd+W).
+2. `make stop` now waits 3s when Next.js is running, stops **web first** (up to 40s SIGINT grace), then API/workers.
+3. The app injects an early HMR guard in `<head>` to stop infinite reconnect loops after the dev server dies.
+
+If a tab is already frozen, force-close it and run `make start` again — do not reload the stuck tab.
+
+**Lighter stop** (keeps Docker): `make stop-apps`
+
+---
+
+### Source ingest stuck on `pending` / “Queued”
+
+**Cause:** Async ingest was queued but ARQ workers are not running.
+
+**Fix:**
+
+```bash
+make start                    # auto-starts workers when ENABLE_REDIS_WORKERS=true
+# or
+make workers                  # foreground workers in this terminal
+tail -f .logs/workers.log     # confirm crawl_complete
+```
+
+Alternatively use **Crawl & Ingest** on Forge Overview (sync — no workers).
+
+See [source-management.md](./source-management.md).
 
 ---
 
@@ -473,15 +542,15 @@ Makefile
 ```bash
 # Morning
 make start
-tail -f .logs/api.log    # optional
+tail -f .logs/workers.log  # optional — confirm async ingest is ready
 
 # Develop
-# edit code — uvicorn --reload picks up API changes automatically
+# edit code — API from make start has no --reload; use make api for hot reload
 
 # Run tests
 make test
 
-# Evening
+# Evening — close localhost:3000 tabs first
 make stop
 ```
 
@@ -491,6 +560,8 @@ make stop
 
 | Document | Contents |
 |----------|----------|
+| [source-management.md](./source-management.md) | Source types, ingest status, workers, troubleshooting |
+| [role-based-landing.md](./role-based-landing.md) | Persona default routes by RBAC role (login redirect, dashboard CTAs) |
 | [test-cases.md](./test-cases.md) | Full test case document — 60 tests with IDs, preconditions, expected results |
 | [gtm-platform-phases.md](./gtm-platform-phases.md) | 12-phase implementation status + acceptance criteria |
 | [ollama-llm-integration.md](./ollama-llm-integration.md) | Dual LLM provider (Ollama + OpenAI) + tests |

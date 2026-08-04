@@ -85,6 +85,7 @@ async def generate_strategy(
         seo_keywords=strategy.get("seo_keywords", []),
         content_calendar=strategy.get("content_calendar", []),
         citations=[],
+        sources_used=result.get("sources_used", []),
     )
 
 

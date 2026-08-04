@@ -2,6 +2,20 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2 } from 'lucide-react';
+import { Card, CardBody } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { AppFooter } from '@/components/layout/AppHeader';
+import { cn } from '@/lib/cn';
+import { resolvePostLoginRoute, storeAuthSession } from '@/lib/role-routing';
+import { DisplayTitle, Eyebrow, TextLead, TextSmall } from '@/components/ui/Typography';
+
+const VALUE_PROPS = [
+  'Onboard any product with a URL — agents crawl and build a profile automatically',
+  'Run outbound sprints, technical evals, and proposals without blocking the UI',
+  'Executive brief loads instantly — SQL-first, LLM only when you trigger it',
+];
 
 export default function HomePage() {
   const router = useRouter();
@@ -19,9 +33,9 @@ export default function HomePage() {
       const result = mode === 'register'
         ? await auth.register(form)
         : await auth.login({ email: form.email, password: form.password });
-      localStorage.setItem('token', result.access_token);
-      localStorage.setItem('tenant_id', result.tenant_id);
-      router.push('/dashboard');
+      storeAuthSession(result.access_token, result.tenant_id, result.role);
+      const destination = await resolvePostLoginRoute(result.role);
+      router.push(destination);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -30,87 +44,94 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <section className="flex-1 flex items-center justify-center px-6 py-20">
-        <div className="w-full max-w-lg animate-fade-up">
-          <div className="text-center mb-10">
-            <p className="text-gtm-accent font-mono text-sm tracking-widest uppercase mb-4">
-              GTM Agent Platform
-            </p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              Turn your technical product into an AI-powered salesperson
-            </h1>
-            <p className="text-[var(--text-secondary)] text-lg">
-              Onboard with a URL. Get marketing, sales, and solution agents automatically.
-            </p>
-          </div>
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-1 grid lg:grid-cols-2 gap-0">
+        {/* Hero — Red Hat split layout */}
+        <section className="flex flex-col justify-center px-8 py-16 lg:py-24 lg:px-16 border-b lg:border-b-0 lg:border-r border-border">
+          <Eyebrow className="mb-4">GTM Agent Platform</Eyebrow>
+          <DisplayTitle className="mb-6">
+            Turn your technical product into an AI-powered GTM engine
+          </DisplayTitle>
+          <TextLead className="mb-8 max-w-lg">
+            Enterprise-grade go-to-market orchestration for sales, marketing, and partners — built for lean hardware.
+          </TextLead>
+          <ul className="space-y-4">
+            {VALUE_PROPS.map((prop) => (
+              <li key={prop} className="flex gap-3 text-body text-muted">
+                <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" aria-hidden />
+                {prop}
+              </li>
+            ))}
+          </ul>
+        </section>
 
-          <div className="bg-gtm-card border border-gtm-border rounded-lg p-8">
-            <div className="flex gap-2 mb-6">
-              {(['register', 'login'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                    mode === m
-                      ? 'bg-gtm-accent text-gtm-bg'
-                      : 'text-[var(--text-secondary)] hover:text-white'
-                  }`}
-                >
-                  {m === 'register' ? 'Get Started' : 'Sign In'}
-                </button>
-              ))}
-            </div>
+        {/* Auth card */}
+        <section className="flex items-center justify-center px-6 py-16 lg:px-16">
+          <div className="w-full max-w-md animate-fade-up">
+            <Card elevated>
+              <CardBody className="p-8">
+                <div className="flex gap-2 mb-6">
+                  {(['register', 'login'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setMode(m)}
+                      className={cn(
+                        'flex-1 py-2 rounded-md text-body-sm font-medium transition-colors focus-ring',
+                        mode === m
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted hover:text-foreground',
+                      )}
+                    >
+                      {m === 'register' ? 'Get Started' : 'Sign In'}
+                    </button>
+                  ))}
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === 'register' && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Company name"
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {mode === 'register' && (
+                    <>
+                      <Input
+                        type="text"
+                        placeholder="Company name"
+                        required
+                        value={form.tenant_name}
+                        onChange={(e) => setForm({ ...form, tenant_name: e.target.value })}
+                      />
+                      <Input
+                        type="text"
+                        placeholder="Your name"
+                        value={form.full_name}
+                        onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                      />
+                    </>
+                  )}
+                  <Input
+                    type="email"
+                    placeholder="Email"
                     required
-                    value={form.tenant_name}
-                    onChange={(e) => setForm({ ...form, tenant_name: e.target.value })}
-                    className="w-full px-4 py-3 bg-gtm-bg border border-gtm-border rounded-md text-white placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-gtm-accent"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
-                  <input
-                    type="text"
-                    placeholder="Your name"
-                    value={form.full_name}
-                    onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                    className="w-full px-4 py-3 bg-gtm-bg border border-gtm-border rounded-md text-white placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-gtm-accent"
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    required
+                    minLength={8}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
                   />
-                </>
-              )}
-              <input
-                type="email"
-                placeholder="Email"
-                required
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full px-4 py-3 bg-gtm-bg border border-gtm-border rounded-md text-white placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-gtm-accent"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                required
-                minLength={8}
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full px-4 py-3 bg-gtm-bg border border-gtm-border rounded-md text-white placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-gtm-accent"
-              />
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-gtm-accent hover:bg-[var(--accent-hover)] text-gtm-bg font-semibold rounded-md transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Loading...' : mode === 'register' ? 'Create Account' : 'Sign In'}
-              </button>
-            </form>
+                  {error && <TextSmall className="text-danger">{error}</TextSmall>}
+                  <Button type="submit" disabled={loading} className="w-full" size="lg">
+                    {loading ? 'Loading…' : mode === 'register' ? 'Create Account' : 'Sign In'}
+                  </Button>
+                </form>
+              </CardBody>
+            </Card>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+      <AppFooter />
+    </div>
   );
 }

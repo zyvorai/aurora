@@ -1,9 +1,13 @@
-"""Ingestion pipeline: crawl → chunk → embed → store."""
+"""Ingestion pipeline: load → chunk → embed → store."""
 
+from __future__ import annotations
+
+import hashlib
 import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.models import (
@@ -12,10 +16,9 @@ from gtm_api.models import (
     Source,
     SourceProvenance,
     SourceStatus,
-    SourceType,
 )
 from gtm_api.services.chunking import chunk_text
-from gtm_api.services.crawler import crawl_website, fetch_single_page
+from gtm_api.services.loaders import load_source_pages
 from gtm_api.services.embeddings import embedding_service
 from gtm_api.services.vector_store import vector_store
 from gtm_api.tenant import record_usage
@@ -26,31 +29,38 @@ async def ingest_source(
     source: Source,
     tenant_id: uuid.UUID,
     product_id: uuid.UUID,
+    *,
+    force: bool = False,
 ) -> dict:
     source.status = SourceStatus.CRAWLING
+    source.error_message = None
     await db.flush()
 
     try:
-        if source.source_type in (SourceType.WEBSITE, SourceType.DOCS, SourceType.BLOG):
-            pages = await crawl_website(source.url)
-        else:
-            page = await fetch_single_page(source.url)
-            pages = [page]
+        pages = await load_source_pages(source, db)
 
         source.pages_discovered = len(pages)
         source.status = SourceStatus.PROCESSING
         await db.flush()
 
+        if force:
+            await _clear_source_documents(db, source, tenant_id)
+
         total_chunks = 0
+        combined_hash = hashlib.sha256()
+
         for page in pages:
-            existing = await db.execute(
-                select(Document).where(
-                    Document.source_id == source.id,
-                    Document.content_hash == page.content_hash,
+            combined_hash.update(page.content_hash.encode())
+
+            if not force:
+                existing = await db.execute(
+                    select(Document).where(
+                        Document.source_id == source.id,
+                        Document.content_hash == page.content_hash,
+                    )
                 )
-            )
-            if existing.scalar_one_or_none():
-                continue
+                if existing.scalar_one_or_none():
+                    continue
 
             doc = Document(
                 product_id=product_id,
@@ -66,7 +76,6 @@ async def ingest_source(
             await db.flush()
 
             text_chunks = chunk_text(page.content)
-            chunk_records = []
             embeddings_data = []
 
             for tc in text_chunks:
@@ -82,7 +91,6 @@ async def ingest_source(
                 )
                 db.add(chunk)
                 await db.flush()
-                chunk_records.append(chunk)
                 embeddings_data.append({
                     "chunk_id": chunk.qdrant_point_id,
                     "content": tc.content,
@@ -103,6 +111,8 @@ async def ingest_source(
 
         source.pages_processed = len(pages)
         source.status = SourceStatus.COMPLETED
+        source.content_hash = combined_hash.hexdigest()
+        source.last_crawled_at = datetime.now(timezone.utc)
         await record_usage(db, tenant_id, pages=len(pages))
 
         return {
@@ -117,11 +127,40 @@ async def ingest_source(
         return {"status": "failed", "error": str(exc)}
 
 
+async def _clear_source_documents(
+    db: AsyncSession,
+    source: Source,
+    tenant_id: uuid.UUID,
+) -> None:
+    docs_result = await db.execute(
+        select(Document).where(Document.source_id == source.id)
+    )
+    documents = docs_result.scalars().all()
+    point_ids: list[str] = []
+
+    for doc in documents:
+        chunks_result = await db.execute(
+            select(Chunk).where(Chunk.document_id == doc.id)
+        )
+        for chunk in chunks_result.scalars().all():
+            point_ids.append(chunk.qdrant_point_id)
+
+    if point_ids:
+        await vector_store.delete_points(point_ids)
+
+    if documents:
+        doc_ids = [d.id for d in documents]
+        await db.execute(delete(Chunk).where(Chunk.document_id.in_(doc_ids)))
+        await db.execute(delete(Document).where(Document.id.in_(doc_ids)))
+
+
 async def ingest_all_sources(
     db: AsyncSession,
     product_id: uuid.UUID,
     tenant_id: uuid.UUID,
     source_ids: Optional[list[uuid.UUID]] = None,
+    *,
+    force: bool = False,
 ) -> dict:
     query = select(Source).where(
         Source.product_id == product_id,
@@ -135,8 +174,8 @@ async def ingest_all_sources(
 
     results = []
     for source in sources:
-        if source.status != SourceStatus.COMPLETED:
-            r = await ingest_source(db, source, tenant_id, product_id)
+        if force or source.status != SourceStatus.COMPLETED:
+            r = await ingest_source(db, source, tenant_id, product_id, force=force)
             results.append({"source_id": str(source.id), **r})
 
     return {"sources_processed": len(results), "results": results}

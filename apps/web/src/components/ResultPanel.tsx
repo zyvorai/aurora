@@ -1,13 +1,15 @@
 'use client';
 
 import ProductProfileView from './ProductProfileView';
+import SourcesUsedPanel from './SourcesUsedPanel';
+import { Eyebrow, Stat, SubsectionTitle, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 type Result = Record<string, unknown>;
 
 function Card({ title, children, className = '' }: { title?: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-gtm-card border border-gtm-border rounded-lg p-5 ${className}`}>
-      {title && <h3 className="font-semibold mb-4 text-[var(--text-primary)]">{title}</h3>}
+      {title && <SubsectionTitle className="mb-4">{title}</SubsectionTitle>}
       {children}
     </div>
   );
@@ -44,8 +46,7 @@ function StatCard({ label, value, highlight }: { label: string; value: number | 
         highlight ? 'border-gtm-accent/40 bg-gtm-accent/5' : 'border-gtm-border bg-gtm-bg/50'
       }`}
     >
-      <p className="text-2xl font-bold tabular-nums">{value}</p>
-      <p className="text-xs text-[var(--text-secondary)] mt-1 uppercase tracking-wide">{label}</p>
+      <Stat label={label} value={value} highlight={highlight} />
     </div>
   );
 }
@@ -54,13 +55,13 @@ function CitationsList({ citations }: { citations: Array<{ chunk_id?: string; do
   if (!citations?.length) return null;
   return (
     <div className="mt-4 pt-4 border-t border-gtm-border">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-3">Sources</h4>
+      <Eyebrow className="mb-3">Sources</Eyebrow>
       <ul className="space-y-2">
         {citations.map((c, i) => (
           <li key={c.chunk_id ?? i} className="text-sm rounded-md bg-gtm-bg border border-gtm-border p-3">
             <p className="font-medium text-gtm-accent">{c.document_title || 'Document'}</p>
-            {c.excerpt && <p className="text-[var(--text-secondary)] mt-1 line-clamp-2">{c.excerpt}</p>}
-            {c.url && (
+            {c.excerpt && <p className="text-muted mt-1 line-clamp-2">{c.excerpt}</p>}
+            {Boolean(c.url) && (
               <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-xs text-gtm-accent hover:underline mt-1 inline-block">
                 View source
               </a>
@@ -113,7 +114,7 @@ function AnalyticsView({ data }: { data: Result }) {
             return (
               <div key={step.key}>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-[var(--text-secondary)]">{step.label}</span>
+                  <span className="text-muted">{step.label}</span>
                   <span className="font-medium tabular-nums">{val}</span>
                 </div>
                 <div className="h-2 rounded-full bg-gtm-bg overflow-hidden">
@@ -133,7 +134,7 @@ function AnalyticsView({ data }: { data: Result }) {
           <dl className="grid grid-cols-2 gap-3 text-sm">
             {Object.entries(metrics).map(([k, v]) => (
               <div key={k} className="flex justify-between border-b border-gtm-border/50 pb-2">
-                <dt className="text-[var(--text-secondary)] capitalize">{k.replace(/_/g, ' ')}</dt>
+                <dt className="text-muted capitalize">{k.replace(/_/g, ' ')}</dt>
                 <dd className="font-medium tabular-nums">{v}</dd>
               </div>
             ))}
@@ -146,14 +147,14 @@ function AnalyticsView({ data }: { data: Result }) {
           {topQuestions.length ? (
             <ul className="space-y-2 text-sm">
               {topQuestions.map((q, i) => (
-                <li key={i} className="flex gap-2 text-[var(--text-secondary)]">
+                <li key={i} className="flex gap-2 text-muted">
                   <span className="text-gtm-accent font-mono text-xs">{i + 1}.</span>
                   {q.question}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-[var(--text-secondary)]">No queries recorded yet.</p>
+            <p className="text-sm text-muted">No queries recorded yet.</p>
           )}
         </Card>
         <Card title="Knowledge gaps">
@@ -167,7 +168,7 @@ function AnalyticsView({ data }: { data: Result }) {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-[var(--text-secondary)]">No ungrounded blocks detected.</p>
+            <p className="text-sm text-muted">No ungrounded blocks detected.</p>
           )}
         </Card>
       </div>
@@ -182,13 +183,15 @@ function StrategyView({ data }: { data: Result }) {
   const keywords = (data.seo_keywords as string[]) || [];
   const valueProps = (data.value_propositions as string[]) || [];
   const messaging = data.messaging_hierarchy as Record<string, unknown> | undefined;
+  const sources = (data.sources_used as string[]) || [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 flex-wrap">
         <h3 className="text-lg font-semibold">GTM Strategy</h3>
-        {data.artifact_id && <Badge>Artifact saved</Badge>}
+        {Boolean(data.artifact_id) && <Badge>Artifact saved</Badge>}
       </div>
+      <SourcesUsedPanel sources={sources} className="mt-0 pt-0 border-0" />
 
       {Boolean(data.gtm_strategy) && (
         <Card title="Strategy overview">
@@ -211,11 +214,11 @@ function StrategyView({ data }: { data: Result }) {
             {personas.map((persona, i) => (
               <div key={i} className="rounded-md border border-gtm-border bg-gtm-bg p-4 space-y-2">
                 <p className="font-semibold">{String(persona.name || persona.title || `Persona ${i + 1}`)}</p>
-                {persona.title && persona.name && (
-                  <p className="text-xs text-[var(--text-secondary)]">{String(persona.title)}</p>
+                {Boolean(persona.title) && Boolean(persona.name) && (
+                  <p className="text-xs text-muted">{String(persona.title)}</p>
                 )}
                 {Array.isArray(persona.pain_points) && (
-                  <ul className="text-xs text-[var(--text-secondary)] list-disc list-inside">
+                  <ul className="text-xs text-muted list-disc list-inside">
                     {(persona.pain_points as string[]).slice(0, 4).map((p) => (
                       <li key={p}>{p}</li>
                     ))}
@@ -232,7 +235,7 @@ function StrategyView({ data }: { data: Result }) {
             {Object.entries(messaging).map(([k, v]) => (
               <div key={k}>
                 <dt className="text-xs uppercase text-gtm-accent">{k.replace(/_/g, ' ')}</dt>
-                <dd className="text-[var(--text-secondary)] mt-0.5">{String(v)}</dd>
+                <dd className="text-muted mt-0.5">{String(v)}</dd>
               </div>
             ))}
           </dl>
@@ -240,7 +243,7 @@ function StrategyView({ data }: { data: Result }) {
       )}
       {valueProps.length > 0 && (
         <Card title="Value propositions">
-          <ul className="list-disc list-inside text-sm space-y-1 text-[var(--text-secondary)]">
+          <ul className="list-disc list-inside text-sm space-y-1 text-muted">
             {valueProps.map((v) => (
               <li key={v}>{v}</li>
             ))}
@@ -264,7 +267,7 @@ function StrategyView({ data }: { data: Result }) {
             {objections.map((o, i) => (
               <div key={i} className="text-sm border-l-2 border-gtm-accent/50 pl-3">
                 <p className="font-medium">{String(o.objection || o.question)}</p>
-                <p className="text-[var(--text-secondary)] mt-1">{String(o.response || o.answer)}</p>
+                <p className="text-muted mt-1">{String(o.response || o.answer)}</p>
               </div>
             ))}
           </div>
@@ -275,7 +278,7 @@ function StrategyView({ data }: { data: Result }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-[var(--text-secondary)] border-b border-gtm-border">
+                <tr className="text-left text-xs text-muted border-b border-gtm-border">
                   <th className="pb-2 pr-4">Week</th>
                   <th className="pb-2 pr-4">Topic</th>
                   <th className="pb-2 pr-4">Channel</th>
@@ -302,6 +305,7 @@ function StrategyView({ data }: { data: Result }) {
 
 function QueryView({ data }: { data: Result }) {
   const citations = (data.citations as Array<{ chunk_id?: string; document_title?: string; excerpt?: string; url?: string }>) || [];
+  const sources = (data.sources_used as string[]) || [];
   return (
     <Card title="Answer">
       <div className="flex gap-2 mb-3 flex-wrap">
@@ -313,6 +317,7 @@ function QueryView({ data }: { data: Result }) {
         )}
       </div>
       <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.answer)}</p>
+      <SourcesUsedPanel sources={sources} />
       <CitationsList citations={citations} />
     </Card>
   );
@@ -339,12 +344,12 @@ function OutreachView({ data }: { data: Result }) {
     <div className="space-y-4">
       <Card title={`Outreach — ${String(data.company_name || 'Prospect')}`}>
         {Boolean(data.product_fit) && (
-          <p className="text-sm text-[var(--text-secondary)] mb-4">{String(data.product_fit)}</p>
+          <p className="text-sm text-muted mb-4">{String(data.product_fit)}</p>
         )}
         {Array.isArray(data.pain_points) && (data.pain_points as string[]).length > 0 && (
           <div className="mb-4">
             <h4 className="text-xs uppercase text-gtm-accent mb-2">Likely pain points</h4>
-            <ul className="list-disc list-inside text-sm text-[var(--text-secondary)]">
+            <ul className="list-disc list-inside text-sm text-muted">
               {(data.pain_points as string[]).map((p) => (
                 <li key={p}>{p}</li>
               ))}
@@ -362,7 +367,7 @@ function OutreachView({ data }: { data: Result }) {
             {followUps.map((f, i) => (
               <div key={i} className="border border-gtm-border rounded-md p-3">
                 <p className="text-xs text-gtm-accent">Day {String(f.day ?? i + 1)} — {String(f.subject ?? '')}</p>
-                <p className="text-sm text-[var(--text-secondary)] mt-2 whitespace-pre-wrap">{String(f.body ?? '')}</p>
+                <p className="text-sm text-muted mt-2 whitespace-pre-wrap">{String(f.body ?? '')}</p>
               </div>
             ))}
           </div>
@@ -373,6 +378,7 @@ function OutreachView({ data }: { data: Result }) {
 }
 
 function ArchitectView({ data }: { data: Result }) {
+  const sources = (data.sources_used as string[]) || [];
   return (
     <div className="space-y-4">
       <Card title="Solution architect">
@@ -382,21 +388,22 @@ function ArchitectView({ data }: { data: Result }) {
           </Badge>
         </div>
         <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.answer)}</p>
+        <SourcesUsedPanel sources={sources} />
         <CitationsList citations={(data.citations as []) || []} />
       </Card>
       {Boolean(data.deployment_plan) && (
         <Card title="Deployment plan">
-          <p className="text-sm whitespace-pre-wrap text-[var(--text-secondary)]">{String(data.deployment_plan)}</p>
+          <p className="text-sm whitespace-pre-wrap text-muted">{String(data.deployment_plan)}</p>
         </Card>
       )}
       {'security_notes' in data && Boolean(data.security_notes) && (
         <Card title="Security considerations">
-          <p className="text-sm whitespace-pre-wrap text-[var(--text-secondary)]">{String(data.security_notes)}</p>
+          <p className="text-sm whitespace-pre-wrap text-muted">{String(data.security_notes)}</p>
         </Card>
       )}
       {Boolean(data.architecture_diagram) && (
         <Card title="Architecture (Mermaid)">
-          <pre className="text-xs font-mono bg-gtm-bg p-4 rounded overflow-x-auto text-[var(--text-secondary)]">
+          <pre className="text-xs font-mono bg-gtm-bg p-4 rounded overflow-x-auto text-muted">
             {String(data.architecture_diagram)}
           </pre>
         </Card>
@@ -406,6 +413,7 @@ function ArchitectView({ data }: { data: Result }) {
 }
 
 function ProposalView({ data }: { data: Result }) {
+  const sources = (data.sources_used as string[]) || [];
   const sections = [
     { key: 'proposal_content', title: 'Proposal' },
     { key: 'sow', title: 'Statement of work' },
@@ -416,10 +424,11 @@ function ProposalView({ data }: { data: Result }) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">{String(data.title || 'Proposal')}</h3>
+      <SourcesUsedPanel sources={sources} className="mt-0 pt-0 border-0" />
       {sections.map(({ key, title }) =>
         data[key] ? (
           <Card key={key} title={title}>
-            <p className="text-sm whitespace-pre-wrap leading-relaxed text-[var(--text-secondary)]">
+            <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted">
               {String(data[key])}
             </p>
           </Card>
@@ -437,7 +446,7 @@ function JobStatusView({ data }: { data: Result }) {
         <span className={`text-2xl ${ok ? 'text-green-400' : 'text-gtm-accent'}`}>{ok ? '✓' : '…'}</span>
         <div>
           <p className="font-medium">{String(data.message || data.status || 'Done')}</p>
-          {data.job_id && <p className="text-xs text-[var(--text-secondary)] mt-1">Job {String(data.job_id)}</p>}
+          {Boolean(data.job_id) && <p className="text-xs text-muted mt-1">Job {String(data.job_id)}</p>}
         </div>
       </div>
     </Card>
@@ -491,7 +500,7 @@ export default function ResultPanel({ result }: { result: Result }) {
 
   return (
     <Card title="Result">
-      <p className="text-sm text-[var(--text-secondary)]">Action completed successfully.</p>
+      <p className="text-sm text-muted">Action completed successfully.</p>
     </Card>
   );
 }

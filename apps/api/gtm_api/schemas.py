@@ -59,30 +59,87 @@ class ProductResponse(BaseModel):
 
 class SourceCreate(BaseModel):
     source_type: str
-    url: str
+    url: Optional[str] = None
+    display_name: Optional[str] = None
+    metadata: Optional[dict] = None
+    github_token: Optional[str] = None
+
+
+class DatabaseSourceCreate(BaseModel):
+    engine: str = Field(..., pattern="^(postgresql|mysql|mariadb)$")
+    host: str
+    port: Optional[int] = None
+    database: str
+    username: str
+    password: str
+    tables: list[str] = Field(..., min_length=1)
+    display_name: Optional[str] = None
+    read_only: bool = True
+
+
+class DatabaseTestRequest(BaseModel):
+    engine: str = Field(..., pattern="^(postgresql|mysql|mariadb)$")
+    host: str
+    port: Optional[int] = None
+    database: str
+    username: str
+    password: str
+
+
+class DatabaseTestResponse(BaseModel):
+    tables: list[str]
 
 
 class SourceResponse(BaseModel):
     id: uuid.UUID
     source_type: str
-    url: str
+    url: Optional[str]
+    display_name: Optional[str]
+    storage_key: Optional[str] = None
+    mime_type: Optional[str] = None
+    file_size_bytes: Optional[int] = None
     status: str
     pages_discovered: int
     pages_processed: int
     error_message: Optional[str]
+    metadata: Optional[dict] = None
+    last_crawled_at: Optional[datetime] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
 
+    @classmethod
+    def from_source(cls, source) -> "SourceResponse":
+        return cls(
+            id=source.id,
+            source_type=source.source_type.value,
+            url=source.url,
+            display_name=source.display_name,
+            storage_key=source.storage_key,
+            mime_type=source.mime_type,
+            file_size_bytes=source.file_size_bytes,
+            status=source.status.value,
+            pages_discovered=source.pages_discovered,
+            pages_processed=source.pages_processed,
+            error_message=source.error_message,
+            metadata=source.metadata_ or {},
+            last_crawled_at=source.last_crawled_at,
+            created_at=source.created_at,
+        )
+
 
 class IngestRequest(BaseModel):
     source_ids: Optional[list[uuid.UUID]] = None
+    force: bool = False
+    async_mode: bool = True
 
 
 class IngestResponse(BaseModel):
-    job_id: str
+    job_ids: list[str] = []
     status: str
     message: str
+    sources_queued: int = 0
+    results: Optional[list[dict]] = None
 
 
 class ProductProfile(BaseModel):
@@ -119,6 +176,7 @@ class QueryResponse(BaseModel):
     citations: list[Citation]
     confidence: float
     grounded: bool
+    sources_used: list[str] = []
 
 
 # Marketing Strategy
@@ -139,6 +197,7 @@ class StrategyResponse(BaseModel):
     seo_keywords: list[str]
     content_calendar: list[dict]
     citations: list[Citation]
+    sources_used: list[str] = []
 
 
 # Content
@@ -185,6 +244,7 @@ class ChatResponse(BaseModel):
     grounded: bool
     lead_score: Optional[float] = None
     suggested_actions: list[str] = []
+    sources_used: list[str] = []
 
 
 # Outreach
@@ -230,6 +290,7 @@ class ArchitectResponse(BaseModel):
     deployment_plan: Optional[str]
     citations: list[Citation]
     grounded: bool
+    sources_used: list[str] = []
 
 
 # Proposals
@@ -248,6 +309,7 @@ class ProposalResponse(BaseModel):
     pricing: Optional[str]
     timeline: str
     citations: list[Citation]
+    sources_used: list[str] = []
 
 
 # Analytics
@@ -257,6 +319,238 @@ class AnalyticsResponse(BaseModel):
     funnel: dict[str, int]
     top_questions: list[dict]
     knowledge_gaps: list[dict]
+
+
+# Executive brief (Tier 0 — no LLM)
+class GtmReadiness(BaseModel):
+    ingest_started: bool
+    ingest_complete: bool
+    profile_built: bool
+    strategy_ready: bool
+    outreach_ready: bool
+
+
+class BriefKpis(BaseModel):
+    leads: int
+    conversations: int
+    artifacts: int
+    agent_runs: int
+
+
+class BriefResponse(BaseModel):
+    product_id: uuid.UUID
+    product_name: str
+    profile_status: str
+    gtm_readiness: GtmReadiness
+    kpis: BriefKpis
+    funnel: dict[str, int]
+    metrics: dict[str, Any]
+    narrative: str
+    risks: list[str]
+    updated_at: str
+    compute_tier: str = "T0"
+    narrative_llm: Optional[str] = None
+
+
+# Workflows
+class OutboundSprintRequest(BaseModel):
+    focus_industries: list[str] = Field(default_factory=list)
+    max_leads: int = 50
+    campaign_name: Optional[str] = None
+    company_url: Optional[str] = None
+    target_persona: str = "CTO"
+
+
+# Pipeline (Wave 2)
+class MarketResearchRequest(BaseModel):
+    focus_industries: list[str] = Field(default_factory=list)
+
+
+class MarketResearchResponse(BaseModel):
+    artifact_id: uuid.UUID
+    brief: dict[str, Any]
+    tokens_used: int = 0
+
+
+class DiscoverLeadsRequest(BaseModel):
+    focus_industries: list[str] = Field(default_factory=list)
+    max_leads: int = 50
+    csv_import: Optional[str] = None
+    geo: Optional[str] = None
+
+
+class DiscoverLeadsResponse(BaseModel):
+    discovered_count: int
+    industries_used: list[str]
+    accounts: list[dict[str, Any]]
+
+
+class QualifyLeadsRequest(BaseModel):
+    account_ids: Optional[list[uuid.UUID]] = None
+    focus_industries: list[str] = Field(default_factory=list)
+
+
+class QualifyLeadsResponse(BaseModel):
+    qualified_count: int
+    tier_a: int
+    tier_b: int
+    leads: list[dict[str, Any]]
+
+
+class PipelineLeadResponse(BaseModel):
+    account_id: str
+    company_name: str
+    domain: Optional[str] = None
+    industry: Optional[str] = None
+    score: float = 0
+    tier: str = "C"
+    explanation: Optional[str] = None
+    factors: dict[str, Any] = Field(default_factory=dict)
+    score_id: Optional[str] = None
+
+
+class CampaignCreateRequest(BaseModel):
+    name: str
+    campaign_type: str = "outreach"
+    template: str = "outbound_sprint"
+    channels: list[str] = Field(default_factory=lambda: ["email"])
+    focus_industries: list[str] = Field(default_factory=list)
+
+
+class CampaignResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    campaign_type: str
+    status: str
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
+# CRM (Wave 3)
+class OpportunityCreateRequest(BaseModel):
+    name: str
+    company: Optional[str] = None
+    stage: str = "discovery"
+    lead_id: Optional[uuid.UUID] = None
+    amount: Optional[float] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class OpportunityStageUpdate(BaseModel):
+    stage: str
+
+
+class OpportunityResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    company: Optional[str] = None
+    stage: str
+    amount: Optional[float] = None
+    probability: float = 0.1
+    lead_id: Optional[uuid.UUID] = None
+    proposal_artifact_id: Optional[uuid.UUID] = None
+    architect_artifact_id: Optional[uuid.UUID] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class PipelineSummaryResponse(BaseModel):
+    total: int
+    by_stage: dict[str, int]
+    weighted_pipeline: float
+
+
+# Workflows (Wave 3)
+class TechnicalEvalRequest(BaseModel):
+    opportunity_name: str
+    company: Optional[str] = None
+    question: str
+    scope: str
+    lead_id: Optional[uuid.UUID] = None
+    include_pricing: bool = True
+
+
+class GenerateProposalRequest(BaseModel):
+    scope: str
+    include_pricing: bool = True
+    opportunity_id: Optional[uuid.UUID] = None
+
+
+class WorkflowStepStatus(BaseModel):
+    name: str
+    status: str
+    updated_at: Optional[str] = None
+    error: Optional[str] = None
+
+
+class WorkflowRunAccepted(BaseModel):
+    workflow_run_id: uuid.UUID
+    status: str
+    poll_url: str
+
+
+class WorkflowRunResponse(BaseModel):
+    id: uuid.UUID
+    workflow_name: str
+    status: str
+    steps: list[WorkflowStepStatus]
+    output_data: dict[str, Any] = Field(default_factory=dict)
+    error_message: Optional[str] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+
+
+# Success & insights (Wave 4)
+class PipelineMetrics(BaseModel):
+    by_stage: dict[str, int] = Field(default_factory=dict)
+    total_opportunities: int = 0
+    weighted_value: float = 0.0
+
+
+class CampaignMetrics(BaseModel):
+    total: int = 0
+    active: int = 0
+
+
+class InsightsResponse(BaseModel):
+    period: str
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    funnel: dict[str, int] = Field(default_factory=dict)
+    top_questions: list[dict] = Field(default_factory=list)
+    knowledge_gaps: list[dict] = Field(default_factory=list)
+    pipeline: PipelineMetrics = Field(default_factory=PipelineMetrics)
+    campaigns: CampaignMetrics = Field(default_factory=CampaignMetrics)
+    compute_tier: str = "T0"
+    narrative_llm: Optional[str] = None
+    narrative_fresh: bool = False
+    narrative_updated_at: Optional[str] = None
+
+
+class AccountHealthResponse(BaseModel):
+    id: str
+    opportunity_id: str
+    health_score: float
+    status: str
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    playbook: dict[str, Any] = Field(default_factory=dict)
+    cs_brief: dict[str, Any] = Field(default_factory=dict)
+    last_cs_brief_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class SuccessPlanResponse(BaseModel):
+    opportunity_id: str
+    health_score: float
+    status: str
+    playbook: dict[str, Any] = Field(default_factory=dict)
+    cs_brief: dict[str, Any] = Field(default_factory=dict)
+
+
+class SyncStatusResponse(BaseModel):
+    enabled: bool
+    provider: Optional[str] = None
+    deployment_profile: str = "full"
 
 
 # Generic

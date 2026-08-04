@@ -61,12 +61,14 @@ async def check_quota(
     if meter is None:
         return
 
-    if meter.tokens_used + tokens > settings.quota_tokens:
+    tokens_used = meter.tokens_used or 0
+    pages_crawled = meter.pages_crawled or 0
+    if tokens_used + tokens > settings.quota_tokens:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Token quota exceeded for this billing period",
         )
-    if meter.pages_crawled + pages > settings.quota_pages:
+    if pages_crawled + pages > settings.quota_pages:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Page crawl quota exceeded for this billing period",
@@ -88,11 +90,19 @@ async def record_usage(
     )
     meter = result.scalar_one_or_none()
     if meter is None:
-        meter = UsageMeter(tenant_id=tenant_id, period=period)
+        meter = UsageMeter(
+            tenant_id=tenant_id,
+            period=period,
+            tokens_used=tokens,
+            pages_crawled=pages,
+            agent_runs=agent_runs,
+        )
         db.add(meter)
-    meter.tokens_used += tokens
-    meter.pages_crawled += pages
-    meter.agent_runs += agent_runs
+        return
+
+    meter.tokens_used = (meter.tokens_used or 0) + tokens
+    meter.pages_crawled = (meter.pages_crawled or 0) + pages
+    meter.agent_runs = (meter.agent_runs or 0) + agent_runs
 
 
 async def audit_log(

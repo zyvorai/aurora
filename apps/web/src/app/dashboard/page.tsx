@@ -1,25 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { products, type Product } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { dashboardActionsForRole, dashboardSubtitle, defaultProductRoute } from '@/lib/role-routing';
+import { PageHero } from '@/components/layout/PageHero';
+import { Card, CardBody, CardFooter } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Input, Textarea } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { SectionTitle, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { role } = useAuth();
   const [productList, setProductList] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', website_url: '', description: '' });
 
+  const actions = dashboardActionsForRole(role);
+
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/'); return; }
     products.list()
       .then(setProductList)
-      .catch(() => router.push('/'))
+      .catch(() => {})
       .finally(() => setLoading(false));
-  }, [router]);
+  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -27,108 +37,103 @@ export default function DashboardPage() {
     setProductList([product, ...productList]);
     setShowCreate(false);
     setForm({ name: '', website_url: '', description: '' });
+    router.push(defaultProductRoute(product.id, role));
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[var(--text-secondary)]">Loading...</p>
+      <div className="flex items-center justify-center py-24 text-body text-muted">
+        Loading products…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-gtm-border px-6 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-gtm-accent font-mono text-xs tracking-widest uppercase">GTM Platform</p>
-          <h1 className="text-xl font-bold">Products</h1>
-        </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-gtm-accent text-gtm-bg font-medium rounded-md hover:bg-[var(--accent-hover)] transition-colors"
-        >
-          + Onboard Product
-        </button>
-      </header>
+    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <PageHero
+        eyebrow="Products"
+        title="Your GTM workspace"
+        description={dashboardSubtitle(role)}
+        actions={
+          <Button onClick={() => setShowCreate(true)}>+ Onboard Product</Button>
+        }
+      />
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        {productList.length === 0 ? (
-          <div className="text-center py-20 animate-fade-up">
-            <h2 className="text-2xl font-bold mb-2">No products yet</h2>
-            <p className="text-[var(--text-secondary)] mb-6">
+      {productList.length === 0 ? (
+        <Card elevated className="text-center py-16 animate-fade-up">
+          <CardBody>
+            <SectionTitle className="mb-2">No products yet</SectionTitle>
+            <TextMuted className="mb-6 max-w-md mx-auto">
               Add your first product by providing a website URL or documentation.
-            </p>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="px-6 py-3 bg-gtm-accent text-gtm-bg font-semibold rounded-md"
-            >
+            </TextMuted>
+            <Button size="lg" onClick={() => setShowCreate(true)}>
               Onboard Your First Product
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {productList.map((p) => (
-              <Link
-                key={p.id}
-                href={`/products/${p.id}`}
-                className="block bg-gtm-card border border-gtm-border rounded-lg p-6 hover:border-gtm-accent/50 transition-colors animate-fade-up"
-              >
-                <div className="flex items-center justify-between">
+            </Button>
+          </CardBody>
+        </Card>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4">
+          {productList.map((p) => (
+            <Card
+              key={p.id}
+              elevated
+              className="hover:border-primary/40 transition-colors animate-fade-up"
+            >
+              <CardBody>
+                <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    <h3 className="text-lg font-semibold">{p.name}</h3>
+                    <SectionTitle as="h3">{p.name}</SectionTitle>
                     {p.website_url && (
-                      <p className="text-[var(--text-secondary)] text-sm mt-1">{p.website_url}</p>
+                      <TextSmall className="mt-1 truncate">{p.website_url}</TextSmall>
                     )}
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    p.profile_status === 'ready'
-                      ? 'bg-green-500/10 text-green-400'
-                      : 'bg-yellow-500/10 text-yellow-400'
-                  }`}>
+                  <Badge variant={p.profile_status === 'ready' ? 'success' : 'warning'}>
                     {p.profile_status}
-                  </span>
+                  </Badge>
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {showCreate && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
-          <div className="bg-gtm-card border border-gtm-border rounded-lg p-8 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-6">Onboard Product</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <input
-                type="text" placeholder="Product name" required
-                value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full px-4 py-3 bg-gtm-bg border border-gtm-border rounded-md text-white focus:outline-none focus:border-gtm-accent"
-              />
-              <input
-                type="url" placeholder="Website URL (e.g. https://zyvor.dev)"
-                value={form.website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })}
-                className="w-full px-4 py-3 bg-gtm-bg border border-gtm-border rounded-md text-white focus:outline-none focus:border-gtm-accent"
-              />
-              <textarea
-                placeholder="Description (optional)" rows={3}
-                value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full px-4 py-3 bg-gtm-bg border border-gtm-border rounded-md text-white focus:outline-none focus:border-gtm-accent resize-none"
-              />
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setShowCreate(false)}
-                  className="flex-1 py-3 border border-gtm-border rounded-md text-[var(--text-secondary)]">
-                  Cancel
-                </button>
-                <button type="submit"
-                  className="flex-1 py-3 bg-gtm-accent text-gtm-bg font-semibold rounded-md">
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
+              </CardBody>
+              <CardFooter className="flex gap-2">
+                <Link href={actions.primary.href(p.id)} className="flex-1">
+                  <Button className="w-full">{actions.primary.label}</Button>
+                </Link>
+                <Link href={actions.secondary.href(p.id)} className="flex-1">
+                  <Button variant="secondary" className="w-full">{actions.secondary.label}</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       )}
+
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Onboard Product">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <Input
+            type="text"
+            placeholder="Product name"
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          <Input
+            type="url"
+            placeholder="Website URL (e.g. https://example.com)"
+            value={form.website_url}
+            onChange={(e) => setForm({ ...form, website_url: e.target.value })}
+          />
+          <Textarea
+            placeholder="Description (optional)"
+            rows={3}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowCreate(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1">Create</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

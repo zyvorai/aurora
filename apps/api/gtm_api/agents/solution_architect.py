@@ -1,6 +1,5 @@
 """Solution Architect LangGraph agent (Phase 7)."""
 
-import json
 import uuid
 from typing import TypedDict
 
@@ -12,12 +11,11 @@ from gtm_api.services.llm import get_chat_model
 from gtm_api.models import Product
 from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
-    build_context_from_results,
     verify_grounding,
 )
-from gtm_api.services.chunking import compact_profile, truncate_to_token_budget
-from gtm_api.services.embeddings import LLMServiceError, embedding_service
-from gtm_api.services.vector_store import vector_store
+from gtm_api.services.chunking import truncate_to_token_budget
+from gtm_api.services.embeddings import LLMServiceError
+from gtm_api.services.mcp import gather_decision_context
 from gtm_api.tenant import record_usage
 
 settings = get_settings()
@@ -27,10 +25,7 @@ ARCHITECT_PROMPT = """You are a solution architect. Answer this technical pre-sa
 Question: {question}
 Additional Context: {context}
 
-Product Profile:
-{profile}
-
-Documentation:
+Multi-source platform context (sources: {sources}):
 {docs}
 
 Provide:
@@ -50,20 +45,24 @@ class ArchitectState(TypedDict):
     question: str
     extra_context: str
     docs_context: str
+    sources_used: list[str]
     result: dict
     tokens_used: int
 
 
 async def retrieve_architect_context(state: ArchitectState) -> ArchitectState:
-    vector = await embedding_service.embed_query(state["question"])
-    results = await vector_store.search(
+    if state.get("docs_context"):
+        return state
+
+    decision_ctx = await gather_decision_context(
+        state["question"],
         uuid.UUID(state["tenant_id"]),
         uuid.UUID(state["product_id"]),
-        vector,
-        limit=4,
+        profile=state.get("profile"),
     )
-    state["docs_context"] = build_context_from_results(results, max_content_tokens=300)
-    state["_search_results"] = results  # type: ignore
+    state["docs_context"] = decision_ctx.to_prompt_section(max_chars=6000)
+    state["sources_used"] = decision_ctx.sources_used
+    state["_search_results"] = decision_ctx.search_results  # type: ignore
     return state
 
 
@@ -73,8 +72,8 @@ async def generate_architect_response(state: ArchitectState) -> ArchitectState:
     prompt = ARCHITECT_PROMPT.format(
         question=state["question"],
         context=truncate_to_token_budget(state.get("extra_context", ""), 150),
-        profile=json.dumps(compact_profile(state["profile"]), indent=2),
-        docs=truncate_to_token_budget(state["docs_context"], 1500),
+        sources=", ".join(state.get("sources_used", [])),
+        docs=truncate_to_token_budget(state["docs_context"], 5000),
     )
 
     try:
@@ -131,10 +130,22 @@ async def invoke_solution_architect(
     profile: dict,
     question: str,
     context: str | None = None,
+    *,
+    db: AsyncSession | None = None,
+    product: Product | None = None,
 ) -> dict:
-    """Run architect graph without holding a DB connection."""
+    """Run architect graph without holding a DB connection (unless db passed for MCP hub)."""
     graph = build_architect_graph()
     app = graph.compile()
+
+    decision_ctx = await gather_decision_context(
+        question,
+        tenant_id,
+        product_id,
+        db=db,
+        product=product,
+        profile=profile,
+    )
 
     result = await app.ainvoke({
         "product_id": str(product_id),
@@ -142,9 +153,11 @@ async def invoke_solution_architect(
         "profile": profile,
         "question": question,
         "extra_context": context or "",
-        "docs_context": "",
+        "docs_context": decision_ctx.to_prompt_section(max_chars=6000),
+        "sources_used": decision_ctx.sources_used,
         "result": {},
         "tokens_used": 0,
+        "_search_results": decision_ctx.search_results,
     })
 
     search_results = result.get("_search_results", [])  # type: ignore
@@ -157,6 +170,7 @@ async def invoke_solution_architect(
         "deployment_plan": result["result"].get("deployment_plan"),
         "security_notes": result["result"].get("security_notes"),
         "tokens_used": result.get("tokens_used", 0),
+        "sources_used": result.get("sources_used", []),
         "citations": [
             {"chunk_id": c.chunk_id, "document_title": c.document_title, "excerpt": c.excerpt, "url": c.url}
             for c in (grounding.citations if grounding else [])
@@ -173,7 +187,7 @@ async def run_solution_architect(
     context: str | None = None,
 ) -> dict:
     payload = await invoke_solution_architect(
-        product.id, tenant_id, product.profile or {}, question, context
+        product.id, tenant_id, product.profile or {}, question, context, db=db, product=product
     )
     await record_usage(db, tenant_id, tokens=payload.pop("tokens_used", 0), agent_runs=1)
     payload.pop("security_notes", None)

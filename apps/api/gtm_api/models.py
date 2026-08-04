@@ -40,6 +40,10 @@ class SourceType(str, enum.Enum):
     OPENAPI = "openapi"
     VIDEO = "video"
     BLOG = "blog"
+    FILE = "file"
+    AUDIO = "audio"
+    SPREADSHEET = "spreadsheet"
+    DATABASE = "database"
 
 
 class SourceStatus(str, enum.Enum):
@@ -57,6 +61,7 @@ class ArtifactType(str, enum.Enum):
     PROPOSAL = "proposal"
     PRESENTATION = "presentation"
     OUTREACH = "outreach"
+    MARKET_RESEARCH = "market_research"
 
 
 class ApprovalStatus(str, enum.Enum):
@@ -143,7 +148,14 @@ class Source(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     source_type: Mapped[SourceType] = mapped_column(Enum(SourceType), nullable=False)
-    url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    url: Mapped[Optional[str]] = mapped_column(String(2048))
+    display_name: Mapped[Optional[str]] = mapped_column(String(512))
+    storage_key: Mapped[Optional[str]] = mapped_column(String(1024))
+    mime_type: Mapped[Optional[str]] = mapped_column(String(255))
+    file_size_bytes: Mapped[Optional[int]] = mapped_column(Integer)
+    credential_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("source_credentials.id"), index=True
+    )
     status: Mapped[SourceStatus] = mapped_column(Enum(SourceStatus), default=SourceStatus.PENDING)
     content_hash: Mapped[Optional[str]] = mapped_column(String(64))
     pages_discovered: Mapped[int] = mapped_column(Integer, default=0)
@@ -155,6 +167,9 @@ class Source(Base):
 
     product: Mapped["Product"] = relationship(back_populates="sources")
     documents: Mapped[list["Document"]] = relationship(back_populates="source")
+    credential: Mapped[Optional["SourceCredential"]] = relationship(
+        foreign_keys=[credential_id]
+    )
 
 
 class Document(Base):
@@ -344,6 +359,116 @@ class Lead(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class DiscoveredAccount(Base):
+    __tablename__ = "discovered_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    domain: Mapped[Optional[str]] = mapped_column(String(255))
+    industry: Mapped[Optional[str]] = mapped_column(String(100))
+    company_size: Mapped[Optional[str]] = mapped_column(String(50))
+    geo: Mapped[Optional[str]] = mapped_column(String(100))
+    personas: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
+    source: Mapped[str] = mapped_column(String(50), default="rules")
+    status: Mapped[str] = mapped_column(String(50), default="new")
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_discovered_accounts_tenant_product", "tenant_id", "product_id"),
+    )
+
+
+class LeadScoreRecord(Base):
+    __tablename__ = "lead_scores"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    discovered_account_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("discovered_accounts.id"), index=True
+    )
+    lead_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("leads.id"), index=True)
+    score: Mapped[float] = mapped_column(Float, default=0.0)
+    tier: Mapped[str] = mapped_column(String(1), default="C")
+    factors: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    explanation: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+OPPORTUNITY_STAGES = (
+    "discovery",
+    "qualification",
+    "technical_eval",
+    "proposal",
+    "negotiation",
+    "closed_won",
+    "closed_lost",
+)
+
+
+class Opportunity(Base):
+    __tablename__ = "opportunities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    lead_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("leads.id"), index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    company: Mapped[Optional[str]] = mapped_column(String(255))
+    stage: Mapped[str] = mapped_column(String(50), default="discovery")
+    amount: Mapped[Optional[float]] = mapped_column(Float)
+    probability: Mapped[float] = mapped_column(Float, default=0.1)
+    owner_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    proposal_artifact_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("artifacts.id"))
+    architect_artifact_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("artifacts.id"))
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_opportunities_tenant_product_stage", "tenant_id", "product_id", "stage"),
+    )
+
+
+class OpportunityActivity(Base):
+    __tablename__ = "opportunity_activities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    opportunity_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("opportunities.id"), nullable=False, index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    activity_type: Mapped[str] = mapped_column(String(50), default="note")
+    subject: Mapped[str] = mapped_column(String(255), default="")
+    body: Mapped[Optional[str]] = mapped_column(Text)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AccountHealth(Base):
+    __tablename__ = "account_health"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    opportunity_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("opportunities.id"), nullable=False, unique=True, index=True
+    )
+    health_score: Mapped[float] = mapped_column(Float, default=50.0)
+    status: Mapped[str] = mapped_column(String(50), default="healthy")
+    metrics: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    playbook: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    cs_brief: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    last_cs_brief_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class Meeting(Base):
     __tablename__ = "meetings"
 
@@ -440,3 +565,39 @@ class SuppressionEntry(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_suppression_tenant_email"),)
+
+
+class DashboardSnapshot(Base):
+    __tablename__ = "dashboard_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    snapshot_type: Mapped[str] = mapped_column(String(50), default="executive_brief")
+    data: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "product_id", "snapshot_type", name="uq_dashboard_snapshot"),
+    )
+
+
+class WorkflowRun(Base):
+    __tablename__ = "workflow_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    workflow_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="queued")
+    input_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    output_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    steps: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
+    error_message: Mapped[Optional[str]] = mapped_column(Text)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -14,7 +14,7 @@ class TestAgentPrompts:
         assert "{question, answer}" in result
 
     def test_strategy_prompt_formats(self):
-        result = STRATEGY_PROMPT.format(profile="{}", context="docs")
+        result = STRATEGY_PROMPT.format(sources="rag, profile", context="docs")
         assert "docs" in result
         assert "{name, title, pain_points, goals, messaging}" in result
 
@@ -29,7 +29,7 @@ class TestAgentPrompts:
 
     def test_proposal_prompt_formats(self):
         result = PROPOSAL_PROMPT.format(
-            profile="{}",
+            sources="rag, crm",
             docs="docs",
             scope="Enterprise rollout",
             include_pricing=True,
@@ -40,7 +40,7 @@ class TestAgentPrompts:
         result = ARCHITECT_PROMPT.format(
             question="How does deployment work?",
             context="k8s",
-            profile="{}",
+            sources="rag, profile",
             docs="docs",
         )
         assert "How does deployment work?" in result

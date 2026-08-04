@@ -11,22 +11,18 @@ from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
 from gtm_api.services.llm import get_chat_model
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Product
-from gtm_api.services.citation_gate import (
-    SYSTEM_PROMPT_GROUNDED,
-    build_context_from_results,
-)
-from gtm_api.services.embeddings import embedding_service
-from gtm_api.services.vector_store import vector_store
+from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED
+from gtm_api.services.chunking import truncate_to_token_budget
+from gtm_api.services.mcp import gather_decision_context
 from gtm_api.tenant import record_usage
 
 settings = get_settings()
 
 PROPOSAL_PROMPT = """Generate a comprehensive technical proposal.
 
-Product Profile:
-{profile}
+Context sources used: {sources}
 
-Documentation:
+Multi-source platform context:
 {docs}
 
 Scope: {scope}
@@ -47,6 +43,7 @@ class ProposalState(TypedDict):
     tenant_id: str
     profile: dict
     docs_context: str
+    sources_used: list[str]
     scope: str
     include_pricing: bool
     result: dict
@@ -54,14 +51,18 @@ class ProposalState(TypedDict):
 
 
 async def retrieve_proposal_context(state: ProposalState) -> ProposalState:
-    vector = await embedding_service.embed_query(state["scope"])
-    results = await vector_store.search(
+    if state.get("docs_context"):
+        return state
+
+    decision_ctx = await gather_decision_context(
+        state["scope"],
         uuid.UUID(state["tenant_id"]),
         uuid.UUID(state["product_id"]),
-        vector,
-        limit=8,
+        profile=state.get("profile"),
     )
-    state["docs_context"] = build_context_from_results(results)
+    state["docs_context"] = decision_ctx.to_prompt_section(max_chars=10000)
+    state["sources_used"] = decision_ctx.sources_used
+    state["_search_results"] = decision_ctx.search_results  # type: ignore
     return state
 
 
@@ -69,8 +70,8 @@ async def generate_proposal(state: ProposalState) -> ProposalState:
     llm = get_chat_model("proposal_generator", temperature=0.2)
 
     prompt = PROPOSAL_PROMPT.format(
-        profile=json.dumps(state["profile"], indent=2),
-        docs=state["docs_context"],
+        sources=", ".join(state.get("sources_used", [])),
+        docs=truncate_to_token_budget(state["docs_context"], 8000),
         scope=state["scope"],
         include_pricing=state["include_pricing"],
     )
@@ -105,6 +106,43 @@ def build_proposal_graph() -> StateGraph:
     return graph
 
 
+async def invoke_proposal_generator(
+    product_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    profile: dict,
+    scope: str,
+    include_pricing: bool = True,
+    *,
+    db: AsyncSession | None = None,
+    product: Product | None = None,
+) -> dict:
+    """Run proposal LangGraph without holding a DB connection."""
+    graph = build_proposal_graph()
+    app = graph.compile()
+
+    decision_ctx = await gather_decision_context(
+        scope,
+        tenant_id,
+        product_id,
+        db=db,
+        product=product,
+        profile=profile,
+    )
+
+    return await app.ainvoke({
+        "product_id": str(product_id),
+        "tenant_id": str(tenant_id),
+        "profile": profile,
+        "docs_context": decision_ctx.to_prompt_section(max_chars=10000),
+        "sources_used": decision_ctx.sources_used,
+        "scope": scope,
+        "include_pricing": include_pricing,
+        "result": {},
+        "tokens_used": 0,
+        "_search_results": decision_ctx.search_results,
+    })
+
+
 async def run_proposal_generator(
     db: AsyncSession,
     product: Product,
@@ -113,21 +151,17 @@ async def run_proposal_generator(
     scope: str,
     include_pricing: bool = True,
 ) -> Artifact:
-    graph = build_proposal_graph()
-    app = graph.compile()
-
-    result = await app.ainvoke({
-        "product_id": str(product.id),
-        "tenant_id": str(tenant_id),
-        "profile": product.profile or {},
-        "docs_context": "",
-        "scope": scope,
-        "include_pricing": include_pricing,
-        "result": {},
-        "tokens_used": 0,
-    })
-
+    result = await invoke_proposal_generator(
+        product.id,
+        tenant_id,
+        product.profile or {},
+        scope,
+        include_pricing,
+        db=db,
+        product=product,
+    )
     proposal = result["result"]
+    sources_used = result.get("sources_used", [])
     full_content = json.dumps(proposal, indent=2)
 
     artifact = Artifact(
@@ -138,7 +172,7 @@ async def run_proposal_generator(
         content=full_content,
         content_hash=content_hash(full_content),
         status=ApprovalStatus.DRAFT,
-        metadata_=proposal,
+        metadata_={**proposal, "sources_used": sources_used},
         created_by=user_id,
     )
     db.add(artifact)

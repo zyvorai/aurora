@@ -25,9 +25,10 @@ class TestSupervisorRouting:
     )
     def test_routes_request_types(self, request_type, expected):
         state = {"request_type": request_type, "routed_agent": ""}
-        assert route_request(state) == expected
+        route_request(state)
         assert state["routed_agent"] == expected
 
     def test_unknown_request_defaults_to_sales(self):
         state = {"request_type": "unknown_action", "routed_agent": ""}
-        assert route_request(state) == "sales"
+        route_request(state)
+        assert state["routed_agent"] == "sales"

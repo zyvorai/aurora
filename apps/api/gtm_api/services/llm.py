@@ -85,6 +85,8 @@ async def check_llm_health() -> dict:
         ready = bool(settings.openai_api_key.strip())
         return {
             "llm_provider": provider,
+            "llm_profile": settings.llm_profile,
+            "deployment_profile": settings.deployment_profile,
             "llm_ready": ready,
             "llm_core_ready": ready,
             "chat_models": configured_models,
@@ -97,11 +99,16 @@ async def check_llm_health() -> dict:
         }
 
     ready, available = await check_ollama_health(settings.ollama_base_url)
-    required = set(configured_models.values()) | {settings.ollama_embedding_model}
-    core_required = (
-        {configured_models[a] for a in CORE_AGENT_TYPES if a in configured_models}
-        | {settings.ollama_embedding_model}
-    )
+    if settings.is_lean_profile():
+        chat_model = settings.get_agent_model("product_understanding")
+        required = {chat_model, settings.ollama_embedding_model}
+        core_required = required
+    else:
+        required = set(configured_models.values()) | {settings.ollama_embedding_model}
+        core_required = (
+            {configured_models[a] for a in CORE_AGENT_TYPES if a in configured_models}
+            | {settings.ollama_embedding_model}
+        )
     missing = _missing_ollama_models(required, available)
     core_missing = _missing_ollama_models(core_required, available)
     fully_ready = ready and not missing
@@ -116,6 +123,8 @@ async def check_llm_health() -> dict:
         )
     return {
         "llm_provider": provider,
+        "llm_profile": settings.llm_profile,
+        "deployment_profile": settings.deployment_profile,
         "llm_ready": fully_ready,
         "llm_core_ready": core_ready,
         "llm_reachable": ready,

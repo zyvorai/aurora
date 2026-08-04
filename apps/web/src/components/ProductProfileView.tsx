@@ -1,5 +1,7 @@
 'use client';
 
+import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+
 interface Profile {
   summary?: string;
   features?: string[];
@@ -22,8 +24,8 @@ function TagList({ items, accent }: { items: string[]; accent?: boolean }) {
       {items.map((item) => (
         <li
           key={item}
-          className={`px-2.5 py-1 rounded-full text-xs ${
-            accent ? 'bg-gtm-accent/15 text-gtm-accent' : 'bg-gtm-bg border border-gtm-border text-[var(--text-secondary)]'
+          className={`px-2.5 py-1 rounded-full text-body-sm ${
+            accent ? 'bg-gtm-accent/15 text-gtm-accent' : 'bg-gtm-bg border border-gtm-border text-muted'
           }`}
         >
           {item}
@@ -36,7 +38,7 @@ function TagList({ items, accent }: { items: string[]; accent?: boolean }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-gtm-accent">{title}</h4>
+      <Eyebrow className="text-gtm-accent">{title}</Eyebrow>
       {children}
     </section>
   );
@@ -48,10 +50,10 @@ export default function ProductProfileView({ profile }: { profile: Profile | Rec
 
   if (isEmpty) {
     return (
-      <p className="text-[var(--text-secondary)] text-sm">
-        No profile data yet. Run <span className="text-white">Crawl &amp; Ingest</span>, then{' '}
-        <span className="text-white">Build Product Profile</span>.
-      </p>
+      <TextMuted>
+        No profile data yet. Run <span className="text-foreground">Crawl &amp; Ingest</span>, then{' '}
+        <span className="text-foreground">Build Product Profile</span>.
+      </TextMuted>
     );
   }
 
@@ -59,12 +61,12 @@ export default function ProductProfileView({ profile }: { profile: Profile | Rec
     <div className="space-y-6">
       {p.summary && (
         <Section title="Summary">
-          <p className="text-sm leading-relaxed text-[var(--text-primary)]">{p.summary}</p>
+          <Text className="leading-relaxed">{p.summary}</Text>
         </Section>
       )}
       {p.industry && (
         <Section title="Industry">
-          <p className="text-sm">{p.industry}</p>
+          <TextSmall className="text-foreground">{p.industry}</TextSmall>
         </Section>
       )}
       {p.features?.length ? (
@@ -84,27 +86,27 @@ export default function ProductProfileView({ profile }: { profile: Profile | Rec
       ) : null}
       {p.use_cases?.length ? (
         <Section title="Use cases">
-          <ul className="list-disc list-inside text-sm text-[var(--text-secondary)] space-y-1">
+          <ul className="list-disc list-inside space-y-1">
             {p.use_cases.map((u) => (
-              <li key={u}>{u}</li>
+              <li key={u}><TextMuted>{u}</TextMuted></li>
             ))}
           </ul>
         </Section>
       ) : null}
       {p.pain_points?.length ? (
         <Section title="Pain points addressed">
-          <ul className="list-disc list-inside text-sm text-[var(--text-secondary)] space-y-1">
+          <ul className="list-disc list-inside space-y-1">
             {p.pain_points.map((pt) => (
-              <li key={pt}>{pt}</li>
+              <li key={pt}><TextMuted>{pt}</TextMuted></li>
             ))}
           </ul>
         </Section>
       ) : null}
       {p.value_propositions?.length ? (
         <Section title="Value propositions">
-          <ul className="list-disc list-inside text-sm text-[var(--text-secondary)] space-y-1">
+          <ul className="list-disc list-inside space-y-1">
             {p.value_propositions.map((v) => (
-              <li key={v}>{v}</li>
+              <li key={v}><TextMuted>{v}</TextMuted></li>
             ))}
           </ul>
         </Section>
@@ -116,12 +118,12 @@ export default function ProductProfileView({ profile }: { profile: Profile | Rec
       ) : null}
       {p.pricing && (
         <Section title="Pricing">
-          <p className="text-sm">{p.pricing}</p>
+          <TextSmall className="text-foreground">{p.pricing}</TextSmall>
         </Section>
       )}
       {p.architecture && (
         <Section title="Architecture">
-          <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">{p.architecture}</p>
+          <TextMuted className="whitespace-pre-wrap">{p.architecture}</TextMuted>
         </Section>
       )}
     </div>

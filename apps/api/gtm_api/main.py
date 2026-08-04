@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError
 
 from gtm_api.config import get_settings
 from gtm_api.database import DB_SETUP_HINT, check_database
-from gtm_api.routers import auth, products, marketing, agents
+from gtm_api.routers import auth, products, marketing, agents, workflows, pipeline, crm, success, mcp
 from gtm_api.services.embeddings import LLMServiceError
 from gtm_api.services.llm import check_llm_health
 
@@ -29,7 +29,8 @@ async def lifespan(app: FastAPI):
 
     try:
         await vector_store.ensure_collection()
-        await knowledge_graph.ensure_constraints()
+        if settings.neo4j_enabled:
+            await knowledge_graph.ensure_constraints()
     except Exception:
         pass
     try:
@@ -38,10 +39,11 @@ async def lifespan(app: FastAPI):
         app.state.llm_health = {"llm_ready": False, "message": str(exc)}
 
     yield
-    try:
-        await knowledge_graph.close()
-    except Exception:
-        pass
+    if settings.neo4j_enabled:
+        try:
+            await knowledge_graph.close()
+        except Exception:
+            pass
 
 
 app = FastAPI(
@@ -107,6 +109,11 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(products.router, prefix=settings.api_prefix)
 app.include_router(marketing.router, prefix=settings.api_prefix)
 app.include_router(agents.router, prefix=settings.api_prefix)
+app.include_router(workflows.router, prefix=settings.api_prefix)
+app.include_router(pipeline.router, prefix=settings.api_prefix)
+app.include_router(crm.router, prefix=settings.api_prefix)
+app.include_router(success.router, prefix=settings.api_prefix)
+app.include_router(mcp.router, prefix=settings.api_prefix)
 
 
 @app.get("/health")

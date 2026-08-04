@@ -122,6 +122,7 @@ async def generate_proposal(
         pricing=meta.get("pricing"),
         timeline=meta.get("timeline", ""),
         citations=[],
+        sources_used=meta.get("sources_used", []),
     )
 
 
@@ -145,6 +146,26 @@ async def refresh_knowledge(
     ctx = await get_tenant_context(user, db)
     result = await refresh_product(db, product_id, ctx.tenant_id)
     return result
+
+
+@router.get("/agents/registry")
+async def list_agent_registry(
+    user: User = Depends(get_current_user),
+):
+    from gtm_api.agents.registry import list_agents
+
+    return [
+        {
+            "agent_id": spec.agent_id,
+            "display_name": spec.display_name,
+            "compute_tier": spec.compute_tier.value,
+            "async_required": spec.async_required,
+            "implemented": spec.implemented,
+            "model_key": spec.model_key,
+            "description": spec.description,
+        }
+        for spec in list_agents()
+    ]
 
 
 @router.post("/products/{product_id}/supervisor")

@@ -11,25 +11,19 @@ from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
 from gtm_api.services.llm import get_chat_model
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Product
-from gtm_api.services.citation_gate import (
-    SYSTEM_PROMPT_GROUNDED,
-    build_context_from_results,
-    extract_citations_from_response,
-    verify_grounding,
-)
-from gtm_api.services.chunking import compact_profile, truncate_to_token_budget
-from gtm_api.services.embeddings import LLMServiceError, embedding_service
-from gtm_api.services.vector_store import vector_store
+from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED
+from gtm_api.services.chunking import truncate_to_token_budget
+from gtm_api.services.embeddings import LLMServiceError
+from gtm_api.services.mcp import gather_decision_context
 from gtm_api.tenant import record_usage
 
 settings = get_settings()
 
-STRATEGY_PROMPT = """Based on the product profile and documentation, create a comprehensive GTM marketing strategy.
+STRATEGY_PROMPT = """Based on the product profile and multi-source platform context, create a comprehensive GTM marketing strategy.
 
-Product Profile:
-{profile}
+Context sources used: {sources}
 
-Documentation Sources:
+Multi-source context:
 {context}
 
 Return a JSON object with:
@@ -51,32 +45,41 @@ class StrategyState(TypedDict):
     tenant_id: str
     profile: dict
     context: str
+    sources_used: list[str]
     focus_areas: list[str]
     strategy: dict
     tokens_used: int
 
 
+def _strategy_query(focus_areas: list[str]) -> str:
+    base = "marketing positioning value proposition target customers competitive advantage"
+    if focus_areas:
+        return f"{' '.join(focus_areas)} {base}"
+    return base
+
+
 async def retrieve_strategy_context(state: StrategyState) -> StrategyState:
-    query = "marketing positioning value proposition target customers competitive advantage"
-    vector = await embedding_service.embed_query(query)
-    results = await vector_store.search(
+    if state.get("context"):
+        return state
+
+    query = _strategy_query(state.get("focus_areas") or [])
+    decision_ctx = await gather_decision_context(
+        query,
         uuid.UUID(state["tenant_id"]),
         uuid.UUID(state["product_id"]),
-        vector,
-        limit=4,
+        profile=state.get("profile"),
     )
-    state["context"] = build_context_from_results(results, max_content_tokens=350)
+    state["context"] = decision_ctx.to_prompt_section(max_chars=8000)
+    state["sources_used"] = decision_ctx.sources_used
     return state
 
 
 async def generate_strategy(state: StrategyState) -> StrategyState:
     llm = get_chat_model("marketing_strategy", temperature=0.3)
 
-    profile_json = json.dumps(compact_profile(state["profile"]), indent=2)
-    context = truncate_to_token_budget(state["context"], 1800)
-
+    context = truncate_to_token_budget(state["context"], 6000)
     prompt = STRATEGY_PROMPT.format(
-        profile=profile_json,
+        sources=", ".join(state.get("sources_used", [])),
         context=context,
     )
     try:
@@ -133,16 +136,30 @@ async def invoke_marketing_strategy(
     tenant_id: uuid.UUID,
     profile: dict,
     focus_areas: list[str] | None = None,
+    *,
+    db: AsyncSession | None = None,
+    product: Product | None = None,
 ) -> dict:
     """Run strategy LangGraph without holding a DB connection (LLM can take many minutes)."""
     graph = build_strategy_graph()
     app = graph.compile()
 
+    query = _strategy_query(focus_areas or [])
+    decision_ctx = await gather_decision_context(
+        query,
+        tenant_id,
+        product_id,
+        db=db,
+        product=product,
+        profile=profile,
+    )
+
     return await app.ainvoke({
         "product_id": str(product_id),
         "tenant_id": str(tenant_id),
         "profile": profile,
-        "context": "",
+        "context": decision_ctx.to_prompt_section(max_chars=8000),
+        "sources_used": decision_ctx.sources_used,
         "focus_areas": focus_areas or [],
         "strategy": {},
         "tokens_used": 0,
@@ -161,6 +178,8 @@ async def run_marketing_strategy(
         tenant_id,
         product.profile or {},
         focus_areas,
+        db=db,
+        product=product,
     )
 
     strategy = result["strategy"]
@@ -174,7 +193,7 @@ async def run_marketing_strategy(
         content=content,
         content_hash=content_hash(content),
         status=ApprovalStatus.DRAFT,
-        metadata_=strategy,
+        metadata_={**strategy, "sources_used": result.get("sources_used", [])},
         created_by=user_id,
     )
     db.add(artifact)

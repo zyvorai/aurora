@@ -80,6 +80,10 @@ Full plan, architecture, unit tests, and integration test guide: [docs/ollama-ll
 
 12-phase implementation status, acceptance criteria, and test matrix: [docs/gtm-platform-phases.md](docs/gtm-platform-phases.md)
 
+Multi-agent composition plan (11 specialized agents, **lean hardware / persona-first**): [docs/multi-agent-composition-plan.md](docs/multi-agent-composition-plan.md)
+
+**Role-based default landing** (persona routes after login): [docs/role-based-landing.md](docs/role-based-landing.md)
+
 Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-guide.md](docs/dev-guide.md)
 
 ## API Endpoints

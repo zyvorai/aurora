@@ -1,4 +1,4 @@
-.PHONY: infra-up infra-down api web workers test init-db ollama-pull install-api install-web install setup venv env check-infra stop clean start
+.PHONY: infra-up infra-down api web workers test init-db ollama-pull ollama-pull-lean install-api install-web install setup venv env check-infra stop stop-apps clean start
 
 VENV := apps/api/.venv
 VENV_PY := $(VENV)/bin/python
@@ -36,6 +36,9 @@ infra-down:
 stop:
 	bash infra/scripts/stop.sh
 
+stop-apps:
+	bash infra/scripts/stop.sh --processes
+
 start:
 	bash infra/scripts/start.sh
 
@@ -44,6 +47,9 @@ clean:
 
 ollama-pull:
 	bash infra/scripts/pull-models.sh
+
+ollama-pull-lean:
+	bash infra/scripts/pull-models-lean.sh
 
 init-db: venv check-infra
 	cd apps/api && .venv/bin/python scripts/init_db.py
