@@ -103,4 +103,4 @@ Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-gu
 
 ## License
 
-MIT
+Apache License 2.0
