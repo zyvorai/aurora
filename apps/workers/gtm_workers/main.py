@@ -6,16 +6,18 @@ import uuid
 import structlog
 from arq import create_pool
 from arq.connections import RedisSettings
+from arq.cron import cron
 
 from gtm_api.config import get_settings
 from gtm_api.database import async_session_factory
 from gtm_api.models import Source
 from gtm_api.services.ingestion import ingest_source
-from gtm_api.services.learning import refresh_product
+from gtm_api.services.learning import refresh_all_active_products, refresh_product
 from gtm_api.services.campaign_monitor import monitor_campaigns_for_product
 from gtm_api.services.customer_success import refresh_cs_briefs_for_product
 from gtm_api.services.insights import refresh_weekly_insights
 from gtm_api.services.crm_sync import sync_opportunities_to_external
+from gtm_api.services.publish_scheduler import process_due_scheduled_posts, retry_failed_posts
 
 settings = get_settings()
 logger = structlog.get_logger()
@@ -88,6 +90,38 @@ async def sync_external_crm(ctx: dict, product_id: str, tenant_id: str) -> dict:
         return result
 
 
+async def nightly_refresh_all_products(ctx: dict) -> dict:
+    if not settings.redis_workers_enabled:
+        return {"skipped": True, "reason": "workers disabled"}
+    async with async_session_factory() as db:
+        result = await refresh_all_active_products(db)
+        await db.commit()
+        logger.info("nightly_refresh_complete", **result)
+        return result
+
+
+async def dispatch_scheduled_publishes(ctx: dict) -> dict:
+    if not settings.redis_workers_enabled:
+        return {"skipped": True, "reason": "workers disabled"}
+    async with async_session_factory() as db:
+        result = await process_due_scheduled_posts(db)
+        await db.commit()
+        if result["dispatched"]:
+            logger.info("scheduled_publish_dispatch", **result)
+        return result
+
+
+async def retry_failed_publishes(ctx: dict) -> dict:
+    if not settings.redis_workers_enabled:
+        return {"skipped": True, "reason": "workers disabled"}
+    async with async_session_factory() as db:
+        result = await retry_failed_posts(db)
+        await db.commit()
+        if result["retried"]:
+            logger.info("publish_retry_sweep", **result)
+        return result
+
+
 class WorkerSettings:
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
     functions = [
@@ -97,6 +131,11 @@ class WorkerSettings:
         refresh_cs_briefs,
         generate_weekly_insights,
         sync_external_crm,
+    ]
+    cron_jobs = [
+        cron(dispatch_scheduled_publishes, minute=set(range(0, 60, 5))),  # every 5 min
+        cron(retry_failed_publishes, minute={0, 15, 30, 45}),  # every 15 min
+        cron(nightly_refresh_all_products, hour={3}, minute={0}),  # once daily at 03:00
     ]
     max_jobs = 10
     job_timeout = 600

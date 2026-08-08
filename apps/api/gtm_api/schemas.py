@@ -38,6 +38,31 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CreateApiKeyRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=255)
+    role: str = Field(default="viewer")
+
+
+class ApiKeyCreatedResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    role: str
+    key_prefix: str
+    api_key: str  # shown once, at creation time only
+
+
+class ApiKeyResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    role: str
+    key_prefix: str
+    last_used_at: Optional[datetime] = None
+    revoked_at: Optional[datetime] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # Products
 class ProductCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)

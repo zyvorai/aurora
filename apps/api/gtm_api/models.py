@@ -321,6 +321,8 @@ class ChannelPost(Base):
     idempotency_key: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     provider_message_id: Mapped[Optional[str]] = mapped_column(String(255))
     error_message: Mapped[Optional[str]] = mapped_column(Text)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
+    next_retry_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -507,6 +509,21 @@ class AuditLog(Base):
     resource_id: Mapped[Optional[str]] = mapped_column(String(100))
     details: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class ApiKey(Base):
+    __tablename__ = "api_keys"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    key_prefix: Mapped[str] = mapped_column(String(12), nullable=False)
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(50), default="viewer")
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class SourceCredential(Base):

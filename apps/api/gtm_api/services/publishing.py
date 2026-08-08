@@ -31,6 +31,50 @@ CHANNEL_HANDLERS = {
 }
 
 
+async def dispatch_channel_post(
+    db: AsyncSession,
+    post: ChannelPost,
+    artifact: Artifact,
+    tenant_id: uuid.UUID,
+    user_id: Optional[uuid.UUID] = None,
+    recipient: Optional[str] = None,
+) -> None:
+    """Resolve recipient (email channels), suppression-check, and call the channel
+    adapter — mutates `post` in place. Shared by the immediate-publish path below and
+    the scheduler/retry queue (services/publish_scheduler.py) so both go through
+    identical dispatch logic."""
+    resolved_recipient = None
+    if post.channel in EMAIL_CHANNELS:
+        resolved_recipient = (
+            recipient
+            or (artifact.metadata_ or {}).get("recipient_email")
+            or settings.email_channel_recipient
+            or settings.smtp_from
+        )
+        if await is_suppressed(db, tenant_id, resolved_recipient):
+            post.status = "blocked"
+            post.error_message = f"Recipient {resolved_recipient} is on the suppression list."
+            await audit_log(
+                db, tenant_id, user_id, "publish_blocked", "channel_post",
+                resource_id=str(post.id),
+                details={"channel": post.channel, "artifact_id": str(artifact.id), "recipient": resolved_recipient},
+            )
+            return
+
+    adapter = ADAPTER_REGISTRY.get(post.channel)
+    if adapter is None:
+        post.status = "failed"
+        post.error_message = f"No adapter registered for channel '{post.channel}'"
+        return
+
+    result = await adapter(artifact, post, resolved_recipient)
+    post.status = result.status
+    post.provider_message_id = result.provider_message_id
+    post.error_message = result.error
+    if result.status == "published":
+        post.published_at = datetime.now(timezone.utc)
+
+
 async def publish_artifact(
     db: AsyncSession,
     artifact: Artifact,
@@ -70,35 +114,9 @@ async def publish_artifact(
     db.add(post)
 
     if not scheduled_at:
-        resolved_recipient = None
-        if channel in EMAIL_CHANNELS:
-            resolved_recipient = (
-                recipient
-                or (artifact.metadata_ or {}).get("recipient_email")
-                or settings.email_channel_recipient
-                or settings.smtp_from
-            )
-            if await is_suppressed(db, tenant_id, resolved_recipient):
-                post.status = "blocked"
-                post.error_message = f"Recipient {resolved_recipient} is on the suppression list."
-                await audit_log(
-                    db, tenant_id, user_id, "publish_blocked", "channel_post",
-                    resource_id=str(post.id),
-                    details={"channel": channel, "artifact_id": str(artifact.id), "recipient": resolved_recipient},
-                )
-                return post
-
-        adapter = ADAPTER_REGISTRY.get(channel)
-        if adapter is None:
-            post.status = "failed"
-            post.error_message = f"No adapter registered for channel '{channel}'"
-        else:
-            result = await adapter(artifact, post, resolved_recipient)
-            post.status = result.status
-            post.provider_message_id = result.provider_message_id
-            post.error_message = result.error
-            if result.status == "published":
-                post.published_at = datetime.now(timezone.utc)
+        await dispatch_channel_post(db, post, artifact, tenant_id, user_id, recipient)
+        if post.status == "blocked":
+            return post
 
     await audit_log(
         db, tenant_id, user_id, "publish", "channel_post",

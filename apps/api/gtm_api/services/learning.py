@@ -4,12 +4,15 @@ import hashlib
 import uuid
 from datetime import datetime, timezone
 
+import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gtm_api.models import Artifact, Document, Source, SourceStatus
+from gtm_api.models import Artifact, Document, Product, Source, SourceStatus
 from gtm_api.services.ingestion import ingest_source
 from gtm_api.services.crawler import fetch_single_page
+
+logger = structlog.get_logger()
 
 
 async def check_source_changes(
@@ -60,6 +63,32 @@ async def refresh_product(
         "refresh_details": refreshed,
         "stale_artifacts_flagged": stale_count,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+async def refresh_all_active_products(db: AsyncSession) -> dict:
+    """Sweep every active product and refresh it. Safe to run frequently: refresh_product
+    already no-ops per-source when check_source_changes() finds no content drift, so this
+    is the "scheduled" half of Phase 10 — the per-source staleness check already existed,
+    it just was never invoked on a schedule."""
+    result = await db.execute(select(Product).where(Product.is_active.is_(True)))
+    products = result.scalars().all()
+
+    refreshed_count = 0
+    failures = []
+    for product in products:
+        try:
+            outcome = await refresh_product(db, product.id, product.tenant_id)
+            if outcome["sources_refreshed"] > 0:
+                refreshed_count += 1
+        except Exception as exc:
+            logger.warning("scheduled_refresh_failed", product_id=str(product.id), error=str(exc))
+            failures.append(str(product.id))
+
+    return {
+        "products_checked": len(products),
+        "products_with_changes": refreshed_count,
+        "failures": failures,
     }
 
 

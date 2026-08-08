@@ -9,11 +9,13 @@ from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 import httpx
+import structlog
 from bs4 import BeautifulSoup
 
 from gtm_api.config import get_settings
 
 settings = get_settings()
+logger = structlog.get_logger()
 
 BLOCKED_NETWORKS = [
     ipaddress.ip_network("127.0.0.0/8"),
@@ -100,6 +102,36 @@ def extract_links(html: str, base_url: str) -> list[str]:
     return links
 
 
+async def _render_with_playwright(url: str) -> Optional[str]:
+    """Best-effort JS-rendered fetch for SPA/JS-heavy pages. Returns None (never raises)
+    on any failure — playwright not installed, browser not installed, navigation error,
+    timeout — so callers always have the plain httpx-fetched page as a safe fallback."""
+    if not settings.crawler_use_playwright:
+        return None
+    try:
+        from playwright.async_api import async_playwright
+    except ImportError:
+        logger.warning("playwright_not_installed", url=url)
+        return None
+
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            try:
+                page = await browser.new_page(user_agent=settings.crawl_user_agent)
+                await page.goto(
+                    url,
+                    timeout=settings.crawler_playwright_timeout_ms,
+                    wait_until="networkidle",
+                )
+                return await page.content()
+            finally:
+                await browser.close()
+    except Exception as exc:
+        logger.warning("playwright_render_failed", url=url, error=str(exc))
+        return None
+
+
 async def crawl_website(
     start_url: str,
     max_pages: Optional[int] = None,
@@ -131,11 +163,18 @@ async def crawl_website(
                     continue
 
                 title, text = extract_text(response.text)
+                links = extract_links(response.text, url)
+
+                if len(text.strip()) < settings.crawler_thin_page_char_threshold:
+                    rendered_html = await _render_with_playwright(url)
+                    if rendered_html:
+                        title, text = extract_text(rendered_html)
+                        links = extract_links(rendered_html, url)
+
                 if len(text.strip()) < 50:
                     continue
 
                 content_hash = hashlib.sha256(text.encode()).hexdigest()
-                links = extract_links(response.text, url)
 
                 pages.append(
                     CrawledPage(
@@ -167,6 +206,12 @@ async def fetch_single_page(url: str) -> CrawledPage:
         response = await client.get(url)
         response.raise_for_status()
         title, text = extract_text(response.text)
+
+        if len(text.strip()) < settings.crawler_thin_page_char_threshold:
+            rendered_html = await _render_with_playwright(url)
+            if rendered_html:
+                title, text = extract_text(rendered_html)
+
         content_hash = hashlib.sha256(text.encode()).hexdigest()
         return CrawledPage(
             url=url,

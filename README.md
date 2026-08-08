@@ -91,7 +91,7 @@ Check provider status: `GET /health`
 
 Full plan, architecture, unit tests, and integration test guide: [docs/ollama-llm-integration.md](docs/ollama-llm-integration.md)
 
-**Test case document (151 tests):** [docs/test-cases.md](docs/test-cases.md)
+**Test case document (220 tests):** [docs/test-cases.md](docs/test-cases.md)
 
 12-phase implementation status, acceptance criteria, and test matrix: [docs/gtm-platform-phases.md](docs/gtm-platform-phases.md)
 

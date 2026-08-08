@@ -106,6 +106,26 @@ class Settings(BaseSettings):
     # exists in the data model yet) -- defaults to smtp_from as a self-send.
     email_channel_recipient: str = ""
 
+    # OAuth publish-channel adapters (Phase 6 roadmap) -- each degrades to
+    # status="not_configured" (same convention as SMTP above) until the operator
+    # supplies real credentials from that platform's developer console.
+    linkedin_access_token: str = ""
+    linkedin_author_urn: str = ""  # e.g. "urn:li:organization:12345" or "urn:li:person:abcd"
+    x_bearer_token: str = ""
+    medium_access_token: str = ""
+    medium_author_id: str = ""
+    devto_api_key: str = ""
+    reddit_access_token: str = ""
+    reddit_subreddit: str = ""
+    reddit_user_agent: str = "EmissaryBot/1.0"
+
+    # SSO (generic OIDC -- works with Auth0, Keycloak, or any OIDC-compliant IdP)
+    sso_enabled: bool = False
+    sso_issuer: str = ""  # e.g. https://your-tenant.us.auth0.com or https://keycloak.example.com/realms/x
+    sso_client_id: str = ""
+    sso_client_secret: str = ""
+    sso_redirect_uri: str = ""
+
     # Auth
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
     algorithm: str = "HS256"
@@ -153,6 +173,12 @@ class Settings(BaseSettings):
     crawl_max_pages: int = 100
     crawl_timeout_seconds: int = 30
     crawl_user_agent: str = "GTMPlatformBot/1.0"
+    # JS-rendered fallback for SPA/JS-heavy sites where httpx+BeautifulSoup only sees an
+    # empty shell. Opt-in: requires `pip install playwright && playwright install chromium`
+    # on the host, which this flag does not do for you.
+    crawler_use_playwright: bool = False
+    crawler_playwright_timeout_ms: int = 15000
+    crawler_thin_page_char_threshold: int = 200
 
     # Source uploads (MinIO)
     upload_max_bytes: int = 100 * 1024 * 1024
@@ -253,6 +279,26 @@ class Settings(BaseSettings):
     @property
     def smtp_configured(self) -> bool:
         return bool(self.smtp_host and self.smtp_user and self.smtp_password)
+
+    @property
+    def linkedin_configured(self) -> bool:
+        return bool(self.linkedin_access_token and self.linkedin_author_urn)
+
+    @property
+    def x_configured(self) -> bool:
+        return bool(self.x_bearer_token)
+
+    @property
+    def medium_configured(self) -> bool:
+        return bool(self.medium_access_token and self.medium_author_id)
+
+    @property
+    def devto_configured(self) -> bool:
+        return bool(self.devto_api_key)
+
+    @property
+    def reddit_configured(self) -> bool:
+        return bool(self.reddit_access_token and self.reddit_subreddit)
 
     @property
     def external_crm_sync_enabled(self) -> bool:

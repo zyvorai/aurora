@@ -73,12 +73,18 @@ flowchart TB
 - Neo4j knowledge graph with tenant isolation (`services/knowledge_graph.py`)
 - LangGraph `ProductUnderstandingAgent` — profile + entity extraction
 - APIs: create product, add sources, ingest, understand, query, get profile
+- **Playwright JS-render fallback** (`services/crawler.py::_render_with_playwright`) — when
+  the httpx+BeautifulSoup fetch yields a thin/SPA-shell page (below
+  `CRAWLER_THIN_PAGE_CHAR_THRESHOLD`), re-fetches via headless Chromium and re-extracts.
+  Opt-in and gated: `CRAWLER_USE_PLAYWRIGHT=true` plus `pip install
+  'emissary-api[playwright]' && playwright install chromium` on the host — off by default
+  since it's a heavy dependency; degrades to the plain httpx result on any failure
+  (not installed, timeout, navigation error), never raises.
 
 ### Gaps ⚠️
 
 | Planned | Current |
 |---------|---------|
-| Playwright for JS-heavy sites | httpx + BeautifulSoup only |
 | GitHub, PDF, DOCX, PPT, video, OpenAPI loaders | Enum exists; only WEBSITE/DOCS/BLOG ingested |
 | Unstructured.io, Whisper, diagram OCR | Not implemented |
 
@@ -105,6 +111,7 @@ now enqueues `refresh_product_knowledge` the same way via `enqueue_product_refre
 | Crawler SSRF block | `tests/test_crawler.py::TestValidateUrl` | ✅ |
 | Ingest end-to-end | `tests/test_ingestion.py::test_ingest_pipeline` | ✅ |
 | Tenant isolation (Qdrant) | `tests/test_vector_store.py::test_tenant_isolation_qdrant` | ✅ |
+| Playwright fallback (config-gated, degrades gracefully, thin-page trigger) | `tests/test_crawler_playwright.py` | ✅ |
 
 ---
 
@@ -274,12 +281,18 @@ import ChatWidget from '@/components/ChatWidget';
 - **Publish dashboard UI** — `components/artifacts/ArtifactList.tsx` (Forge "Publish" tab):
   approve/reject, publish-to-channel modal (channel select, scheduled-at, conditional
   recipient-email field), status badges
+- **Real LinkedIn/X/Medium/Dev.to/Reddit connectors** (`publishing_adapters/oauth_adapters.py`)
+  — real API calls once credentials are configured (`LINKEDIN_ACCESS_TOKEN`,
+  `X_BEARER_TOKEN`, `MEDIUM_ACCESS_TOKEN`, `DEVTO_API_KEY`, `REDDIT_ACCESS_TOKEN`, etc.),
+  degrading to `not_configured` otherwise — same convention as the SMTP adapter. `blog`
+  remains a stub (no single target CMS platform to integrate against).
+- **Publish scheduler + retry queue** (`services/publish_scheduler.py`) — ARQ cron jobs
+  dispatch due `scheduled_at` posts every 5 min and retry failed posts every 15 min (up to
+  5 attempts, exponential backoff via `ChannelPost.retry_count`/`next_retry_at`); both reuse
+  the same `dispatch_channel_post()` suppression-check + adapter-call path as immediate publish
 
 ### Gaps ❌
 
-- LinkedIn/X/Medium/Dev.to/Reddit/blog remain stub adapters (`stub_adapter.py`) — need real
-  OAuth app registration + credentials per channel, which is an operator action, not just code
-- No scheduler or retry queue for `scheduled_at` posts
 - No A/B variants or engagement prediction
 
 ### Acceptance criteria
@@ -290,9 +303,9 @@ import ChatWidget from '@/components/ChatWidget';
 - [x] One real (non-OAuth) channel connector (email via SMTP)
 - [x] Per-prospect suppression list enforced at publish time
 - [x] Publishing dashboard UI (approve/publish/status)
-- [ ] Real LinkedIn/X/Medium connectors
-- [ ] Scheduled publish via worker
-- [ ] Failed publish retry
+- [x] Real LinkedIn/X/Medium/Dev.to/Reddit connectors (credential-gated)
+- [x] Scheduled publish via worker
+- [x] Failed publish retry
 
 ### Tests
 
@@ -300,6 +313,8 @@ import ChatWidget from '@/components/ChatWidget';
 |------|------|--------|
 | Approval gate blocks publish | `tests/test_publishing.py::test_publish_blocked_without_approval` | ✅ |
 | Idempotency dedup | `tests/test_publishing.py::test_publish_rejects_duplicate_idempotency_key` | ✅ |
+| OAuth adapters (not_configured degrade + real call + error mapping) | `tests/test_oauth_adapters.py` | ✅ |
+| Scheduled dispatch + retry backoff/exhaustion | `tests/test_publish_scheduler.py` | ✅ |
 | Email adapter degrades without SMTP config | `tests/test_publishing.py::test_publish_email_channel_real_adapter_not_configured_without_smtp` | ✅ |
 | Publish blocked when recipient suppressed | `tests/test_publishing.py::test_publish_email_blocked_when_recipient_suppressed` | ✅ |
 
@@ -353,10 +368,6 @@ import ChatWidget from '@/components/ChatWidget';
   `components/pipeline/OpportunityDetailModal.tsx`, which links the generated proposal back
   to the opportunity via `proposal_artifact_id`
 
-### Gaps ⚠️
-
-- No dedicated export test (renderers are exercised manually/smoke-tested, not unit-tested)
-
 ### Acceptance criteria
 
 - [x] Generate proposal JSON artifact from scope + KB
@@ -366,10 +377,10 @@ import ChatWidget from '@/components/ChatWidget';
 
 ### Tests
 
-| Test | Status |
-|------|--------|
-| Proposal agent (mocked LLM) | ❌ Missing |
-| PDF/DOCX/PPTX export | ⚠️ Manually verified, no automated test yet |
+| Test | File | Status |
+|------|------|--------|
+| Proposal agent (mocked LLM) | — | ❌ Missing |
+| PDF/DOCX/PPTX export (real renderers, byte-signature + round-trip checks, HTML-escaping) | `tests/test_proposal_export.py` | ✅ |
 
 ---
 
@@ -420,10 +431,14 @@ import ChatWidget from '@/components/ChatWidget';
   falls back to sync when Redis workers are disabled
 - "Refresh Knowledge" button in the Forge Overview tab (`ForgePage.tsx`), reusing the
   existing `useIngestPolling` hook
+- **Scheduled cron** — `refresh_all_active_products()` (`services/learning.py`) sweeps every
+  active product daily (ARQ cron, 03:00) and calls `refresh_product` for each; per-source
+  staleness detection (`check_source_changes`, content-hash based) already no-ops when
+  nothing changed, so this was a pure scheduling gap, not a detection gap. A single
+  product's failure is caught and logged, not allowed to abort the rest of the sweep.
 
 ### Gaps ⚠️
 
-- No scheduled cron / drift alerts
 - Stale artifacts counted but not auto-regenerated
 - No GitHub/release-notes monitoring
 
@@ -431,15 +446,16 @@ import ChatWidget from '@/components/ChatWidget';
 
 - [x] Detect changed source URLs and re-ingest
 - [x] Worker can run refresh job
-- [ ] Scheduled refresh per product
+- [x] Scheduled refresh per product (daily cron sweep)
 - [ ] Auto-regenerate stale marketing assets as drafts
 
 ### Tests
 
-| Test | Status |
-|------|--------|
-| Source change detection | ❌ Missing |
-| Refresh re-ingest | ❌ Missing |
+| Test | File | Status |
+|------|------|--------|
+| Scheduled sweep (all products, per-product failure isolation) | `tests/test_learning_scheduler.py` | ✅ |
+| Source change detection | — | ❌ Missing |
+| Refresh re-ingest | — | ❌ Missing |
 
 ---
 
@@ -511,11 +527,23 @@ orchestrator — that's an intentional scope boundary, not a gap being tracked.
   a new `/dashboard/admin/danger` page (linked only from Settings, plus a header "Admin" link
   visible to the `admin` role) holds export + typed-slug-confirmation purge, with a
   client-side `role !== 'admin'` guard as defense-in-depth alongside the backend 403
+- **SSO** (`services/sso.py`, `GET /auth/sso/login`, `GET /auth/sso/callback`) — generic
+  OIDC via discovery metadata, so it works with Auth0, Keycloak, or any OIDC-compliant IdP,
+  gated by `SSO_ENABLED`/`SSO_ISSUER`/`SSO_CLIENT_ID`/`SSO_CLIENT_SECRET`/`SSO_REDIRECT_URI`.
+  Two known, documented (not silent) limitations: (1) users are unique per (tenant, email)
+  here, not globally, so a callback whose email matches 0 or >1 tenant's user 404s/409s
+  instead of guessing which tenant to log into — real per-tenant SSO config or domain-based
+  tenant resolution is a follow-up product decision; (2) `state` isn't verified on callback
+  since this app has no server-side session store to bind it to (JWT-only) — a real CSRF gap.
+- **Public API keys** (`POST/GET/DELETE /auth/api-keys`, `ApiKey` model + `007_api_keys`
+  migration) — `X-API-Key` header is a first-class alternative to the JWT Bearer token in
+  `get_current_user()`, so a key authenticates on every existing protected route, not just a
+  new endpoint. Keys are tenant + role scoped (same `ROLE_PERMISSIONS` matrix as human
+  users), sha256-hashed at rest, and only shown in plaintext once at creation.
 
 ### Gaps ❌
 
-- No SSO (Auth0/Keycloak) — `sso: true` is a plan flag only
-- No public API keys
+- SSO `state` CSRF verification and multi-tenant email resolution (see notes above)
 - No private/VPC deploy tooling
 - No SOC2/GDPR compliance modules
 - Tenant export is products + users only; purge is vector/KG-only (see scope notes above)
@@ -526,8 +554,8 @@ orchestrator — that's an intentional scope boundary, not a gap being tracked.
 - [x] Immutable audit trail queryable via `GET /audit`
 - [x] Product limits per plan tier
 - [x] Admin UI for plan usage, suppression management, data export, and tenant purge
-- [ ] SSO integration
-- [ ] API key authentication
+- [x] SSO integration (generic OIDC, credential-gated)
+- [x] API key authentication (`X-API-Key`, wired into every protected route)
 - [ ] Private deployment guide
 
 ### Tests
@@ -537,10 +565,12 @@ orchestrator — that's an intentional scope boundary, not a gap being tracked.
 | Plan feature flags | `tests/test_api.py::TestEnterprise::test_plan_features` | ✅ |
 | Active product count / plan usage | `tests/test_admin.py::test_count_active_products`, `test_get_plan_usage_reports_limit_and_used` | ✅ |
 | Suppression list | `tests/test_admin.py::test_list_suppressions_scoped_to_tenant` | ✅ |
+| RBAC enforced through real routes (not just the checker in isolation) | `tests/test_rbac_enforcement.py` | ✅ |
+| Audit log created on a real write action | `tests/test_audit_log.py` | ✅ |
+| API key generation, resolution, revocation, management routes | `tests/test_api_keys.py` | ✅ |
+| SSO discovery/token-exchange/userinfo + login/callback routes (incl. 404/409 email cases) | `tests/test_sso.py` | ✅ |
 | Purge slug mismatch → 400 | `tests/test_admin.py::test_purge_rejects_mismatched_confirmation` | ✅ |
 | Purge success | `tests/test_admin.py::test_purge_succeeds_with_matching_slug` | ✅ |
-| RBAC enforcement | — | ❌ Missing |
-| Audit log creation | — | ❌ Missing |
 
 ---
 
@@ -557,7 +587,7 @@ Dual-provider layer (Ollama + OpenAI) documented in [ollama-llm-integration.md](
 
 ## Test matrix summary
 
-151 tests across `apps/api/tests/` (per-file breakdown grew organically with each wave —
+220 tests across `apps/api/tests/` (per-file breakdown grew organically with each wave —
 see individual phase sections above for the tests most relevant to that phase, or run
 `pytest --collect-only -q` for the full list). All passing as of this update.
 
@@ -624,22 +654,39 @@ Visual design: glass/"Tahoe" system is the default look across all pages — see
 
 `Wire supervisor to real agents`, `Wire ingest to background workers`, `PDF/DOCX proposal
 export`, `Real publishing adapter interface`, `Content approve/publish UI`, `Campaign
-management UI`, `Per-prospect suppression enforcement`, and `Enterprise admin routes + UI`
-are now done — see Phases 11, 1, 10, 8, 6, 3, 5, and 12 above for what's implemented vs.
-still open on each.
+management UI`, `Per-prospect suppression enforcement`, `Enterprise admin routes + UI`,
+`Real LinkedIn/X/Medium/Dev.to/Reddit connectors`, `SSO (generic OIDC)`, `Public API-key
+authentication`, `Playwright crawler`, `Scheduled learning cron`, `Publish scheduler +
+retry queue`, `RBAC/audit-log/proposal-export automated tests` are now done — see the
+relevant phase sections above for what's implemented vs. still open on each. Notable
+scope notes on what "done" means for a few of these:
+
+- **OAuth connectors** (`services/publishing_adapters/oauth_adapters.py`): real API
+  calls, gated by `LINKEDIN_ACCESS_TOKEN`/`X_BEARER_TOKEN`/`MEDIUM_ACCESS_TOKEN`/
+  `DEVTO_API_KEY`/`REDDIT_ACCESS_TOKEN` etc. — degrades to `not_configured` exactly like
+  the SMTP email adapter until an operator supplies real per-platform credentials. `blog`
+  is still a stub (no single target CMS to integrate against).
+- **SSO** (`services/sso.py`, `POST /auth/sso/login|callback`): generic OIDC (works with
+  Auth0, Keycloak, or any OIDC-compliant IdP via discovery metadata), gated by
+  `SSO_ENABLED`. Known limitation, not a bug: users are unique per (tenant, email), not
+  globally, so a bare IdP email that matches zero or >1 tenant's user returns 404/409
+  instead of guessing — proper per-tenant SSO config or domain-based tenant resolution is
+  a follow-up product decision. The `state` param also has no server-side session to bind
+  to (this app is JWT-only) so it isn't verified on callback — a known CSRF gap.
+- **Public API keys** (`POST/GET/DELETE /auth/api-keys`, `X-API-Key` header): fully wired
+  into `get_current_user`, so API keys authenticate on every existing protected route, not
+  just a new standalone endpoint.
+- **Scheduled learning cron**: a daily sweep (`refresh_all_active_products`) rather than
+  new staleness tracking — the existing per-source content-hash check
+  (`check_source_changes`) already no-ops when nothing changed, so running it on a
+  schedule was the actual gap, not staleness detection itself.
 
 | Priority | Item | Phases |
 |----------|------|--------|
-| P1 | Real LinkedIn/X/Medium/Dev.to/Reddit connectors (adapters are stubbed behind a pluggable interface — needs OAuth app credentials) | 6 |
 | P2 | GitHub/PDF source loaders | 1 |
-| P2 | SSO (Auth0/Keycloak) | 12 |
 | P2 | WebSocket chat streaming (replace polling for chat/ingest/workflow progress) | 4 |
-| P2 | Public API key authentication | 12 |
-| P3 | Playwright crawler | 1 |
-| P3 | Scheduled learning cron (refresh runs async now, but isn't scheduled) | 10 |
-| P3 | Publish scheduler + retry queue for `scheduled_at` posts | 6 |
-| P3 | RBAC enforcement + audit-log-creation automated tests (currently manually verified only) | 12 |
-| P3 | Automated test for PDF/DOCX/PPTX proposal export (currently manual/smoke-tested) | 8 |
+| P3 | SSO CSRF `state` verification (needs a server-side session store this app doesn't have yet) | 12 |
+| P3 | SSO multi-tenant email resolution (per-tenant IdP config or domain-based tenant lookup) | 12 |
 
 ---
 
@@ -648,7 +695,7 @@ still open on each.
 ```bash
 make start    # infra + DB + API + web (background) — local dev, bare processes
 make stop     # stop processes + Docker
-make test     # 151 tests
+make test     # 220 tests
 curl http://localhost:8000/health
 ```
 

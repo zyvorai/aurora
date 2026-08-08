@@ -1,7 +1,7 @@
-"""Stub adapter factory for channels that need OAuth app credentials the
-platform operator must register themselves (LinkedIn, X, Medium, Dev.to,
-Reddit, generic blog/CMS webhook). Each returns "not_configured" until a real
-implementation is wired up behind the same PublishAdapter protocol."""
+"""Stub adapter factory for channels with no real implementation yet. LinkedIn, X,
+Medium, Dev.to, and Reddit have real credential-gated adapters in oauth_adapters.py --
+this file now only covers the generic "blog" channel, which has no single target
+platform to integrate against."""
 
 from __future__ import annotations
 
@@ -29,9 +29,4 @@ def make_stub_adapter(channel_label: str):
     return publish
 
 
-linkedin_adapter = make_stub_adapter("LinkedIn")
-x_adapter = make_stub_adapter("X/Twitter")
-medium_adapter = make_stub_adapter("Medium")
-devto_adapter = make_stub_adapter("Dev.to")
-reddit_adapter = make_stub_adapter("Reddit")
 blog_adapter = make_stub_adapter("Blog/CMS webhook")
