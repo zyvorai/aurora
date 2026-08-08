@@ -22,7 +22,7 @@ const PERSONA_LABELS: Record<PersonaPath, string> = {
   brief: 'Executive Brief',
   sales: 'Sales Workspace',
   marketing: 'Marketing Hub',
-  partner: 'Partner Portal',
+  partner: 'Partner Enablement',
   forge: 'Full Forge',
 };
 

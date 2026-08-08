@@ -17,8 +17,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variants: Record<Variant, string> = {
   primary:
     'rounded-full text-white border border-white/20 ' +
-    'bg-gradient-to-b from-[rgb(255,124,84)] to-primary ' +
-    'shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_20px_-6px_rgba(255,77,48,0.45)] ' +
+    'bg-gradient-to-b from-[rgb(56,189,248)] to-[rgb(37,99,235)] ' +
+    'shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_20px_-6px_rgba(37,99,235,0.45)] ' +
     'hover:brightness-[1.06] hover:-translate-y-px transition-[filter,transform]',
   secondary:
     'rounded-full text-foreground border border-[var(--glass-border)] bg-[var(--glass-bg)] ' +

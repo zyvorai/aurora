@@ -54,10 +54,10 @@ export function SidebarNav({ productId, onNavigate, className }: SidebarNavProps
             onClick={onNavigate}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'flex items-center gap-3 rounded-full px-3 py-2.5 text-body font-medium transition-colors focus-ring',
+              'flex items-center gap-3 rounded-full px-3 py-2.5 text-body font-medium transition-[color,background-color,transform] focus-ring',
               isActive
-                ? 'bg-primary/10 text-primary border border-primary/20'
-                : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
+                ? 'bg-[rgba(56,189,248,0.14)] text-[rgb(186,230,253)] shadow-[inset_0_0_0_1px_rgba(56,189,248,0.22),0_2px_12px_-4px_rgba(14,165,233,0.35)]'
+                : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)] hover:translate-x-0.5',
             )}
           >
             <Icon className="w-4 h-4 shrink-0" aria-hidden />

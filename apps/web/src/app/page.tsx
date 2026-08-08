@@ -124,7 +124,7 @@ export default function HomePage() {
               <p className="text-sm mt-1 text-muted">AI-powered GTM orchestration</p>
             </div>
 
-            <Card strong>
+            <Card strong className="login-panel-glass">
               <CardBody className="p-8">
                 <div className="flex gap-2 mb-6">
                   {(['register', 'login'] as const).map((m) => (

@@ -35,7 +35,7 @@ module.exports = {
         content: 'var(--content-max-width)',
       },
       fontFamily: {
-        sans: ['Instrument Sans', 'system-ui', 'sans-serif'],
+        sans: ['IBM Plex Sans', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       fontSize: {

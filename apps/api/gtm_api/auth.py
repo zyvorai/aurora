@@ -1,5 +1,6 @@
 """Authentication and authorization utilities."""
 
+import dataclasses
 import hashlib
 import re
 import secrets
@@ -16,12 +17,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
-from gtm_api.models import ApiKey, User
+from gtm_api.models import ApiKey, CustomerAccount, PortalAccountStatus, User
 
 settings = get_settings()
 # auto_error=False so a request can authenticate via X-API-Key instead of Bearer JWT;
 # get_current_user raises the equivalent 401/403 itself when neither is present.
 security = HTTPBearer(auto_error=False)
+# Separate HTTPBearer instance for portal routes -- functionally identical (just parses
+# the Authorization header), kept distinct so the two dependency graphs never get mixed
+# up by accident in FastAPI's dependency cache.
+portal_security = HTTPBearer(auto_error=False)
 
 API_KEY_PREFIX = "sk_live_"
 
@@ -63,6 +68,67 @@ def create_access_token(user_id: uuid.UUID, tenant_id: uuid.UUID, role: str) -> 
         "exp": expire,
     }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+@dataclasses.dataclass
+class PortalIdentity:
+    """External (non-employee) identity resolved from a portal token. Deliberately not
+    a `User` -- portal routes never accept `Depends(get_current_user)`, and internal
+    routes never accept a portal token, by construction (the "type" claim below)."""
+
+    account_id: uuid.UUID
+    tenant_id: uuid.UUID
+    portal_type: str
+    account: CustomerAccount
+
+
+def create_portal_token(account_id: uuid.UUID, tenant_id: uuid.UUID, portal_type: str = "customer") -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.portal_token_expire_minutes)
+    payload = {
+        "sub": str(account_id),
+        "tenant_id": str(tenant_id),
+        "portal_type": portal_type,
+        "type": "portal",
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+async def get_current_portal_account(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(portal_security),
+    db: AsyncSession = Depends(get_db),
+) -> PortalIdentity:
+    invalid = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate portal credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if credentials is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated")
+
+    try:
+        payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=[settings.algorithm])
+    except JWTError as exc:
+        raise invalid from exc
+
+    # The discriminator: an employee JWT (no "type" claim) must never satisfy this
+    # dependency, and a portal token must never satisfy get_current_user().
+    if payload.get("type") != "portal":
+        raise invalid
+
+    account_id = payload.get("sub")
+    portal_type = payload.get("portal_type")
+    if account_id is None or portal_type != "customer":
+        raise invalid
+
+    result = await db.execute(select(CustomerAccount).where(CustomerAccount.id == uuid.UUID(account_id)))
+    account = result.scalar_one_or_none()
+    if account is None or not account.is_active or account.status != PortalAccountStatus.APPROVED:
+        raise invalid
+
+    return PortalIdentity(
+        account_id=account.id, tenant_id=account.tenant_id, portal_type="customer", account=account
+    )
 
 
 async def _resolve_api_key(raw_key: str, db: AsyncSession) -> User:

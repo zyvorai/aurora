@@ -1,0 +1,112 @@
+import { resolveApiBase } from './api-base';
+import { getPortalToken } from './portal-auth';
+
+async function baseRequest<T>(path: string, token: string | null, options: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> | undefined),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let response: Response;
+  try {
+    response = await fetch(`${resolveApiBase()}${path}`, { ...options, headers });
+  } catch {
+    throw new Error('Cannot reach the API at ' + resolveApiBase());
+  }
+
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const body = await response.json();
+      detail = body.detail ?? detail;
+      if (typeof detail !== 'string') detail = JSON.stringify(detail);
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(detail || `Request failed (${response.status})`);
+  }
+
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}
+
+/** Customer-facing calls (signup/login/me) — authenticated with the portal token. */
+function portalRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  return baseRequest<T>(`/portal${path}`, getPortalToken(), options);
+}
+
+/** Admin-facing calls (list/approve/reject) — authenticated with the INTERNAL employee
+ * token (same localStorage key api.ts's request() reads), not the portal token, since
+ * these are called by a logged-in tenant admin reviewing signups, not by the applicant. */
+function adminPortalRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const employeeToken = typeof window === 'undefined' ? null : localStorage.getItem('token');
+  return baseRequest<T>(`/portal${path}`, employeeToken, options);
+}
+
+export interface PortalSignupRequest {
+  tenant_slug: string;
+  product_id: string;
+  email: string;
+  password: string;
+  company_name?: string;
+  contact_name?: string;
+}
+
+export interface PortalSignupResponse {
+  id: string;
+  status: string;
+  message: string;
+}
+
+export interface PortalTokenResponse {
+  access_token: string;
+  token_type: string;
+  portal_type: string;
+  account_id: string;
+  tenant_id: string;
+}
+
+export interface CustomerAccount {
+  id: string;
+  tenant_id: string;
+  product_id: string;
+  email: string;
+  company_name?: string | null;
+  contact_name?: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  rejected_reason?: string | null;
+  created_at: string;
+}
+
+export const portal = {
+  signup: (req: PortalSignupRequest) =>
+    portalRequest<PortalSignupResponse>('/customer/signup', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+
+  login: (req: { tenant_slug: string; email: string; password: string }) =>
+    portalRequest<PortalTokenResponse>('/customer/login', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+
+  me: () => portalRequest<CustomerAccount>('/customer/me'),
+};
+
+export const portalAdmin = {
+  listAccounts: (statusFilter?: string) => {
+    const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : '';
+    return adminPortalRequest<CustomerAccount[]>(`/customer/accounts${query}`);
+  },
+
+  approve: (accountId: string) =>
+    adminPortalRequest<CustomerAccount>(`/customer/accounts/${accountId}/approve`, { method: 'POST' }),
+
+  reject: (accountId: string, reason: string) =>
+    adminPortalRequest<CustomerAccount>(`/customer/accounts/${accountId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+};

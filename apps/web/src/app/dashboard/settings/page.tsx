@@ -166,6 +166,20 @@ export default function SettingsPage() {
 
       {isAdmin && (
         <section>
+          <SectionHeader label="Portals" title="Customer portal accounts" />
+          <Card elevated>
+            <CardBody className="flex items-center justify-between">
+              <TextMuted>Review and approve customer portal signup requests.</TextMuted>
+              <Link href="/dashboard/admin/portal-accounts">
+                <Button variant="secondary">Review requests</Button>
+              </Link>
+            </CardBody>
+          </Card>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section>
           <SectionHeader label="Danger zone" title="Data export & purge" />
           <Card elevated className="border-danger/30">
             <CardBody className="flex items-center justify-between">

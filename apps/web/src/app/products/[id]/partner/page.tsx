@@ -17,8 +17,8 @@ export default function PartnerPage() {
     <div className="space-y-8 animate-fade-up">
       <PageHero
         eyebrow="Partners"
-        title="Partner Portal"
-        description="Read-only product facts and co-branded outreach templates — minimal LLM use."
+        title="Partner Enablement"
+        description="Internal view for prepping partner-facing material — read-only product facts and co-branded outreach templates. Not the reseller's own login; see the customer portal for external, self-service access."
       />
 
       <section>

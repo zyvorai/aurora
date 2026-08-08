@@ -63,6 +63,54 @@ class ApiKeyResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# External portals (customer/salesperson/reseller — customer only for now)
+class PortalSignupRequest(BaseModel):
+    tenant_slug: str = Field(..., min_length=1, max_length=100)
+    product_id: uuid.UUID
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    company_name: str = ""
+    contact_name: str = ""
+
+
+class PortalSignupResponse(BaseModel):
+    id: uuid.UUID
+    status: str
+    message: str = "Signup received. An administrator will review your request."
+
+
+class PortalLoginRequest(BaseModel):
+    tenant_slug: str = Field(..., min_length=1, max_length=100)
+    email: EmailStr
+    password: str
+
+
+class PortalTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    portal_type: str = "customer"
+    account_id: uuid.UUID
+    tenant_id: uuid.UUID
+
+
+class CustomerAccountResponse(BaseModel):
+    id: uuid.UUID
+    tenant_id: uuid.UUID
+    product_id: uuid.UUID
+    email: str
+    company_name: Optional[str] = None
+    contact_name: Optional[str] = None
+    status: str
+    rejected_reason: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PortalRejectRequest(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=1000)
+
+
 # Products
 class ProductCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)

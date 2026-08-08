@@ -130,6 +130,9 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
+    # Shorter-lived than employee tokens -- external portal accounts (customer/
+    # salesperson/reseller) warrant a tighter session than internal staff.
+    portal_token_expire_minutes: int = 60
     # Seeds a default admin/Admin@321 account on startup if one doesn't already exist yet
     # (matching the customer-install convention used elsewhere in this product family).
     # Idempotent and safe to leave on: never resets a password once the account exists.

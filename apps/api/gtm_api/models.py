@@ -71,6 +71,13 @@ class ApprovalStatus(str, enum.Enum):
     REJECTED = "rejected"
 
 
+class PortalAccountStatus(str, enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    SUSPENDED = "suspended"
+
+
 class SourceProvenance(str, enum.Enum):
     TENANT_AUTHORITATIVE = "tenant_authoritative"
     PLATFORM_GENERATED = "platform_generated"
@@ -524,6 +531,39 @@ class ApiKey(Base):
     last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CustomerAccount(Base):
+    """External identity for the tenant's own end-customers, deliberately kept out of
+    `users` -- separate table, separate token type (see auth.py::create_portal_token /
+    get_current_portal_account), so an external non-employee login can never satisfy
+    an internal `Depends(get_current_user)` or appear in ROLE_PERMISSIONS."""
+
+    __tablename__ = "customer_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    discovered_account_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("discovered_accounts.id"), nullable=True
+    )
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    company_name: Mapped[Optional[str]] = mapped_column(String(255))
+    contact_name: Mapped[Optional[str]] = mapped_column(String(255))
+    status: Mapped[PortalAccountStatus] = mapped_column(
+        Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
+    )
+    rejected_reason: Mapped[Optional[str]] = mapped_column(Text)
+    reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_customer_account_tenant_email"),)
 
 
 class SourceCredential(Base):
