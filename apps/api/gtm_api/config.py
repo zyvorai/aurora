@@ -130,6 +130,11 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
+    # Seeds a default admin/Admin@321 account on startup if one doesn't already exist yet
+    # (matching the customer-install convention used elsewhere in this product family).
+    # Idempotent and safe to leave on: never resets a password once the account exists.
+    # Disable for a real deployment where this default shouldn't be reachable at all.
+    seed_default_admin: bool = True
 
     # LLM provider: ollama | openai | "" (auto-detect from OPENAI_API_KEY)
     llm_provider: str = ""

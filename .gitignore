@@ -18,6 +18,7 @@ venv/
 node_modules/
 .next/
 out/
+*.tsbuildinfo
 
 # IDE
 .idea/
@@ -39,3 +40,8 @@ postgres_data/
 .run/
 qdrant_data/
 neo4j_data/
+
+# TLS private keys / certs (real domain deploy) -- never commit these
+infra/nginx/certs/*
+!infra/nginx/certs/.gitkeep
+!infra/nginx/certs/README.md

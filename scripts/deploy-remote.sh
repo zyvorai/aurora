@@ -92,6 +92,14 @@ info "Target: ${DEPLOY_USER}@${HOST}:~/${REMOTE_DIR}"
 # and docker-compose.prod.yml's `env_file: .env` would resolve to infra/.env.
 DC="sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml"
 
+# Auto-enable the nginx/TLS overlay once a real cert has been placed on the
+# remote host (see infra/nginx/certs/README.md) -- nothing to configure here,
+# it just starts showing up once you've done the manual CA + DNS steps.
+if _ssh "test -f \"\$HOME/${REMOTE_DIR}/infra/nginx/certs/emissary.zyvor.dev.crt\" && test -f \"\$HOME/${REMOTE_DIR}/infra/nginx/certs/emissary.zyvor.dev.key\"" 2>/dev/null; then
+    info "Found emissary.zyvor.dev cert on remote — enabling nginx/TLS overlay."
+    DC="${DC} -f infra/nginx/docker-compose.nginx.yml"
+fi
+
 # ── Uninstall mode ──
 if $UNINSTALL; then
     info "Stopping and removing the Emissary stack on ${HOST}..."
@@ -144,6 +152,21 @@ _ssh "
         echo '.env already present, left untouched.'
     fi
 "
+
+# ── Step 3b: refuse to bake a broken NEXT_PUBLIC_API_URL into the web image ──
+# It's a build-time value baked into the browser bundle -- if it's still the
+# .env.prod.example placeholder or "localhost", every VISITOR's browser tries
+# to call their own machine instead of this server, not this container. This
+# caught a real bug where the deployed app silently didn't work for anyone but
+# whoever ran curl from the deploy host itself.
+NEXT_PUBLIC_API_URL_REMOTE="$(_ssh "grep -m1 '^NEXT_PUBLIC_API_URL=' \"\$HOME/${REMOTE_DIR}/.env\" 2>/dev/null || true")"
+if ! $SKIP_BUILD; then
+    if echo "$NEXT_PUBLIC_API_URL_REMOTE" | grep -qE 'localhost|127\.0\.0\.1|YOUR_SERVER_IP_OR_DOMAIN'; then
+        if [ "${ALLOW_LOCALHOST_API_URL:-false}" != "true" ]; then
+            error "Remote .env has ${NEXT_PUBLIC_API_URL_REMOTE:-NEXT_PUBLIC_API_URL unset}, which visiting browsers can't reach. SSH in and set NEXT_PUBLIC_API_URL to this host's real address (e.g. http://${HOST}:8000/api/v1 or https://your-domain/api/v1) before deploying, or set ALLOW_LOCALHOST_API_URL=true to override."
+        fi
+    fi
+fi
 
 # ── Step 4: bring the stack up ──
 BUILD_FLAG="--build"

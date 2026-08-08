@@ -1,0 +1,26 @@
+# Optional overlay: TLS termination via nginx for a real domain deployment.
+# Requires infra/nginx/certs/emissary.zyvor.dev.{crt,key} to exist first --
+# see infra/nginx/certs/README.md. Until then, leave this overlay off and
+# access the stack via its existing host-published ports (8000/3000).
+#
+# Usage (paths are relative to --project-directory, i.e. the repo root,
+# regardless of where this file itself lives):
+#
+#   docker compose --project-directory . -f infra/docker-compose.yml \
+#     -f docker-compose.prod.yml -f infra/nginx/docker-compose.nginx.yml up -d
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/emissary.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infra/nginx/certs:/etc/nginx/certs:ro
+    restart: unless-stopped

@@ -26,6 +26,15 @@ async def lifespan(app: FastAPI):
     app.state.db_health = await check_database()
     if not app.state.db_health.get("db_ready"):
         print(f"WARNING: {app.state.db_health.get('db_message')}")
+    elif settings.seed_default_admin:
+        try:
+            from gtm_api.database import async_session_factory
+            from gtm_api.services.bootstrap import seed_default_admin
+
+            async with async_session_factory() as db:
+                await seed_default_admin(db)
+        except Exception as exc:
+            print(f"WARNING: default admin seed skipped: {exc}")
 
     try:
         await vector_store.ensure_collection()

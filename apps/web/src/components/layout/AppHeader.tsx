@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LogOut, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -116,6 +117,12 @@ export function AppHeader({
 }
 
 export function AppFooter() {
+  // resolveHealthUrl() branches on window, so it must not run during SSR — the server
+  // and client would render different hrefs and React would flag a hydration mismatch.
+  // Render the SSR-safe relative fallback first, then swap in the real URL post-mount.
+  const [healthUrl, setHealthUrl] = useState('/health');
+  useEffect(() => setHealthUrl(resolveHealthUrl()), []);
+
   return (
     <footer className="border-t border-border mt-auto">
       <div className="max-w-content mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-body-sm">
@@ -135,7 +142,7 @@ export function AppFooter() {
         <div>
           <p className="font-medium mb-2">Resources</p>
           <ul className="space-y-1 text-muted">
-            <li><a href={resolveHealthUrl()} className="hover:text-foreground" target="_blank" rel="noreferrer">API health</a></li>
+            <li><a href={healthUrl} className="hover:text-foreground" target="_blank" rel="noreferrer">API health</a></li>
           </ul>
         </div>
         <div>

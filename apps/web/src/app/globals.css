@@ -347,6 +347,33 @@ code, pre {
   box-shadow: 0 12px 32px -12px rgba(255, 77, 48, 0.35);
 }
 
+/* ---- login hero ---- */
+
+.login-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(255, 77, 48, 0.18), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 90%, rgba(56, 130, 246, 0.12), transparent 60%),
+    linear-gradient(160deg, rgba(10, 14, 26, 0.98) 0%, rgba(6, 9, 18, 1) 100%);
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(1px);
+  animation: tahoe-orb-pulse 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.login-orb-primary { background: radial-gradient(circle, rgba(255, 77, 48, 0.35) 0%, transparent 70%); }
+.login-orb-violet { background: radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 70%); }
+.login-orb-sky { background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%); }
+
+.login-feature-card {
+  transition: border-color 0.2s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 /* ---- accessibility fallbacks: no backdrop-filter support ---- */
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -397,7 +424,7 @@ code, pre {
 
 @media (prefers-reduced-motion: reduce) {
   .glass-hover-lift:hover { transform: none; }
-  .tahoe-empty-orb { animation: none; }
+  .tahoe-empty-orb, .login-orb { animation: none; }
   .animate-fade-up, .animate-slide-in, .animate-glass-in {
     animation: none;
     opacity: 1;

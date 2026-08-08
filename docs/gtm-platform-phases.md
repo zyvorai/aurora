@@ -540,6 +540,11 @@ orchestrator — that's an intentional scope boundary, not a gap being tracked.
   `get_current_user()`, so a key authenticates on every existing protected route, not just a
   new endpoint. Keys are tenant + role scoped (same `ROLE_PERMISSIONS` matrix as human
   users), sha256-hashed at rest, and only shown in plaintext once at creation.
+- **Default admin seed** (`services/bootstrap.py::seed_default_admin`, run from `main.py`'s
+  lifespan on every startup) — idempotently creates `marketing@zyvor.dev` / `Admin@321` if
+  no user with that email exists yet, matching the customer-install convention used
+  elsewhere in this product family. Never resets a password once the account exists;
+  disable with `SEED_DEFAULT_ADMIN=false`.
 
 ### Gaps ❌
 
@@ -587,7 +592,7 @@ Dual-provider layer (Ollama + OpenAI) documented in [ollama-llm-integration.md](
 
 ## Test matrix summary
 
-220 tests across `apps/api/tests/` (per-file breakdown grew organically with each wave —
+223 tests across `apps/api/tests/` (per-file breakdown grew organically with each wave —
 see individual phase sections above for the tests most relevant to that phase, or run
 `pytest --collect-only -q` for the full list). All passing as of this update.
 
@@ -695,7 +700,7 @@ scope notes on what "done" means for a few of these:
 ```bash
 make start    # infra + DB + API + web (background) — local dev, bare processes
 make stop     # stop processes + Docker
-make test     # 220 tests
+make test     # 223 tests
 curl http://localhost:8000/health
 ```
 
@@ -719,5 +724,29 @@ Note: Ollama's models are not pre-pulled on a fresh host — `/health` reports `
 "degraded"` with `missing_models` until you run `make ollama-pull` locally or
 `docker exec <ollama-container> ollama pull <model>` on the remote host. This does not block
 the API/DB/web stack from being healthy.
+
+**Seeded admin login**: every deployment seeds `marketing@zyvor.dev` / `Admin@321` as a
+default admin account on startup if one doesn't already exist yet
+(`services/bootstrap.py::seed_default_admin`), matching the customer-install convention
+used elsewhere in this product family. Idempotent — never resets a password once the
+account exists. Disable with `SEED_DEFAULT_ADMIN=false`.
+
+**`NEXT_PUBLIC_API_URL` is a build-time value baked into the browser bundle** — it must be
+an address a visitor's browser can reach (the server's public IP or domain), not
+`localhost`/`127.0.0.1`. Leaving it as the `.env.prod.example` placeholder means every
+visitor's browser tries to call *their own* machine instead of the server — a real bug
+found by actually testing the deployed web app in a browser against the remote host,
+not just curling the API directly. `deploy-remote.sh` now refuses to build with this
+still unset (override with `ALLOW_LOCALHOST_API_URL=true` if you really mean it).
+
+**TLS / real domain**: an optional nginx overlay (`infra/nginx/docker-compose.nginx.yml`)
+terminates HTTPS for `emissary.zyvor.dev`, path-routing `/api/*`, `/health`, `/docs`,
+`/openapi.json` to the api container and everything else to web. `deploy-remote.sh`
+auto-enables it once `infra/nginx/certs/emissary.zyvor.dev.{crt,key}` exist on the remote
+host — see [infra/nginx/certs/README.md](../infra/nginx/certs/README.md) for the CA
+request + DNS steps (manual, external to this repo). The existing `zyvor.dev.crt` in the
+sibling `hypersdk-web` repo is **not** a wildcard — its SAN list only covers `zyvor.dev`
+and `www.zyvor.dev`, confirmed via `openssl x509 -noout -ext subjectAltName`, so it does
+not validate for a subdomain.
 
 Full local dev guide (setup, scripts, Makefile, troubleshooting): [dev-guide.md](./dev-guide.md)

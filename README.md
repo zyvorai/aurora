@@ -64,6 +64,16 @@ missing, brings the stack up, polls `/health`):
 ./scripts/test-deploy-remote-e2e.sh <host> <user> --skip-deploy   # smoke test only
 ```
 
+**First login:** every deployment seeds a default admin account on startup if one doesn't
+already exist — `marketing@zyvor.dev` / `Admin@321` (change this password immediately in any
+real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC_API_URL` in
+`.env` must be an address a **visitor's browser** can reach (not `localhost`) —
+`deploy-remote.sh` refuses to build with that left unset.
+
+**TLS / real domain:** optional nginx overlay terminates HTTPS for `emissary.zyvor.dev` —
+see [infra/nginx/certs/README.md](infra/nginx/certs/README.md) for the CA + DNS steps.
+`deploy-remote.sh` auto-enables it once a cert is present on the remote host.
+
 ## LLM Providers
 
 The platform supports **both Ollama and OpenAI** via a single factory. Switch with env vars only:
@@ -91,7 +101,7 @@ Check provider status: `GET /health`
 
 Full plan, architecture, unit tests, and integration test guide: [docs/ollama-llm-integration.md](docs/ollama-llm-integration.md)
 
-**Test case document (220 tests):** [docs/test-cases.md](docs/test-cases.md)
+**Test case document (223 tests):** [docs/test-cases.md](docs/test-cases.md)
 
 12-phase implementation status, acceptance criteria, and test matrix: [docs/gtm-platform-phases.md](docs/gtm-platform-phases.md)
 

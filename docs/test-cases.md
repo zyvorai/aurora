@@ -2,7 +2,7 @@
 
 Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 
-**Last verified:** 220 tests passing (2026-08-08)
+**Last verified:** 223 tests passing (2026-08-08)
 **Run command:** `make test` or `cd apps/api && .venv/bin/python -m pytest tests/ -v`
 
 > Sections 5–7 below itemize the original 9 test files with per-case TC-IDs (still accurate
@@ -12,7 +12,8 @@ Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 > `test_loaders.py`, `test_mcp_context.py`, `test_rbac_enforcement.py`, `test_audit_log.py`,
 > `test_proposal_export.py`, `test_api_keys.py`, `test_publish_scheduler.py`,
 > `test_learning_scheduler.py`, `test_crawler_playwright.py`, `test_oauth_adapters.py`,
-> `test_sso.py`) are listed in the file map (Section 6) but not individually TC-ID'd — see
+> `test_sso.py`, `test_bootstrap.py`) are listed in the file map (Section 6) but not
+> individually TC-ID'd — see
 > the file itself for per-test detail, or `docs/gtm-platform-phases.md`'s per-phase Tests
 > tables.
 
@@ -22,8 +23,8 @@ Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 
 | Metric | Value |
 |--------|-------|
-| Total test cases | 220 |
-| Test files | 32 (+ `conftest.py` shared fixtures) |
+| Total test cases | 223 |
+| Test files | 33 (+ `conftest.py` shared fixtures) |
 | External services required | **None** (Ollama, Postgres, Qdrant, Neo4j are mocked, run in-memory, or not invoked — including `test_vector_store.py`'s tenant-isolation test, which uses qdrant-client's in-memory backend rather than mocking the filter logic away) |
 | Typical runtime | ~3 seconds |
 
@@ -234,6 +235,7 @@ cd apps/api
 | `tests/test_crawler_playwright.py` | Playwright JS-render fallback: config gating, graceful degradation, thin-page trigger | 6 |
 | `tests/test_oauth_adapters.py` | LinkedIn/X/Medium/Dev.to/Reddit adapters: not_configured gate, real (mocked) call, error mapping | 13 |
 | `tests/test_sso.py` | OIDC discovery/token-exchange/userinfo + login/callback routes incl. 404/409 email cases | 9 |
+| `tests/test_bootstrap.py` | default admin seed (marketing@zyvor.dev/Admin@321): idempotent creation, never resets an existing password | 3 |
 | `tests/conftest.py` | Shared fixtures | — |
 
 ---
@@ -301,6 +303,7 @@ Mark live-service tests with a pytest marker so default CI stays fast and offlin
 
 | Date | Change |
 |------|--------|
+| 2026-08-08 | Corrected stale 220/32-file count to actual 223/33 files: added `test_bootstrap.py` for the new default admin seed (marketing@zyvor.dev/Admin@321) |
 | 2026-08-08 | Corrected stale 151/23-file count to actual 220/32 files: added 9 new test files closing the RBAC/audit-log/proposal-export test gaps and covering newly-built API-key auth, publish scheduler/retry, scheduled learning cron, Playwright crawler fallback, real OAuth publish adapters, and generic OIDC SSO |
 | 2026-08-08 | Corrected stale 145/18-file count to actual 151/23 files: added `test_admin.py` (enterprise admin router — plan usage, suppression list, purge confirmation) and one new case in `test_publishing.py` (`test_publish_email_blocked_when_recipient_suppressed`) for per-prospect suppression enforcement |
 | 2026-08-08 | Refreshed against actual code: corrected stale 60/9-file count to 145/18 files (waves 0–4, `test_agent_registry.py`, `test_tenant.py` had been added but never reflected here); added `test_ingestion.py`, `test_publishing.py`, `test_vector_store.py`, `test_api_products.py` closing all 6 previously-proposed gap tests |
