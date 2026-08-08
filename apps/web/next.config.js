@@ -43,6 +43,21 @@ const nextConfig = {
       },
     ];
   },
+  // Next.js defaults statically-prerendered pages (/, /dashboard, /dashboard/settings,
+  // etc.) to `s-maxage=31536000` (one year), which assumes a CDN that invalidates on
+  // deploy. This app is served directly from a single container with no CDN in front,
+  // so every redeploy leaves returning visitors' browsers holding a stale HTML document
+  // that references JS/CSS chunk hashes the new build no longer has -- a broken/unstyled
+  // page until a hard refresh. Static assets under /_next/static/* are content-hashed and
+  // safe to cache forever; only override the page documents themselves.
+  async headers() {
+    return [
+      {
+        source: '/((?!_next/static|_next/image).*)',
+        headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate' }],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
