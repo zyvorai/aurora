@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { products, type Artifact } from '@/lib/api';
+import { useIngestPolling } from '@/lib/useIngestPolling';
+import { showToast } from '@/lib/toast';
 import { useProduct } from '@/context/ProductContext';
 import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
@@ -62,6 +64,19 @@ export default function ProductForgePageInner() {
   const [proposalScope, setProposalScope] = useState('');
   const sessionId = useState(() => crypto.randomUUID())[0];
 
+  const { polling: ingestPolling, startPolling: startIngestPolling } = useIngestPolling({
+    productId: id,
+    onComplete: () => {
+      setResult({ status: 'completed', message: 'Ingest complete.' });
+      showToast('success', 'Ingest complete.');
+      products.artifacts(id).then(setArtifacts).catch(() => {});
+    },
+    onError: (message) => {
+      setResult({ error: message });
+      showToast('error', message);
+    },
+  });
+
   useEffect(() => {
     setTab(parseTab(searchParams.get('tab')));
   }, [searchParams]);
@@ -96,7 +111,8 @@ export default function ProductForgePageInner() {
       let res: Record<string, unknown>;
       switch (action) {
         case 'ingest': {
-          const ingestRes = await products.ingest(id);
+          const ingestRes = await products.ingest(id, { async_mode: true });
+          if (ingestRes.status === 'queued') startIngestPolling();
           res = { ...ingestRes };
           break;
         }
@@ -204,8 +220,8 @@ export default function ProductForgePageInner() {
             <div className="space-y-6">
               <SourcesPanel productId={id} />
               <div className="flex flex-wrap gap-3">
-                <Button disabled={loading} onClick={() => runAction('ingest')}>
-                  {taskButtonLabel(loadingAction, loading, 'Crawl & Ingest', 'ingest')}
+                <Button disabled={loading || ingestPolling} onClick={() => runAction('ingest')}>
+                  {ingestPolling ? 'Ingesting…' : taskButtonLabel(loadingAction, loading, 'Crawl & Ingest', 'ingest')}
                 </Button>
                 <Button variant="secondary" disabled={loading} onClick={() => runAction('understand')}>
                   {taskButtonLabel(loadingAction, loading, 'Build Product Profile', 'understand')}
@@ -329,6 +345,21 @@ export default function ProductForgePageInner() {
               <Input value={proposalScope} onChange={(e) => setProposalScope(e.target.value)} placeholder="Enterprise scope…" className="flex-1" disabled={loading} />
               <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Generate Proposal', 'proposal')}</Button>
             </form>
+          )}
+
+          {tab === 'proposal' && typeof result?.artifact_id === 'string' && (
+            <div className="flex flex-wrap gap-2">
+              {(['pdf', 'docx', 'pptx'] as const).map((format) => (
+                <Button
+                  key={format}
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => products.downloadProposalExport(id, result.artifact_id as string, format)}
+                >
+                  Export {format.toUpperCase()}
+                </Button>
+              ))}
+            </div>
           )}
 
           {tab === 'analytics' && (

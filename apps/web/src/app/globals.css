@@ -48,6 +48,22 @@
   --accent-hover: var(--primary-hover);
 }
 
+.light-theme {
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --foreground: #0f172a;
+  --muted-foreground: #64748b;
+  --primary: #ff4d30;
+  --primary-hover: #e63e22;
+  --primary-foreground: #ffffff;
+  --border: #e2e8f0;
+  --ring: #ff4d30;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
 body {
   font-family: 'Instrument Sans', system-ui, sans-serif;
   font-size: var(--font-size-base);
@@ -68,6 +84,15 @@ code, pre {
 
 .animate-fade-up {
   animation: fade-up 0.5s ease-out forwards;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.2s ease-out forwards;
 }
 
 .gradient-mesh {

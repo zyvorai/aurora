@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { LogOut } from 'lucide-react';
+import { LogOut, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { personaLabel, defaultPersonaForRole, type AppRole } from '@/lib/role-routing';
+import { resolveHealthUrl } from '@/lib/api-base';
+import { useTheme } from '@/context/ThemeContext';
 
 interface AppHeaderProps {
   productName?: string;
@@ -24,6 +26,7 @@ export function AppHeader({
   showMenuButton,
   onSignOut,
 }: AppHeaderProps) {
+  const { theme, toggleTheme } = useTheme();
   const personaLabelText = role ? personaLabel(defaultPersonaForRole(role)) : null;
 
   const personaBadge = personaLabelText ? (
@@ -79,6 +82,20 @@ export function AppHeader({
           >
             Products
           </Link>
+          <Link
+            href="/dashboard/settings"
+            className="hidden sm:inline text-body-sm text-muted hover:text-foreground focus-ring rounded-sm px-2 py-1"
+          >
+            Settings
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
           {onSignOut && (
             <Button variant="ghost" size="sm" onClick={onSignOut} aria-label="Sign out">
               <LogOut className="w-4 h-4" />
@@ -110,7 +127,7 @@ export function AppFooter() {
         <div>
           <p className="font-medium mb-2">Resources</p>
           <ul className="space-y-1 text-muted">
-            <li><a href="http://127.0.0.1:8000/health" className="hover:text-foreground" target="_blank" rel="noreferrer">API health</a></li>
+            <li><a href={resolveHealthUrl()} className="hover:text-foreground" target="_blank" rel="noreferrer">API health</a></li>
           </ul>
         </div>
         <div>

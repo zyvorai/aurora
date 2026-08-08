@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { useMemo, useState, type ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProduct } from '@/context/ProductContext';
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
+import CommandPalette, { type CommandPaletteItem } from '@/components/CommandPalette';
 import { AppHeader } from './AppHeader';
-import { SidebarNav, resolveActive, personaLabel } from './SidebarNav';
+import { SidebarNav, resolveActive, personaLabel, NAV_ITEMS } from './SidebarNav';
 import { Breadcrumbs } from './Breadcrumbs';
 import { defaultProductRoute } from '@/lib/role-routing';
 
@@ -17,8 +19,27 @@ export function ProductShell({ children }: ProductShellProps) {
   const { signOut, role } = useAuth();
   const { product, productId, loading } = useProduct();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const active = resolveActive(pathname, productId);
+
+  useKeyboardShortcut({ key: 'k', ctrlOrMeta: true, handler: () => setPaletteOpen(true) });
+
+  const paletteItems = useMemo<CommandPaletteItem[]>(() => {
+    if (!productId) return [];
+    return NAV_ITEMS.map((item): CommandPaletteItem => ({
+      id: item.key,
+      label: item.label,
+      group: 'Go to',
+      onSelect: () => router.push(item.href(productId)),
+    })).concat([
+      { id: 'dashboard', label: 'Dashboard', group: 'Go to', onSelect: () => router.push('/dashboard') },
+      { id: 'audit', label: 'Audit Log', group: 'Go to', onSelect: () => router.push('/dashboard/audit') },
+      { id: 'settings', label: 'Settings', group: 'Account', onSelect: () => router.push('/dashboard/settings') },
+      { id: 'sign-out', label: 'Sign out', group: 'Account', onSelect: signOut },
+    ]);
+  }, [productId, router, signOut]);
 
   if (loading) {
     return (
@@ -77,6 +98,13 @@ export function ProductShell({ children }: ProductShellProps) {
           </main>
         </div>
       </div>
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        items={paletteItems}
+        title="Jump to a workspace…"
+      />
     </div>
   );
 }

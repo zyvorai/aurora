@@ -353,6 +353,30 @@ export const products = {
     return request(`/products/${id}/analytics`);
   },
 
+  async downloadProposalExport(
+    productId: string,
+    artifactId: string,
+    format: 'pdf' | 'docx' | 'pptx',
+  ): Promise<void> {
+    const token = getToken();
+    const response = await fetch(
+      `${resolveApiBase()}/products/${productId}/proposals/${artifactId}/export?format=${format}`,
+      { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+    );
+    if (!response.ok) {
+      throw new Error(`Export failed (${response.status})`);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `proposal-${artifactId}.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
+
   artifacts(id: string): Promise<Artifact[]> {
     return request<Artifact[]>(`/products/${id}/artifacts`);
   },
@@ -475,6 +499,20 @@ export const products = {
 
   accountHealth(id: string): Promise<AccountHealthRecord[]> {
     return request<AccountHealthRecord[]>(`/products/${id}/account-health`);
+  },
+};
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  created_at: string;
+}
+
+export const audit = {
+  list(): Promise<AuditLogEntry[]> {
+    return request<AuditLogEntry[]>('/audit');
   },
 };
 

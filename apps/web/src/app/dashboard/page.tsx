@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Rocket } from 'lucide-react';
 import { products, type Product } from '@/lib/api';
+import { showToast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { dashboardActionsForRole, dashboardSubtitle, defaultProductRoute } from '@/lib/role-routing';
 import { PageHero } from '@/components/layout/PageHero';
@@ -12,6 +14,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { EmptyState } from '@/components/ui/EmptyState';
+import OnboardingChecklist from '@/components/OnboardingChecklist';
 import { SectionTitle, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 export default function DashboardPage() {
@@ -27,17 +31,21 @@ export default function DashboardPage() {
   useEffect(() => {
     products.list()
       .then(setProductList)
-      .catch(() => {})
+      .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load products'))
       .finally(() => setLoading(false));
   }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    const product = await products.create(form);
-    setProductList([product, ...productList]);
-    setShowCreate(false);
-    setForm({ name: '', website_url: '', description: '' });
-    router.push(defaultProductRoute(product.id, role));
+    try {
+      const product = await products.create(form);
+      setProductList([product, ...productList]);
+      setShowCreate(false);
+      setForm({ name: '', website_url: '', description: '' });
+      router.push(defaultProductRoute(product.id, role));
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to create product');
+    }
   }
 
   if (loading) {
@@ -59,18 +67,15 @@ export default function DashboardPage() {
         }
       />
 
+      <OnboardingChecklist hasProduct={productList.length > 0} firstProductId={productList[0]?.id} />
+
       {productList.length === 0 ? (
-        <Card elevated className="text-center py-16 animate-fade-up">
-          <CardBody>
-            <SectionTitle className="mb-2">No products yet</SectionTitle>
-            <TextMuted className="mb-6 max-w-md mx-auto">
-              Add your first product by providing a website URL or documentation.
-            </TextMuted>
-            <Button size="lg" onClick={() => setShowCreate(true)}>
-              Onboard Your First Product
-            </Button>
-          </CardBody>
-        </Card>
+        <EmptyState
+          icon={Rocket}
+          title="No products yet"
+          description="Add your first product by providing a website URL or documentation."
+          actions={[{ label: 'Onboard Your First Product', onClick: () => setShowCreate(true) }]}
+        />
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {productList.map((p) => (

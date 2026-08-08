@@ -14,6 +14,12 @@ import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Kanban } from 'lucide-react';
+import { showToast } from '@/lib/toast';
+import { workflowProgressPercent } from '@/lib/workflow-progress';
 import { Stat, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 const STAGE_LABELS: Record<string, string> = {
@@ -73,17 +79,19 @@ export default function PipelinePage() {
           setTimeout(poll, 3000);
         } else {
           load();
-          setMessage(
-            run.status === 'completed'
-              ? 'Technical eval complete — opportunity at Proposal stage'
-              : (run.error_message ?? 'Workflow failed'),
-          );
+          const doneMessage = run.status === 'completed'
+            ? 'Technical eval complete — opportunity at Proposal stage'
+            : (run.error_message ?? 'Workflow failed');
+          setMessage(doneMessage);
+          showToast(run.status === 'completed' ? 'success' : 'error', doneMessage);
           setLoading(false);
         }
       };
       setTimeout(poll, 2000);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Technical eval failed');
+      const errorMessage = err instanceof Error ? err.message : 'Technical eval failed';
+      setMessage(errorMessage);
+      showToast('error', errorMessage);
       setLoading(false);
     }
   }
@@ -148,15 +156,18 @@ export default function PipelinePage() {
 
       {workflowStatus && workflowStatus.status !== 'completed' && (
         <Card>
-          <CardBody>
-            <SectionHeader title={`Workflow: ${workflowStatus.status}`} />
+          <CardBody className="space-y-3">
+            <ProgressBar percent={workflowProgressPercent(workflowStatus)} label={`Workflow: ${workflowStatus.status}`} />
             <ul className="space-y-1">
               {workflowStatus.steps.map((step) => (
-                <li key={step.name}>
+                <li key={step.name} className="flex items-center justify-between">
                   <TextSmall>
-                    {step.name}: {step.status}
+                    {step.name}
                     {step.error ? ` — ${step.error}` : ''}
                   </TextSmall>
+                  <Badge variant={step.status === 'failed' ? 'danger' : step.status === 'completed' ? 'success' : 'default'}>
+                    {step.status}
+                  </Badge>
                 </li>
               ))}
             </ul>
@@ -214,9 +225,16 @@ export default function PipelinePage() {
           </div>
         </div>
         {opportunities.length === 0 && (
-          <TextMuted className="mt-4">
-            No opportunities yet. Create one or run a technical eval workflow.
-          </TextMuted>
+          <EmptyState
+            icon={Kanban}
+            title="No opportunities yet"
+            description="Create one manually, or run a technical eval workflow to generate one from a qualified lead."
+            actions={[
+              { label: 'New opportunity', onClick: createManualOpp, primary: false },
+              { label: 'Run technical eval', onClick: runTechnicalEval },
+            ]}
+            className="mt-4"
+          />
         )}
       </section>
     </div>

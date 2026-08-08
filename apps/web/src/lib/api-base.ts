@@ -19,3 +19,10 @@ export function resolveApiBase(): string {
 
   return '/api';
 }
+
+/** /health is mounted at the API root, not under /api/v1 -- derive it from the same base. */
+export function resolveHealthUrl(): string {
+  const base = resolveApiBase();
+  const root = base.replace(/\/api\/v1$/, '').replace(/\/api$/, '');
+  return `${root}/health`;
+}

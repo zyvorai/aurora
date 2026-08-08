@@ -3,19 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { products, type ExecutiveBrief, type WorkflowRunAccepted } from '@/lib/api';
+import { products, type ExecutiveBrief, type WorkflowRunStatus } from '@/lib/api';
+import { showToast } from '@/lib/toast';
+import { workflowProgressPercent } from '@/lib/workflow-progress';
 import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SectionTitle, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 export default function MarketingPage() {
   const { id } = useParams<{ id: string }>();
   const [brief, setBrief] = useState<ExecutiveBrief | null>(null);
-  const [workflow, setWorkflow] = useState<WorkflowRunAccepted | null>(null);
-  const [pollStatus, setPollStatus] = useState<string | null>(null);
+  const [run, setRun] = useState<WorkflowRunStatus | null>(null);
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
@@ -24,20 +26,20 @@ export default function MarketingPage() {
 
   async function runOutboundSprint() {
     setRunning(true);
-    setPollStatus(null);
+    setRun(null);
     try {
       const accepted = await products.startOutboundSprint(id, {
         focus_industries: ['fintech', 'healthtech'],
         campaign_name: 'Outbound Sprint',
       });
-      setWorkflow(accepted);
-      setPollStatus('queued');
 
       const poll = async () => {
-        const run = await products.pollWorkflow(accepted.workflow_run_id);
-        setPollStatus(run.status);
-        if (run.status === 'completed' || run.status === 'failed') {
+        const status = await products.pollWorkflow(accepted.workflow_run_id);
+        setRun(status);
+        if (status.status === 'completed' || status.status === 'failed') {
           setRunning(false);
+          if (status.status === 'failed') showToast('error', status.error_message || 'Outbound sprint failed');
+          else showToast('success', 'Outbound sprint complete.');
           products.brief(id).then(setBrief).catch(() => {});
           return;
         }
@@ -45,7 +47,7 @@ export default function MarketingPage() {
       };
       setTimeout(poll, 2000);
     } catch (err) {
-      setPollStatus(err instanceof Error ? err.message : 'Failed');
+      showToast('error', err instanceof Error ? err.message : 'Failed to start outbound sprint');
       setRunning(false);
     }
   }
@@ -83,11 +85,20 @@ export default function MarketingPage() {
             <Button disabled={running} onClick={runOutboundSprint}>
               {running ? 'Running outbound sprint…' : 'Run Outbound Sprint'}
             </Button>
-            {pollStatus && (
-              <TextMuted>
-                Workflow status: {pollStatus}
-                {workflow && ` · ${workflow.poll_url}`}
-              </TextMuted>
+            {run && (
+              <div className="space-y-2">
+                <ProgressBar percent={workflowProgressPercent(run)} label={`Status: ${run.status}`} />
+                <ul className="space-y-1">
+                  {run.steps.map((step) => (
+                    <li key={step.name} className="flex items-center justify-between text-body-sm">
+                      <span className="text-foreground">{step.name}</span>
+                      <Badge variant={step.status === 'failed' ? 'danger' : step.status === 'completed' ? 'success' : 'default'}>
+                        {step.status}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </CardBody>
         </Card>

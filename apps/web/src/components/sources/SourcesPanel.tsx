@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { products, type ProductSource } from '@/lib/api';
+import { useIngestPolling } from '@/lib/useIngestPolling';
+import { showToast } from '@/lib/toast';
 import { readStoredRole } from '@/lib/role-routing';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +12,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow,
 } from '@/components/ui/Table';
 import { TextMuted, TextSmall } from '@/components/ui/Typography';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { FolderOpen } from 'lucide-react';
 import AddSourceWizard from '@/components/sources/AddSourceWizard';
 
 function statusVariant(status: string): 'success' | 'warning' | 'default' {
@@ -37,7 +42,6 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [wizardOpen, setWizardOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [pollIngest, setPollIngest] = useState(false);
 
   const role = readStoredRole();
   const canWrite = role === 'admin' || role === 'editor';
@@ -54,45 +58,18 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
     load();
   }, [load]);
 
-  // Poll source status after async ingest; stop after max attempts or when API is down.
-  useEffect(() => {
-    if (!pollIngest) return;
-
-    let attempts = 0;
-    let cancelled = false;
-    let timerId: number | undefined;
-    const maxAttempts = 40;
-
-    const tick = async () => {
-      if (cancelled || attempts >= maxAttempts) {
-        setPollIngest(false);
-        return;
-      }
-      attempts += 1;
-      try {
-        const list = await products.listSources(productId, { timeoutMs: 8000 });
-        if (cancelled) return;
-        setSources(list);
-        const pending = list.some((s) => s.status === 'pending' || s.status === 'crawling' || s.status === 'processing');
-        if (!pending) {
-          setPollIngest(false);
-          onIngestComplete?.();
-          return;
-        }
-      } catch {
-        setPollIngest(false);
-        setMessage('API unavailable — run make start and refresh.');
-        return;
-      }
-      timerId = window.setTimeout(tick, 3000);
-    };
-
-    timerId = window.setTimeout(tick, 3000);
-    return () => {
-      cancelled = true;
-      if (timerId) window.clearTimeout(timerId);
-    };
-  }, [pollIngest, productId, onIngestComplete]);
+  const { polling, startPolling } = useIngestPolling({
+    productId,
+    onSources: setSources,
+    onComplete: () => {
+      showToast('success', 'Ingest complete.');
+      onIngestComplete?.();
+    },
+    onError: (msg) => {
+      setMessage(msg);
+      showToast('error', msg);
+    },
+  });
 
   async function handleIngest(sourceIds?: string[], force = false) {
     setBusy(true);
@@ -105,13 +82,15 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
       });
       setMessage(res.message);
       if (res.status === 'queued') {
-        setPollIngest(true);
+        startPolling();
       } else {
         load();
         onIngestComplete?.();
       }
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Ingest failed');
+      const errorMessage = err instanceof Error ? err.message : 'Ingest failed';
+      setMessage(errorMessage);
+      showToast('error', errorMessage);
     } finally {
       setBusy(false);
     }
@@ -124,7 +103,9 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
       await products.deleteSource(productId, sourceId);
       load();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Delete failed');
+      const errorMessage = err instanceof Error ? err.message : 'Delete failed';
+      setMessage(errorMessage);
+      showToast('error', errorMessage);
     } finally {
       setBusy(false);
     }
@@ -166,10 +147,22 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
 
       {message && <TextMuted>{message}</TextMuted>}
 
+      {polling && (
+        <ProgressBar
+          percent={sources.length ? (sources.filter((s) => s.status === 'completed').length / sources.length) * 100 : 5}
+          label="Ingesting sources…"
+        />
+      )}
+
       {loading ? (
         <TextMuted>Loading sources…</TextMuted>
       ) : sources.length === 0 ? (
-        <TextMuted>No sources yet. Add a website URL at onboarding or use Add source.</TextMuted>
+        <EmptyState
+          icon={FolderOpen}
+          title="No sources yet"
+          description="Add a website URL, file, video, or other source to start building this product's knowledge base."
+          actions={canWrite ? [{ label: '+ Add source', onClick: () => setWizardOpen(true) }] : undefined}
+        />
       ) : (
         <Table>
           <TableHead>

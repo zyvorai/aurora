@@ -14,7 +14,7 @@ import { cn } from '@/lib/cn';
 
 export type PersonaKey = 'brief' | 'sales' | 'pipeline' | 'marketing' | 'partner' | 'forge';
 
-const NAV_ITEMS: { key: PersonaKey; label: string; href: (id: string) => string; icon: typeof LayoutDashboard }[] = [
+export const NAV_ITEMS: { key: PersonaKey; label: string; href: (id: string) => string; icon: typeof LayoutDashboard }[] = [
   { key: 'brief', label: 'Brief', href: (id) => `/products/${id}/brief`, icon: LayoutDashboard },
   { key: 'sales', label: 'Sales', href: (id) => `/products/${id}/sales`, icon: Users },
   { key: 'pipeline', label: 'Pipeline', href: (id) => `/products/${id}/pipeline`, icon: Kanban },

@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/cn';
 
-type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'tier-a' | 'tier-b' | 'tier-c';
+export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'tier-a' | 'tier-b' | 'tier-c';
 
 const variants: Record<BadgeVariant, string> = {
   default: 'bg-surface text-muted border-border',
