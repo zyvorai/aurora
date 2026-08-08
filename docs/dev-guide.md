@@ -232,7 +232,7 @@ All commands run from the **repository root**.
 | `make api` | Run API in **foreground** (uses venv uvicorn) |
 | `make web` | Run Next.js in **foreground** |
 | `make workers` | Run ARQ workers in **foreground** |
-| `make test` | Run pytest (60 tests) |
+| `make test` | Run pytest (151 tests) |
 | `make ollama-pull` | Pull MVP Ollama models |
 
 ### Important: always use the venv
@@ -372,7 +372,7 @@ make test
 cd apps/api && .venv/bin/python -m pytest tests/ -v
 ```
 
-60 tests covering auth, RBAC, chunking, citation gate, crawler SSRF, supervisor routing, LLM factory, and HTTP health checks.
+151 tests covering auth, RBAC, chunking, citation gate, crawler SSRF, supervisor routing, LLM factory, publishing/suppression, admin routes, and HTTP health checks.
 
 See also:
 
@@ -526,10 +526,15 @@ infra/
     start.sh     make start
     stop.sh      make stop / make clean
     pull-models.sh   make ollama-pull
+scripts/
+  deploy-remote.sh          SSH deploy of the Docker Compose stack to a remote host
+  test-deploy-remote-e2e.sh smoke test an existing (or fresh) remote deploy
+docker-compose.prod.yml     api/web/workers images, overlaid on infra/docker-compose.yml
+.env.prod.example
 docs/
   dev-guide.md           ← this file
-  test-cases.md          ← canonical test inventory (60 cases)
-  gtm-platform-phases.md 12-phase status
+  test-cases.md          ← canonical test inventory
+  gtm-platform-phases.md 12-phase status (also covers containerized/remote deploy)
   ollama-llm-integration.md
 .env.example
 Makefile
@@ -562,7 +567,7 @@ make stop
 |----------|----------|
 | [source-management.md](./source-management.md) | Source types, ingest status, workers, troubleshooting |
 | [role-based-landing.md](./role-based-landing.md) | Persona default routes by RBAC role (login redirect, dashboard CTAs) |
-| [test-cases.md](./test-cases.md) | Full test case document — 60 tests with IDs, preconditions, expected results |
+| [test-cases.md](./test-cases.md) | Full test case document — 151 tests with IDs, preconditions, expected results |
 | [gtm-platform-phases.md](./gtm-platform-phases.md) | 12-phase implementation status + acceptance criteria |
 | [ollama-llm-integration.md](./ollama-llm-integration.md) | Dual LLM provider (Ollama + OpenAI) + tests |
 | [README.md](../README.md) | Project overview + API endpoint list |

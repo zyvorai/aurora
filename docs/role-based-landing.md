@@ -73,7 +73,7 @@ Roles are assigned at registration (first user is `admin`) and enforced on the A
 
 See [`apps/api/gtm_api/auth.py`](../apps/api/gtm_api/auth.py) (`ROLE_PERMISSIONS`).
 
-The frontend **does not** gate routes by role today — it only changes default navigation. API endpoints still enforce permissions (e.g. `viewer` cannot call write-only routes).
+The frontend mostly **does not** gate routes by role — it only changes default navigation, relying on the API to enforce permissions (e.g. `viewer` cannot call write-only routes). The one exception is `/dashboard/admin/danger` (tenant data export/purge), which has an inline `role !== 'admin'` guard as defense-in-depth alongside the backend's `manage_tenant` permission check — a deliberate one-off for a single destructive-action page, not a general route-guard framework.
 
 ---
 
@@ -112,6 +112,7 @@ Sign out, sign in again (or clear `localStorage` and re-login) so `role` is refr
 | [`apps/web/src/hooks/useAuth.ts`](../apps/web/src/hooks/useAuth.ts) | Exposes `role` from `localStorage` |
 | [`apps/web/src/components/layout/AppHeader.tsx`](../apps/web/src/components/layout/AppHeader.tsx) | Default workspace badge |
 | [`apps/web/src/components/layout/ProductShell.tsx`](../apps/web/src/components/layout/ProductShell.tsx) | Role-aware breadcrumb home link |
+| [`apps/web/src/app/dashboard/admin/danger/page.tsx`](../apps/web/src/app/dashboard/admin/danger/page.tsx) | Admin-only page with an inline `role !== 'admin'` guard |
 
 ### Key functions
 
@@ -131,7 +132,7 @@ dashboardActionsForRole(role)
 ## Future extensions (not implemented)
 
 - **User-selectable persona** — e.g. marketing vs sales preference for `editor` users (would need a `preferred_persona` field on `User`).
-- **Route guards** — hide sidebar items or block pages when the API role lacks permission.
+- **General route-guard framework** — a single inline guard exists for the admin danger-zone page (see above); hiding sidebar items or blocking other pages by role is still not implemented.
 - **Org-level defaults** — tenant setting to override `ROLE_DEFAULT_PERSONA` for all users.
 
 ---

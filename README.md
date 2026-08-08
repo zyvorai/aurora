@@ -49,6 +49,21 @@ brew install ollama && ollama serve && make ollama-pull
 # Or OpenAI: set LLM_PROVIDER=openai and OPENAI_API_KEY in .env
 ```
 
+### Containerized / production
+
+```bash
+cp .env.prod.example .env   # then edit secrets
+docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+Deploy to a remote Docker host over SSH (syncs the repo, installs the Compose plugin if
+missing, brings the stack up, polls `/health`):
+
+```bash
+./scripts/deploy-remote.sh <host> <user>
+./scripts/test-deploy-remote-e2e.sh <host> <user> --skip-deploy   # smoke test only
+```
+
 ## LLM Providers
 
 The platform supports **both Ollama and OpenAI** via a single factory. Switch with env vars only:
@@ -76,7 +91,7 @@ Check provider status: `GET /health`
 
 Full plan, architecture, unit tests, and integration test guide: [docs/ollama-llm-integration.md](docs/ollama-llm-integration.md)
 
-**Test case document (145 tests):** [docs/test-cases.md](docs/test-cases.md)
+**Test case document (151 tests):** [docs/test-cases.md](docs/test-cases.md)
 
 12-phase implementation status, acceptance criteria, and test matrix: [docs/gtm-platform-phases.md](docs/gtm-platform-phases.md)
 
@@ -97,9 +112,27 @@ Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-gu
 - `POST /api/v1/products/{id}/strategy` — Generate GTM strategy
 - `POST /api/v1/products/{id}/content` — Generate content
 - `POST /api/v1/products/{id}/chat` — Sales agent chat
-- `POST /api/v1/products/{id}/outreach` — Personalized outreach
+- `POST /api/v1/products/{id}/outreach` — Personalized outreach (optional `recipient_email` for suppression-aware publish)
 - `POST /api/v1/products/{id}/architect` — Solution architect Q&A
 - `POST /api/v1/products/{id}/proposals` — Generate proposal
+- `POST /api/v1/artifacts/{id}/approve` — Approve/reject generated content
+- `POST /api/v1/artifacts/{id}/publish` — Publish to a channel (blocked if recipient is suppressed)
+- `POST /api/v1/products/{id}/campaigns`, `GET .../campaigns`, `GET .../campaigns/{id}/status` — Campaign management
+- `GET /api/v1/products/{id}/opportunities/{opp_id}` — Opportunity detail
+- `GET /api/v1/products/{id}/account-health` — Customer success account health
+- `GET /api/v1/agents/registry` — Agent registry catalog
+- `GET /api/v1/admin/plan` — Plan + usage
+- `GET/POST /api/v1/admin/suppression` — Suppression list
+- `GET /api/v1/admin/export` — Tenant data export (admin only)
+- `POST /api/v1/admin/purge` — Tenant knowledge purge, typed-slug confirmation (admin only)
+
+## Design system
+
+Default look is a glass/"Tahoe" visual language (blurred glass cards, pill buttons, hero
+orbs) using the platform's orange brand accent — see `apps/web/src/app/globals.css`
+(`.glass*`, `.tahoe-*` classes and `--glass-*`/`--blur-liquid*` tokens). Degrades
+automatically to flat surfaces under `prefers-reduced-transparency`,
+`prefers-reduced-motion`, and browsers without `backdrop-filter` support.
 
 ## License
 
