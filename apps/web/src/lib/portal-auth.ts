@@ -1,11 +1,11 @@
-/** Session storage for external portal accounts (customer/reseller, salesperson later) --
+/** Session storage for external portal accounts (customer/reseller/salesperson) --
  * deliberately separate keys from role-routing.ts's token/tenant_id/role, so an
  * internal-employee session and a portal session can never be confused with each other.
  * One portal session at a time per browser (a single "portal_token" key) -- being logged
  * into two portal types simultaneously in one browser is an edge case not worth the
  * storage complexity for this phase. */
 
-export type PortalType = 'customer' | 'reseller';
+export type PortalType = 'customer' | 'reseller' | 'salesperson';
 
 const PORTAL_TOKEN_KEY = 'portal_token';
 const PORTAL_TYPE_KEY = 'portal_type';

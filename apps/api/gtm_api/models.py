@@ -365,6 +365,11 @@ class Lead(Base):
     source: Mapped[str] = mapped_column(String(50), default="chat")
     metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
     consent_basis: Mapped[Optional[str]] = mapped_column(String(100))
+    # Set when an external salesperson-portal account owns this lead; null for
+    # internally-sourced leads.
+    assigned_sales_person_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("sales_person_accounts.id"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -436,6 +441,12 @@ class Opportunity(Base):
     amount: Mapped[Optional[float]] = mapped_column(Float)
     probability: Mapped[float] = mapped_column(Float, default=0.1)
     owner_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    # Distinct from owner_id (which is an unconstrained UUID implicitly meaning an
+    # internal User) -- this is the FK for an external salesperson-portal account, kept
+    # separate deliberately rather than overloading owner_id with two identity types.
+    assigned_sales_person_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("sales_person_accounts.id"), nullable=True
+    )
     proposal_artifact_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("artifacts.id"))
     architect_artifact_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("artifacts.id"))
     metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
@@ -601,6 +612,39 @@ class ResellerAccount(Base):
     )
 
     __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_reseller_account_tenant_email"),)
+
+
+class SalesPersonAccount(Base):
+    """External identity for contracted/affiliate sales reps who are NOT tenant
+    employees -- deliberately distinct from the internal `editor` role's Sales
+    Workspace, which is for the tenant's own staff. Same isolation rationale as
+    CustomerAccount/ResellerAccount (separate table/token type, never a `User` row).
+    Scoped to only the Leads/Opportunities assigned to them via
+    Lead.assigned_sales_person_id / Opportunity.assigned_sales_person_id."""
+
+    __tablename__ = "sales_person_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    contact_name: Mapped[Optional[str]] = mapped_column(String(255))
+    commission_rate: Mapped[float] = mapped_column(Float, default=0.0)
+    territory: Mapped[Optional[str]] = mapped_column(String(255))
+    assigned_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    status: Mapped[PortalAccountStatus] = mapped_column(
+        Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
+    )
+    rejected_reason: Mapped[Optional[str]] = mapped_column(Text)
+    reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_sales_person_account_tenant_email"),)
 
 
 class SourceCredential(Base):

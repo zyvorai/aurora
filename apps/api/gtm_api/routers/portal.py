@@ -23,11 +23,23 @@ from gtm_api.auth import (
     PortalIdentity,
 )
 from gtm_api.database import get_db
-from gtm_api.models import CustomerAccount, DiscoveredAccount, PortalAccountStatus, Product, ResellerAccount, Tenant, User
+from gtm_api.models import (
+    CustomerAccount,
+    DiscoveredAccount,
+    Lead,
+    Opportunity,
+    PortalAccountStatus,
+    Product,
+    ResellerAccount,
+    SalesPersonAccount,
+    Tenant,
+    User,
+)
 from gtm_api.schemas import (
     CustomerAccountResponse,
     DealRegistrationRequest,
     DealRegistrationResponse,
+    OpportunityResponse,
     PortalLoginRequest,
     PortalRejectRequest,
     PortalSignupRequest,
@@ -35,6 +47,9 @@ from gtm_api.schemas import (
     PortalTokenResponse,
     ResellerAccountResponse,
     ResellerSignupRequest,
+    SalesPersonAccountResponse,
+    SalesPersonPipelineResponse,
+    SalesPersonSignupRequest,
 )
 from gtm_api.tenant import audit_log, get_tenant_context
 
@@ -367,6 +382,182 @@ async def reject_reseller_account(
     account.reviewed_at = datetime.now(timezone.utc)
     await audit_log(
         db, ctx.tenant_id, user.id, "reject_reseller_account", "reseller_account",
+        resource_id=str(account_id), details={"reason": req.reason},
+    )
+    await db.flush()
+    await db.refresh(account)
+    return account
+
+
+# ---- Sales-person portal: same lifecycle as customer/reseller, scoped to their own
+# assigned Lead/Opportunity rows via assigned_sales_person_id ----
+
+
+@router.post("/salesperson/signup", response_model=PortalSignupResponse, status_code=201)
+async def salesperson_signup(req: SalesPersonSignupRequest, db: AsyncSession = Depends(get_db)):
+    tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
+
+    existing = await db.execute(
+        select(SalesPersonAccount).where(
+            SalesPersonAccount.tenant_id == tenant.id, SalesPersonAccount.email == req.email
+        )
+    )
+    if existing.scalar_one_or_none() is not None:
+        raise HTTPException(status_code=409, detail="An account with this email already exists")
+
+    account = SalesPersonAccount(
+        tenant_id=tenant.id,
+        email=req.email,
+        hashed_password=hash_password(req.password),
+        contact_name=req.contact_name,
+        territory=req.territory,
+        status=PortalAccountStatus.PENDING,
+    )
+    db.add(account)
+    await audit_log(
+        db, tenant.id, None, "portal_signup", "sales_person_account",
+        details={"email": req.email},
+    )
+    await db.flush()
+    await db.refresh(account)
+
+    return PortalSignupResponse(id=account.id, status=account.status.value)
+
+
+@router.post("/salesperson/login", response_model=PortalTokenResponse)
+async def salesperson_login(req: PortalLoginRequest, db: AsyncSession = Depends(get_db)):
+    tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
+
+    result = await db.execute(
+        select(SalesPersonAccount).where(
+            SalesPersonAccount.tenant_id == tenant.id, SalesPersonAccount.email == req.email
+        )
+    )
+    account = result.scalar_one_or_none()
+    if not account or not verify_password(req.password, account.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    if account.status != PortalAccountStatus.APPROVED or not account.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Account is {account.status.value}, not yet approved for login",
+        )
+
+    token = create_portal_token(account.id, tenant.id, portal_type="salesperson")
+    return PortalTokenResponse(access_token=token, portal_type="salesperson", account_id=account.id, tenant_id=tenant.id)
+
+
+@router.get("/salesperson/me", response_model=SalesPersonAccountResponse)
+async def salesperson_me(identity: PortalIdentity = Depends(get_current_portal_account)):
+    if identity.portal_type != "salesperson":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a sales-person account")
+    return identity.account
+
+
+@router.get("/salesperson/my-pipeline", response_model=SalesPersonPipelineResponse)
+async def salesperson_my_pipeline(
+    identity: PortalIdentity = Depends(get_current_portal_account), db: AsyncSession = Depends(get_db)
+):
+    if identity.portal_type != "salesperson":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a sales-person account")
+
+    lead_result = await db.execute(
+        select(Lead)
+        .where(Lead.assigned_sales_person_id == identity.account_id)
+        .order_by(Lead.created_at.desc())
+    )
+    leads = list(lead_result.scalars().all())
+
+    opp_result = await db.execute(
+        select(Opportunity)
+        .where(Opportunity.assigned_sales_person_id == identity.account_id)
+        .order_by(Opportunity.created_at.desc())
+    )
+    opportunities = [
+        OpportunityResponse(
+            id=opp.id,
+            name=opp.name,
+            company=opp.company,
+            stage=opp.stage,
+            amount=opp.amount,
+            probability=opp.probability,
+            lead_id=opp.lead_id,
+            proposal_artifact_id=opp.proposal_artifact_id,
+            architect_artifact_id=opp.architect_artifact_id,
+            metadata=opp.metadata_ or {},
+            created_at=opp.created_at,
+            updated_at=opp.updated_at,
+        )
+        for opp in opp_result.scalars().all()
+    ]
+
+    return SalesPersonPipelineResponse(leads=leads, opportunities=opportunities)
+
+
+@router.get("/salesperson/accounts", response_model=list[SalesPersonAccountResponse])
+async def list_salesperson_accounts(
+    status_filter: str | None = None,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    query = select(SalesPersonAccount).where(SalesPersonAccount.tenant_id == ctx.tenant_id)
+    if status_filter:
+        query = query.where(SalesPersonAccount.status == status_filter)
+    result = await db.execute(query.order_by(SalesPersonAccount.created_at.desc()))
+    return list(result.scalars().all())
+
+
+@router.post("/salesperson/accounts/{account_id}/approve", response_model=SalesPersonAccountResponse)
+async def approve_salesperson_account(
+    account_id: uuid.UUID,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    result = await db.execute(
+        select(SalesPersonAccount).where(
+            SalesPersonAccount.id == account_id, SalesPersonAccount.tenant_id == ctx.tenant_id
+        )
+    )
+    account = result.scalar_one_or_none()
+    if account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+    account.status = PortalAccountStatus.APPROVED
+    account.reviewed_by = user.id
+    account.reviewed_at = datetime.now(timezone.utc)
+    await audit_log(
+        db, ctx.tenant_id, user.id, "approve_salesperson_account", "sales_person_account",
+        resource_id=str(account_id),
+    )
+    await db.flush()
+    await db.refresh(account)
+    return account
+
+
+@router.post("/salesperson/accounts/{account_id}/reject", response_model=SalesPersonAccountResponse)
+async def reject_salesperson_account(
+    account_id: uuid.UUID,
+    req: PortalRejectRequest,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    result = await db.execute(
+        select(SalesPersonAccount).where(
+            SalesPersonAccount.id == account_id, SalesPersonAccount.tenant_id == ctx.tenant_id
+        )
+    )
+    account = result.scalar_one_or_none()
+    if account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+    account.status = PortalAccountStatus.REJECTED
+    account.rejected_reason = req.reason
+    account.reviewed_by = user.id
+    account.reviewed_at = datetime.now(timezone.utc)
+    await audit_log(
+        db, ctx.tenant_id, user.id, "reject_salesperson_account", "sales_person_account",
         resource_id=str(account_id), details={"reason": req.reason},
     )
     await db.flush()

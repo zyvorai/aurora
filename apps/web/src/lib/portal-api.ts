@@ -109,6 +109,54 @@ export interface DealRegistration {
   created_at: string;
 }
 
+export interface SalesPersonSignupRequest {
+  tenant_slug: string;
+  email: string;
+  password: string;
+  contact_name?: string;
+  territory?: string;
+}
+
+export interface SalesPersonAccount {
+  id: string;
+  tenant_id: string;
+  email: string;
+  contact_name?: string | null;
+  commission_rate: number;
+  territory?: string | null;
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  rejected_reason?: string | null;
+  created_at: string;
+}
+
+export interface SalesPersonLead {
+  id: string;
+  company?: string | null;
+  name?: string | null;
+  email?: string | null;
+  title?: string | null;
+  score: number;
+  stage: string;
+  created_at: string;
+}
+
+export interface SalesPersonOpportunity {
+  id: string;
+  name: string;
+  company?: string | null;
+  stage: string;
+  amount?: number | null;
+  probability: number;
+  lead_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface SalesPersonPipeline {
+  leads: SalesPersonLead[];
+  opportunities: SalesPersonOpportunity[];
+}
+
 export const portal = {
   signup: (req: PortalSignupRequest) =>
     portalRequest<PortalSignupResponse>('/customer/signup', {
@@ -149,6 +197,24 @@ export const resellerPortal = {
   myDeals: () => portalRequest<DealRegistration[]>('/reseller/deals'),
 };
 
+export const salesPersonPortal = {
+  signup: (req: SalesPersonSignupRequest) =>
+    portalRequest<PortalSignupResponse>('/salesperson/signup', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+
+  login: (req: { tenant_slug: string; email: string; password: string }) =>
+    portalRequest<PortalTokenResponse>('/salesperson/login', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+
+  me: () => portalRequest<SalesPersonAccount>('/salesperson/me'),
+
+  myPipeline: () => portalRequest<SalesPersonPipeline>('/salesperson/my-pipeline'),
+};
+
 export const portalAdmin = {
   listAccounts: (statusFilter?: string) => {
     const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : '';
@@ -174,6 +240,20 @@ export const portalAdmin = {
 
   rejectReseller: (accountId: string, reason: string) =>
     adminPortalRequest<ResellerAccount>(`/reseller/accounts/${accountId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+
+  listSalesPersonAccounts: (statusFilter?: string) => {
+    const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : '';
+    return adminPortalRequest<SalesPersonAccount[]>(`/salesperson/accounts${query}`);
+  },
+
+  approveSalesPerson: (accountId: string) =>
+    adminPortalRequest<SalesPersonAccount>(`/salesperson/accounts/${accountId}/approve`, { method: 'POST' }),
+
+  rejectSalesPerson: (accountId: string, reason: string) =>
+    adminPortalRequest<SalesPersonAccount>(`/salesperson/accounts/${accountId}/reject`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }),

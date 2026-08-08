@@ -13,10 +13,22 @@ import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
-import { portalAdmin, type CustomerAccount, type ResellerAccount } from '@/lib/portal-api';
+import { portalAdmin, type CustomerAccount, type ResellerAccount, type SalesPersonAccount } from '@/lib/portal-api';
 
-type PortalAccount = CustomerAccount | ResellerAccount;
-type PortalTab = 'customer' | 'reseller';
+type PortalAccount = CustomerAccount | ResellerAccount | SalesPersonAccount;
+type PortalTab = 'customer' | 'reseller' | 'salesperson';
+
+const TAB_LABEL: Record<PortalTab, string> = {
+  customer: 'Customers',
+  reseller: 'Resellers',
+  salesperson: 'Sales reps',
+};
+
+function displayName(account: PortalAccount): string {
+  if ('company_name' in account && account.company_name) return account.company_name;
+  if ('contact_name' in account && account.contact_name) return account.contact_name;
+  return '—';
+}
 
 const STATUS_VARIANT: Record<PortalAccount['status'], BadgeVariant> = {
   pending: 'warning',
@@ -43,7 +55,12 @@ export default function PortalAccountsAdminPage() {
 
   function refresh() {
     setLoading(true);
-    const call = tab === 'customer' ? portalAdmin.listAccounts() : portalAdmin.listResellerAccounts();
+    const call =
+      tab === 'customer'
+        ? portalAdmin.listAccounts()
+        : tab === 'reseller'
+          ? portalAdmin.listResellerAccounts()
+          : portalAdmin.listSalesPersonAccounts();
     call
       .then((result) => setAccounts(result))
       .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load accounts'))
@@ -54,7 +71,8 @@ export default function PortalAccountsAdminPage() {
     setBusyId(account.id);
     try {
       if (tab === 'customer') await portalAdmin.approve(account.id);
-      else await portalAdmin.approveReseller(account.id);
+      else if (tab === 'reseller') await portalAdmin.approveReseller(account.id);
+      else await portalAdmin.approveSalesPerson(account.id);
       showToast('success', `Approved ${account.email}`);
       refresh();
     } catch (err) {
@@ -69,7 +87,8 @@ export default function PortalAccountsAdminPage() {
     setBusyId(rejectTarget.id);
     try {
       if (tab === 'customer') await portalAdmin.reject(rejectTarget.id, rejectReason.trim());
-      else await portalAdmin.rejectReseller(rejectTarget.id, rejectReason.trim());
+      else if (tab === 'reseller') await portalAdmin.rejectReseller(rejectTarget.id, rejectReason.trim());
+      else await portalAdmin.rejectSalesPerson(rejectTarget.id, rejectReason.trim());
       showToast('success', `Rejected ${rejectTarget.email}`);
       setRejectTarget(null);
       setRejectReason('');
@@ -109,7 +128,7 @@ export default function PortalAccountsAdminPage() {
       />
 
       <div className="flex gap-2">
-        {(['customer', 'reseller'] as const).map((t) => (
+        {(['customer', 'reseller', 'salesperson'] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -119,7 +138,7 @@ export default function PortalAccountsAdminPage() {
               tab === t ? 'bg-primary text-primary-foreground' : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
             )}
           >
-            {t}s
+            {TAB_LABEL[t]}
           </button>
         ))}
       </div>
@@ -127,14 +146,14 @@ export default function PortalAccountsAdminPage() {
       {loading ? (
         <div className="text-muted">Loading…</div>
       ) : accounts.length === 0 ? (
-        <EmptyState icon={Users} title="No signup requests yet" description={`${tab === 'customer' ? 'Customer' : 'Reseller'} portal signups will appear here.`} />
+        <EmptyState icon={Users} title="No signup requests yet" description={`${TAB_LABEL[tab]} portal signups will appear here.`} />
       ) : (
         <Card>
           <Table>
             <TableHead>
               <TableRow>
                 <TableHeaderCell>Email</TableHeaderCell>
-                <TableHeaderCell>Company</TableHeaderCell>
+                <TableHeaderCell>{tab === 'salesperson' ? 'Name' : 'Company'}</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>
                 <TableHeaderCell>Requested</TableHeaderCell>
                 <TableHeaderCell>{''}</TableHeaderCell>
@@ -144,7 +163,7 @@ export default function PortalAccountsAdminPage() {
               {accounts.map((account) => (
                 <TableRow key={account.id}>
                   <TableCell>{account.email}</TableCell>
-                  <TableCell>{account.company_name || '—'}</TableCell>
+                  <TableCell>{displayName(account)}</TableCell>
                   <TableCell>
                     <Badge variant={STATUS_VARIANT[account.status]}>{account.status}</Badge>
                   </TableCell>

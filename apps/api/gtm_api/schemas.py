@@ -154,6 +154,41 @@ class DealRegistrationResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SalesPersonSignupRequest(BaseModel):
+    tenant_slug: str = Field(..., min_length=1, max_length=100)
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    contact_name: str = ""
+    territory: str = ""
+
+
+class SalesPersonAccountResponse(BaseModel):
+    id: uuid.UUID
+    tenant_id: uuid.UUID
+    email: str
+    contact_name: Optional[str] = None
+    commission_rate: float = 0.0
+    territory: Optional[str] = None
+    status: str
+    rejected_reason: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class SalesPersonLeadResponse(BaseModel):
+    id: uuid.UUID
+    company: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    title: Optional[str] = None
+    score: float = 0.0
+    stage: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # Products
 class ProductCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)
@@ -570,6 +605,11 @@ class OpportunityResponse(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+class SalesPersonPipelineResponse(BaseModel):
+    leads: list[SalesPersonLeadResponse]
+    opportunities: list[OpportunityResponse]
 
 
 class PipelineSummaryResponse(BaseModel):

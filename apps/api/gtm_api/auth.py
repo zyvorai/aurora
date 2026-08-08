@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
-from gtm_api.models import ApiKey, CustomerAccount, PortalAccountStatus, ResellerAccount, User
+from gtm_api.models import ApiKey, CustomerAccount, PortalAccountStatus, ResellerAccount, SalesPersonAccount, User
 
 settings = get_settings()
 # auto_error=False so a request can authenticate via X-API-Key instead of Bearer JWT;
@@ -79,14 +79,15 @@ class PortalIdentity:
     account_id: uuid.UUID
     tenant_id: uuid.UUID
     portal_type: str
-    account: "CustomerAccount | ResellerAccount"
+    account: "CustomerAccount | ResellerAccount | SalesPersonAccount"
 
 
-# One model per external portal type. Adding a new portal type (e.g. salesperson) means
-# adding one entry here -- create_portal_token/get_current_portal_account need no changes.
+# One model per external portal type. Adding a new portal type means adding one entry
+# here -- create_portal_token/get_current_portal_account need no further changes.
 PORTAL_ACCOUNT_MODELS: dict[str, type] = {
     "customer": CustomerAccount,
     "reseller": ResellerAccount,
+    "salesperson": SalesPersonAccount,
 }
 
 
