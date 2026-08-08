@@ -1,4 +1,4 @@
-"""GTM Platform API configuration."""
+"""Emissary API configuration."""
 
 import os
 from functools import lru_cache
@@ -69,7 +69,7 @@ AGENT_ENV_KEYS: dict[str, tuple[str, str]] = {
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    app_name: str = "GTM Agent Platform"
+    app_name: str = "Emissary"
     debug: bool = False
     api_prefix: str = "/api/v1"
 

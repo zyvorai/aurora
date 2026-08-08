@@ -1,4 +1,4 @@
-"""Tests for GTM Platform API."""
+"""Tests for Emissary API."""
 
 import pytest
 from gtm_api.auth import hash_password, verify_password, slugify, content_hash

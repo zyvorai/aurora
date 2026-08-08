@@ -1,4 +1,4 @@
-# GTM Platform — Test Case Document
+# Emissary — Test Case Document
 
 Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 

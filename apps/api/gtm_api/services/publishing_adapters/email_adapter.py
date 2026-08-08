@@ -27,7 +27,7 @@ def _send_sync(artifact: Artifact) -> ProviderResult:
     recipient = settings.email_channel_recipient or settings.smtp_from
 
     message = EmailMessage()
-    message["Subject"] = artifact.title or "GTM Platform Update"
+    message["Subject"] = artifact.title or "Emissary Update"
     message["From"] = settings.smtp_from
     message["To"] = recipient
     message["Message-Id"] = make_msgid()

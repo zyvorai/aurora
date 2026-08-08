@@ -1,4 +1,4 @@
-# Multi-Agent Composition Plan — Zyvor GTM Platform
+# Multi-Agent Composition Plan — Emissary
 
 Plan to evolve from **7 monolithic LangGraph agents + routing stub** into **11 specialized, composable agents** orchestrated by a real supervisor.
 

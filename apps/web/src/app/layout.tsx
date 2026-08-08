@@ -6,7 +6,7 @@ import { ThemeProvider, THEME_INIT_SCRIPT } from '@/context/ThemeContext';
 import { DEV_HMR_GUARD_SCRIPT } from '@/lib/dev-hmr-guard-inline';
 
 export const metadata: Metadata = {
-  title: 'GTM Agent Platform',
+  title: 'Emissary',
   description: 'Turn your technical product into an AI-powered salesperson',
 };
 

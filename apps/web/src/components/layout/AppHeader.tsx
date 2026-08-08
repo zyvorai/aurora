@@ -58,7 +58,7 @@ export function AppHeader({
             </Button>
           )}
           <Link href="/dashboard" className="flex flex-col min-w-0 focus-ring rounded-sm">
-            <span className="text-eyebrow text-[10px]">GTM Platform</span>
+            <span className="text-eyebrow text-[10px]">Emissary</span>
             {productName ? (
               <span className="text-body font-semibold truncate">{productName}</span>
             ) : (
@@ -131,7 +131,7 @@ export function AppFooter() {
           </ul>
         </div>
         <div>
-          <p className="font-medium mb-2">GTM Agent Platform</p>
+          <p className="font-medium mb-2">Emissary</p>
           <p className="text-muted text-xs font-medium">Enterprise GTM orchestration</p>
         </div>
       </div>

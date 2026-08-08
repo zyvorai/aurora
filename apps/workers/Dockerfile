@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
 # Build context for this Dockerfile MUST be the repo root (not apps/workers/),
-# because apps/workers/pyproject.toml declares a plain "gtm-api" dependency with
+# because apps/workers/pyproject.toml declares a plain "emissary-api" dependency with
 # no PyPI/path/git source -- the only way to satisfy it in a container is to
 # install apps/api's package into the same venv from local source.
 FROM python:3.12-slim-bookworm AS builder

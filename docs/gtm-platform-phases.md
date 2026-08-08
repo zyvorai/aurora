@@ -1,4 +1,4 @@
-# GTM Agent Platform — 12-Phase Implementation Guide
+# Emissary — 12-Phase Implementation Guide
 
 Multi-tenant SaaS platform where software companies onboard with a website or documentation URL. The platform builds a grounded knowledge base and runs AI marketing, sales, and solution agents.
 

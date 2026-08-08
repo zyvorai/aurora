@@ -48,7 +48,7 @@ export default function HomePage() {
       <main className="flex-1 grid lg:grid-cols-2 gap-0">
         {/* Hero — Red Hat split layout */}
         <section className="flex flex-col justify-center px-8 py-16 lg:py-24 lg:px-16 border-b lg:border-b-0 lg:border-r border-border">
-          <Eyebrow className="mb-4">GTM Agent Platform</Eyebrow>
+          <Eyebrow className="mb-4">Emissary</Eyebrow>
           <DisplayTitle className="mb-6">
             Turn your technical product into an AI-powered GTM engine
           </DisplayTitle>
