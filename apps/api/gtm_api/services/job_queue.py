@@ -28,3 +28,18 @@ async def enqueue_source_ingest(
         str(product_id),
     )
     return job.job_id if job else None
+
+
+async def enqueue_product_refresh(
+    product_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+) -> Optional[str]:
+    if not settings.redis_workers_enabled:
+        return None
+    redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))
+    job = await redis.enqueue_job(
+        "refresh_product_knowledge",
+        str(product_id),
+        str(tenant_id),
+    )
+    return job.job_id if job else None

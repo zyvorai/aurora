@@ -2,12 +2,14 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import get_current_user, require_permission
 from gtm_api.database import async_session_factory, get_db
-from gtm_api.models import User
+from gtm_api.models import Artifact, User
 from gtm_api.schemas import (
     ArchitectRequest,
     ArchitectResponse,
@@ -25,10 +27,15 @@ from gtm_api.agents.outreach import run_outreach
 from gtm_api.agents.solution_architect import invoke_solution_architect, run_solution_architect
 from gtm_api.agents.proposal_generator import run_proposal_generator
 from gtm_api.agents.supervisor import run_supervisor
+from gtm_api.config import get_settings
 from gtm_api.services.analytics import get_analytics
+from gtm_api.services.job_queue import enqueue_product_refresh
 from gtm_api.services.learning import refresh_product
 from gtm_api.services.enterprise import get_audit_trail, add_suppression
+from gtm_api.services.proposal_export import EXPORT_RENDERERS
 from gtm_api.tenant import get_product_for_tenant, get_tenant_context, record_usage
+
+settings = get_settings()
 
 router = APIRouter(tags=["agents"])
 
@@ -126,6 +133,48 @@ async def generate_proposal(
     )
 
 
+@router.get("/products/{product_id}/proposals/{artifact_id}/export")
+async def export_proposal(
+    product_id: uuid.UUID,
+    artifact_id: uuid.UUID,
+    format: str = "pdf",
+    user: User = Depends(require_permission("read")),
+    db: AsyncSession = Depends(get_db),
+):
+    if format not in EXPORT_RENDERERS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported format '{format}'. Use one of: {', '.join(EXPORT_RENDERERS)}",
+        )
+
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+
+    result = await db.execute(
+        select(Artifact).where(
+            Artifact.id == artifact_id,
+            Artifact.product_id == product_id,
+            Artifact.tenant_id == ctx.tenant_id,
+        )
+    )
+    artifact = result.scalar_one_or_none()
+    if not artifact:
+        raise HTTPException(status_code=404, detail="Proposal artifact not found")
+
+    render, content_type = EXPORT_RENDERERS[format]
+    try:
+        file_bytes = render(artifact)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Export failed: {exc}")
+
+    filename = f"proposal-{artifact_id}.{format}"
+    return StreamingResponse(
+        iter([file_bytes]),
+        media_type=content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get("/products/{product_id}/analytics", response_model=AnalyticsResponse)
 async def product_analytics(
     product_id: uuid.UUID,
@@ -140,10 +189,23 @@ async def product_analytics(
 @router.post("/products/{product_id}/refresh")
 async def refresh_knowledge(
     product_id: uuid.UUID,
+    async_mode: bool = True,
     user: User = Depends(require_permission("write")),
     db: AsyncSession = Depends(get_db),
 ):
     ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+
+    if async_mode and settings.redis_workers_enabled:
+        job_id = await enqueue_product_refresh(product_id, ctx.tenant_id)
+        if job_id:
+            return {
+                "status": "queued",
+                "job_id": job_id,
+                "message": "Refresh queued — poll product sources for status",
+            }
+        # Workers unavailable — fall through to synchronous refresh
+
     result = await refresh_product(db, product_id, ctx.tenant_id)
     return result
 

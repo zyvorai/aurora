@@ -19,7 +19,7 @@ from gtm_api.agents.solution_architect import invoke_solution_architect
 from gtm_api.agents.registry import get_agent_spec, resolve_agent_for_request
 from gtm_api.auth import content_hash
 from gtm_api.database import async_session_factory
-from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Product
+from gtm_api.models import AgentRun, ApprovalStatus, Artifact, ArtifactType, Product
 from gtm_api.services.analytics import get_analytics
 from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
@@ -77,6 +77,7 @@ async def dispatch_agent(
         user_id=user_id,
         request_type=request_type,
         payload=input_data,
+        upstream_artifacts=await _resolve_upstream_artifacts(db, tenant_id, input_data),
     )
 
     handlers = {
@@ -104,6 +105,47 @@ async def dispatch_agent(
         return await handler(db, product, agent_input)
     except Exception as exc:
         return wrap_llm_error(spec.agent_id, exc)
+
+
+async def _resolve_upstream_artifacts(
+    db: AsyncSession,
+    tenant_id: uuid.UUID,
+    input_data: dict,
+) -> dict:
+    """Look up artifacts/agent runs referenced by upstream_artifact_ids /
+    upstream_agent_run_id in the request payload, so a dispatch can chain off
+    a prior agent's output instead of only the caller-supplied payload."""
+    artifacts: dict = {}
+
+    for raw_id in input_data.get("upstream_artifact_ids") or []:
+        try:
+            artifact_id = raw_id if isinstance(raw_id, uuid.UUID) else uuid.UUID(str(raw_id))
+        except (ValueError, TypeError):
+            continue
+        artifact = await db.get(Artifact, artifact_id)
+        if artifact and artifact.tenant_id == tenant_id:
+            artifacts[str(artifact.id)] = {
+                "artifact_type": artifact.artifact_type.value,
+                "title": artifact.title,
+                "content": artifact.content,
+                "metadata": artifact.metadata_ or {},
+            }
+
+    run_id = input_data.get("upstream_agent_run_id")
+    if run_id:
+        try:
+            run_uuid = run_id if isinstance(run_id, uuid.UUID) else uuid.UUID(str(run_id))
+        except (ValueError, TypeError):
+            run_uuid = None
+        if run_uuid:
+            run = await db.get(AgentRun, run_uuid)
+            if run and run.tenant_id == tenant_id:
+                artifacts[f"run:{run.id}"] = {
+                    "agent_type": run.agent_type,
+                    "output": run.output_data or {},
+                }
+
+    return artifacts
 
 
 def _suggest_next(agent_id: str) -> list[str]:

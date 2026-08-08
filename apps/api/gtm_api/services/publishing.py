@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import content_hash
 from gtm_api.models import Approval, ApprovalStatus, Artifact, ChannelPost
+from gtm_api.services.publishing_adapters import ADAPTER_REGISTRY
 from gtm_api.tenant import audit_log
 
 
@@ -62,9 +63,17 @@ async def publish_artifact(
     db.add(post)
 
     if not scheduled_at:
-        post.status = "published"
-        post.published_at = datetime.now(timezone.utc)
-        post.provider_message_id = f"mock-{uuid.uuid4().hex[:12]}"
+        adapter = ADAPTER_REGISTRY.get(channel)
+        if adapter is None:
+            post.status = "failed"
+            post.error_message = f"No adapter registered for channel '{channel}'"
+        else:
+            result = await adapter(artifact, post)
+            post.status = result.status
+            post.provider_message_id = result.provider_message_id
+            post.error_message = result.error
+            if result.status == "published":
+                post.published_at = datetime.now(timezone.utc)
 
     await audit_log(
         db, tenant_id, user_id, "publish", "channel_post",

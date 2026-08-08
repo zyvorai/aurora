@@ -95,6 +95,17 @@ class Settings(BaseSettings):
     minio_bucket: str = "gtm-artifacts"
     minio_secure: bool = False
 
+    # SMTP (publishing email channel adapter)
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "gtm-platform@example.com"
+    smtp_use_tls: bool = True
+    # The email channel is a broadcast/digest send (no per-lead recipient list
+    # exists in the data model yet) -- defaults to smtp_from as a self-send.
+    email_channel_recipient: str = ""
+
     # Auth
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
     algorithm: str = "HS256"
@@ -238,6 +249,10 @@ class Settings(BaseSettings):
         if self.deployment_profile.strip().lower() == "minimal":
             return False
         return self.enable_redis_workers
+
+    @property
+    def smtp_configured(self) -> bool:
+        return bool(self.smtp_host and self.smtp_user and self.smtp_password)
 
     @property
     def external_crm_sync_enabled(self) -> bool:

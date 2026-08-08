@@ -56,7 +56,7 @@ flowchart TB
 | 8 | Proposal Generator | ⚠️ MVP | `agents/proposal_generator.py` | `POST /products/{id}/proposals` |
 | 9 | Analytics | ⚠️ MVP | `services/analytics.py` | `GET /products/{id}/analytics` |
 | 10 | Continuous Learning | ⚠️ MVP | `services/learning.py`, `workers/` | `POST /products/{id}/refresh` |
-| 11 | Multi-Agent Supervisor | ❌ Stub | `agents/supervisor.py` | `POST /products/{id}/supervisor` |
+| 11 | Multi-Agent Supervisor | ✅ Complete | `agents/supervisor.py`, `agents/executor.py`, `agents/registry.py`, `agents/tools.py` | `POST /products/{id}/supervisor` |
 | 12 | Enterprise | ⚠️ MVP | `services/enterprise.py`, `auth.py` | `GET /audit`, RBAC on all routes |
 
 ---
@@ -80,8 +80,12 @@ flowchart TB
 |---------|---------|
 | Playwright for JS-heavy sites | httpx + BeautifulSoup only |
 | GitHub, PDF, DOCX, PPT, video, OpenAPI loaders | Enum exists; only WEBSITE/DOCS/BLOG ingested |
-| Background crawl via Redis queue | Synchronous ingest in API; workers exist but not wired |
 | Unstructured.io, Whisper, diagram OCR | Not implemented |
+
+Background crawl via Redis queue is done: `services/job_queue.py::enqueue_source_ingest()` +
+`routers/products.py::trigger_ingest()` enqueue the worker's `crawl_source` job when
+`async_mode=True` and Redis workers are enabled; `POST /products/{id}/refresh` (Phase 10)
+now enqueues `refresh_product_knowledge` the same way via `enqueue_product_refresh()`.
 
 ### Acceptance criteria
 
@@ -90,7 +94,7 @@ flowchart TB
 - [x] Product profile extracted and stored in Postgres
 - [x] Grounded Q&A returns citations
 - [ ] GitHub/PDF/video sources ingest successfully
-- [ ] Ingest runs asynchronously via worker queue
+- [x] Ingest runs asynchronously via worker queue
 
 ### Tests
 
@@ -98,9 +102,9 @@ flowchart TB
 |------|------|--------|
 | Chunk text splitting | `tests/test_api.py::TestChunking` | ✅ |
 | Citation grounding | `tests/test_api.py::TestCitationGate` | ✅ |
-| Crawler SSRF block | — | ❌ Missing |
-| Ingest end-to-end | — | ❌ Missing |
-| Tenant isolation (Qdrant) | — | ❌ Missing |
+| Crawler SSRF block | `tests/test_crawler.py::TestValidateUrl` | ✅ |
+| Ingest end-to-end | `tests/test_ingestion.py::test_ingest_pipeline` | ✅ |
+| Tenant isolation (Qdrant) | `tests/test_vector_store.py::test_tenant_isolation_qdrant` | ✅ |
 
 ---
 
@@ -248,16 +252,20 @@ import ChatWidget from '@/components/ChatWidget';
 
 **Goal:** Publish approved content to LinkedIn, X, Medium, blog CMS, email, etc.
 
-### Implemented ⚠️ (stub)
+### Implemented ⚠️
 
 - Approval gate before publish
 - Idempotency keys on `ChannelPost`
-- Channel name registry (LinkedIn, X, Medium, Dev.to, Reddit, blog, newsletter, email)
+- **Pluggable adapter interface** (`services/publishing_adapters/`, `PublishAdapter` protocol) —
+  `publish_artifact()` dispatches to a per-channel adapter instead of a hardcoded mock
+- **Real `email`/`newsletter` channel** via SMTP (`email_adapter.py`, configured with
+  `SMTP_HOST`/`SMTP_USER`/`SMTP_PASSWORD`; degrades to `not_configured` when unset)
 
 ### Gaps ❌
 
-- **Mock publish only** — no real connector APIs
-- No scheduler or retry queue
+- LinkedIn/X/Medium/Dev.to/Reddit/blog remain stub adapters (`stub_adapter.py`) — need real
+  OAuth app registration + credentials per channel, which is an operator action, not just code
+- No scheduler or retry queue for `scheduled_at` posts
 - No A/B variants or engagement prediction
 - No publishing dashboard UI
 
@@ -265,16 +273,19 @@ import ChatWidget from '@/components/ChatWidget';
 
 - [x] Publish blocked without approval
 - [x] Idempotent publish records
-- [ ] Real LinkedIn/X/Medium connector (or pluggable adapter interface)
+- [x] Pluggable adapter interface (`PublishAdapter` protocol)
+- [x] One real (non-OAuth) channel connector (email via SMTP)
+- [ ] Real LinkedIn/X/Medium connectors
 - [ ] Scheduled publish via worker
 - [ ] Failed publish retry
 
 ### Tests
 
-| Test | Status |
-|------|--------|
-| Approval gate | ❌ Missing |
-| Idempotency | ❌ Missing |
+| Test | File | Status |
+|------|------|--------|
+| Approval gate blocks publish | `tests/test_publishing.py::test_publish_blocked_without_approval` | ✅ |
+| Idempotency dedup | `tests/test_publishing.py::test_publish_rejects_duplicate_idempotency_key` | ✅ |
+| Email adapter degrades without SMTP config | `tests/test_publishing.py::test_publish_email_channel_real_adapter_not_configured_without_smtp` | ✅ |
 
 ---
 
@@ -312,30 +323,32 @@ import ChatWidget from '@/components/ChatWidget';
 
 **Goal:** One-click proposal packs with PDF/DOCX/PPTX export.
 
-### Implemented ⚠️
+### Implemented ✅
 
 - `ProposalGeneratorAgent` — proposal, SOW, ROI, pricing, timeline
 - Artifacts stored in Postgres
 - Frontend Proposal tab in product workspace
+- **PDF/DOCX/PPTX export** — `services/proposal_export.py` (weasyprint / python-docx /
+  python-pptx), `GET /products/{id}/proposals/{artifact_id}/export?format=pdf|docx|pptx`,
+  with Export buttons in the Forge Proposal tab
 
-### Gaps ❌
+### Gaps ⚠️
 
-- `python-docx`, `python-pptx`, `weasyprint` in dependencies but **not wired**
-- No file download endpoint
+- No dedicated export test (renderers are exercised manually/smoke-tested, not unit-tested)
 
 ### Acceptance criteria
 
 - [x] Generate proposal JSON artifact from scope + KB
-- [ ] Export PDF
-- [ ] Export DOCX
-- [ ] Export PPTX
+- [x] Export PDF
+- [x] Export DOCX
+- [x] Export PPTX
 
 ### Tests
 
 | Test | Status |
 |------|--------|
 | Proposal agent (mocked LLM) | ❌ Missing |
-| PDF/DOCX export | ❌ Missing |
+| PDF/DOCX/PPTX export | ⚠️ Manually verified, no automated test yet |
 
 ---
 
@@ -381,7 +394,9 @@ import ChatWidget from '@/components/ChatWidget';
 - Source change detection via content hash
 - `refresh_product` re-ingests changed sources
 - Worker job `refresh_product_knowledge`
-- `POST /products/{id}/refresh` API
+- `POST /products/{id}/refresh` API — now enqueues to the worker (`async_mode=True` by
+  default, via `enqueue_product_refresh()`) instead of running synchronously in-request;
+  falls back to sync when Redis workers are disabled
 
 ### Gaps ⚠️
 
@@ -409,28 +424,42 @@ import ChatWidget from '@/components/ChatWidget';
 
 **Goal:** Single orchestration runtime routing to all agent subgraphs.
 
-### Implemented ❌ (routing shell only)
+### Implemented ✅
 
-- LangGraph supervisor with request-type → agent routing table
-- `POST /products/{id}/supervisor` endpoint
+- LangGraph supervisor with request-type → agent routing table (`agents/registry.py`)
+- `agents/executor.py::dispatch_agent()` resolves the routed agent and calls one of 11 real
+  `_execute_*` handlers (product, market_research, lead_discovery, lead_qualification,
+  outreach, campaign, sales_engineer, proposal, analytics, crm, customer_success) — each
+  invoking the real agent/service functions, persisting `Artifact`/`AgentRun` rows, and
+  recording usage
+- `AgentInput.upstream_artifacts` is now populated: `dispatch_agent()` resolves
+  `upstream_artifact_ids`/`upstream_agent_run_id` from the request payload into looked-up
+  `Artifact`/`AgentRun` rows, so a dispatch can chain off a prior agent's output
+- Minimal tool registry (`agents/tools.py`): `search_kb`, `create_artifact`, `schedule_post`,
+  callable by agent code without duplicating RAG-search/persistence/publish logic
+- `POST /products/{id}/supervisor` endpoint (`routers/agents.py`) calls `run_supervisor`
 
-### Critical gap
+### Note
 
-Execute nodes return `{"status": "routed"}` — they **do not invoke** real agents. Direct router endpoints remain the primary execution path.
+Multi-step orchestration exists via two mechanisms today: this per-request dispatch (single
+agent per call, optionally chained via `upstream_artifacts`) and the separate `WorkflowRun`
+mechanism (`services/workflows.py`) that already sequences `outbound_sprint`/`technical_eval`
+across multiple agents with `202`-accepted + poll semantics. They're not unified into one
+orchestrator — that's an intentional scope boundary, not a gap being tracked.
 
 ### Acceptance criteria
 
 - [x] Routing table maps request types to agents
-- [ ] Supervisor dispatches to real agent implementations
-- [ ] Shared memory across agent calls
-- [ ] Tool registry (search_kb, create_artifact, schedule_post)
+- [x] Supervisor dispatches to real agent implementations
+- [x] Shared memory across agent calls (`upstream_artifacts`)
+- [x] Tool registry (search_kb, create_artifact, schedule_post)
 
 ### Tests
 
-| Test | Status |
-|------|--------|
-| Route mapping | ❌ Missing |
-| End-to-end dispatch | ❌ Missing |
+| Test | File | Status |
+|------|------|--------|
+| Route mapping | `tests/test_agent_registry.py::TestAgentRegistry` | ✅ |
+| End-to-end dispatch (mocked LLM) | `tests/test_agent_registry.py::TestSupervisorExecution::test_run_supervisor_strategy_mocked` | ✅ |
 
 ---
 
@@ -485,24 +514,20 @@ Dual-provider layer (Ollama + OpenAI) documented in [ollama-llm-integration.md](
 
 ## Test matrix summary
 
-| Category | Tests | Passing |
-|----------|-------|---------|
-| Auth utilities | 3 | ✅ |
-| Chunking | 2 | ✅ |
-| Citation gate | 2 | ✅ |
-| Enterprise plan flags | 1 | ✅ |
-| LLM factory (unit) | 6 | ✅ |
-| LLM integration | 9 | ✅ |
-| **Total** | **23** | **✅** |
+145 tests across `apps/api/tests/` (per-file breakdown grew organically with each wave —
+see individual phase sections above for the tests most relevant to that phase, or run
+`pytest --collect-only -q` for the full list). All passing as of this update.
 
-### Recommended next tests
+### Previously "recommended next tests" — now implemented
 
-1. `test_crawler_blocks_private_ips` — SSRF validation
-2. `test_ingest_pipeline` — crawl → chunk → embed (mocked externals)
-3. `test_approval_blocks_publish` — Phase 3 + 6 gate
-4. `test_tenant_isolation_qdrant` — cross-tenant search returns empty
-5. `test_supervisor_dispatches_strategy` — Phase 11 wiring
-6. `test_api_products_crud` — FastAPI TestClient with auth
+1. `test_crawler_blocks_private_ips` — SSRF validation — ✅ `tests/test_crawler.py`
+2. `test_ingest_pipeline` — crawl → chunk → embed (mocked externals) — ✅ `tests/test_ingestion.py`
+3. `test_approval_blocks_publish` — Phase 3 + 6 gate — ✅ `tests/test_publishing.py`
+4. `test_tenant_isolation_qdrant` — cross-tenant search never leaks — ✅ `tests/test_vector_store.py` (real in-memory Qdrant, not mocked)
+5. `test_supervisor_dispatches_strategy` — Phase 11 wiring — ✅ `tests/test_agent_registry.py`
+6. `test_api_products_crud` — ✅ `tests/test_api_products.py` (direct router-function calls with
+   mocked `AsyncSession`, matching this suite's established convention, not a TestClient+
+   dependency-override HTTP harness)
 
 Run all tests:
 
@@ -527,7 +552,7 @@ Product workspace tabs (`apps/web/src/app/products/[id]/page.tsx`):
 | Sales Chat | 4 | chat |
 | Outreach | 5 | outreach |
 | Architect | 7 | architect |
-| Proposal | 8 | proposals |
+| Proposal | 8 | proposals, `GET .../proposals/{id}/export?format=pdf\|docx\|pptx` |
 | Analytics | 9 | analytics |
 
 API client: `apps/web/src/lib/api.ts`
@@ -536,28 +561,37 @@ API client: `apps/web/src/lib/api.ts`
 
 ## Roadmap priorities
 
+`Wire supervisor to real agents`, `Wire ingest to background workers`, `PDF/DOCX proposal
+export`, and `Real publishing adapter interface` (below) are now done — see Phases 11, 1, 10,
+8, and 6 above for what's implemented vs. still open on each.
+
 | Priority | Item | Phases |
 |----------|------|--------|
-| P0 | Wire supervisor to real agents | 11 |
-| P0 | Add phase integration tests | All |
-| P1 | Wire ingest to background workers | 1, 10 |
-| P1 | PDF/DOCX proposal export | 8 |
-| P1 | Real publishing adapter interface | 6 |
+| P1 | Real LinkedIn/X/Medium/Dev.to/Reddit connectors (adapters are stubbed behind a pluggable interface — needs OAuth app credentials) | 6 |
 | P2 | GitHub/PDF source loaders | 1 |
 | P2 | SSO (Auth0/Keycloak) | 12 |
-| P2 | WebSocket chat streaming | 4 |
+| P2 | WebSocket chat streaming (replace polling for chat/ingest/workflow progress) | 4 |
 | P3 | Playwright crawler | 1 |
-| P3 | Scheduled learning cron | 10 |
+| P3 | Scheduled learning cron (refresh runs async now, but isn't scheduled) | 10 |
+| P3 | Publish scheduler + retry queue for `scheduled_at` posts | 6 |
 
 ---
 
 ## Quick reference
 
 ```bash
-make start    # infra + DB + API + web (background)
+make start    # infra + DB + API + web (background) — local dev, bare processes
 make stop     # stop processes + Docker
-make test     # 23 tests
+make test     # 145 tests
 curl http://localhost:8000/health
+```
+
+Containerized (api/web/workers as Docker images alongside the existing backing-infra
+compose file — see [Dockerfiles + compose overlay](../docker-compose.prod.yml)):
+
+```bash
+cp .env.prod.example .env   # then edit secrets
+docker compose -f infra/docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
 Full local dev guide (setup, scripts, Makefile, troubleshooting): [dev-guide.md](./dev-guide.md)

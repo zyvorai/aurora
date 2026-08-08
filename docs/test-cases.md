@@ -2,8 +2,14 @@
 
 Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 
-**Last verified:** 60 tests passing  
+**Last verified:** 145 tests passing (2026-08-08)
 **Run command:** `make test` or `cd apps/api && .venv/bin/python -m pytest tests/ -v`
+
+> Sections 5–7 below itemize the original 9 test files with per-case TC-IDs (still accurate
+> for those files). Test files added in later waves (`test_wave0.py`–`test_wave4_success.py`,
+> `test_agent_registry.py`, `test_tenant.py`) and the four tests added to close the Section 8
+> gaps are listed in the file map (Section 6) but not individually TC-ID'd — see the file
+> itself for per-test detail, or `docs/gtm-platform-phases.md`'s per-phase Tests tables.
 
 ---
 
@@ -11,12 +17,10 @@ Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 
 | Metric | Value |
 |--------|-------|
-| Total test cases | 60 |
-| Test files | 9 (+ `conftest.py` shared fixtures) |
-| Unit tests | 47 |
-| Integration tests | 13 |
-| External services required | **None** (Ollama, Postgres, Qdrant, Neo4j are mocked or not invoked) |
-| Typical runtime | ~2 seconds |
+| Total test cases | 145 |
+| Test files | 18 (+ `conftest.py` shared fixtures) |
+| External services required | **None** (Ollama, Postgres, Qdrant, Neo4j are mocked, run in-memory, or not invoked — including `test_vector_store.py`'s tenant-isolation test, which uses qdrant-client's in-memory backend rather than mocking the filter logic away) |
+| Typical runtime | ~3 seconds |
 
 Tests are grouped by platform concern: authentication, ingestion safety, RAG grounding, LLM provider wiring, multi-agent routing, and HTTP health/error handling.
 
@@ -201,6 +205,16 @@ cd apps/api
 | `tests/test_llm_integration.py` | `TestLLMIntegration` | 11 |
 | `tests/test_api_integration.py` | `TestHealthEndpoint`, `TestExceptionHandlers` | 3 |
 | `tests/test_supervisor.py` | `TestSupervisorRouting` | 13 |
+| `tests/test_agent_registry.py` | `TestAgentRegistry`, `TestSupervisorExecution` | — |
+| `tests/test_tenant.py` | — | — |
+| `tests/test_wave0.py` | `TestLeanConfig`, `TestExecutiveBrief` | — |
+| `tests/test_wave2_pipeline.py` | `TestLeadDiscovery`, `TestLeadQualification` | — |
+| `tests/test_wave3_crm.py` | `TestCRMService` | — |
+| `tests/test_wave4_success.py` | `TestCustomerSuccess`, `TestCampaignMonitor`, `TestInsights`, `TestCRMSync` | — |
+| `tests/test_ingestion.py` | `test_ingest_pipeline` | 1 |
+| `tests/test_publishing.py` | approval gate, idempotency, email adapter | 4 |
+| `tests/test_vector_store.py` | `test_tenant_isolation_qdrant` (real in-memory Qdrant) | 1 |
+| `tests/test_api_products.py` | product CRUD (direct router calls, mocked session) | 4 |
 | `tests/conftest.py` | Shared fixtures | — |
 
 ---
@@ -224,17 +238,24 @@ cd apps/api
 
 ## 8. Gaps & roadmap
 
-These scenarios are **not** automated yet. Recommended next tests:
+The six scenarios previously listed here are now automated:
+
+| Was proposed as | Scenario | Now covered by |
+|------------------|----------|-----------------|
+| TC-ING-001 | Crawl → chunk → embed pipeline | `tests/test_ingestion.py::test_ingest_pipeline` |
+| TC-API-010 | `POST /api/v1/products` CRUD with auth | `tests/test_api_products.py` (direct router-function calls + mocked `AsyncSession`, not TestClient+SQLite — see Section 1 note) |
+| TC-TEN-001 | Cross-tenant Qdrant isolation | `tests/test_vector_store.py::test_tenant_isolation_qdrant` (real in-memory Qdrant, exercises the actual `FieldCondition` filter) |
+| TC-PUB-001 | Approval blocks publish | `tests/test_publishing.py` |
+| TC-SUP-020 | Supervisor invokes real agent graph | `tests/test_agent_registry.py::TestSupervisorExecution` (this was already implemented and tested before this doc was refreshed — the supervisor's `execute_routed` node has called `dispatch_agent()` for real for some time; only this doc was stale) |
+| — | Publishing adapter interface + real email channel | `tests/test_publishing.py::test_publish_email_channel_real_adapter_not_configured_without_smtp` |
+
+Still **not** automated:
 
 | Priority | Proposed ID | Scenario | Suggested approach |
 |----------|-------------|----------|-------------------|
-| P0 | TC-ING-001 | Crawl → chunk → embed pipeline | Mock crawler + httpx embed; assert chunk count |
-| P0 | TC-API-010 | `POST /api/v1/products` CRUD with auth | TestClient + SQLite test DB |
-| P1 | TC-TEN-001 | Cross-tenant Qdrant isolation | Mock vector store; assert tenant filter |
-| P1 | TC-PUB-001 | Approval blocks publish | Mock user roles + publishing service |
-| P1 | TC-SUP-020 | Supervisor invokes real agent graph | Mock `get_chat_model().invoke` |
 | P2 | TC-AGT-001 | Build Product Profile happy path | Mock LLM JSON response + test DB |
 | P2 | TC-AGT-002 | Generate GTM Strategy happy path | Same pattern |
+| P2 | TC-EXP-001 | Proposal PDF/DOCX/PPTX export renders valid files | Assert file magic bytes (`%PDF-`, `PK\x03\x04`) per format, per `services/proposal_export.py` |
 | P2 | TC-E2E-001 | Live Ollama smoke (optional, manual CI job) | `@pytest.mark.live` gated by env flag |
 
 Mark live-service tests with a pytest marker so default CI stays fast and offline:
@@ -261,4 +282,5 @@ Mark live-service tests with a pytest marker so default CI stays fast and offlin
 
 | Date | Change |
 |------|--------|
+| 2026-08-08 | Refreshed against actual code: corrected stale 60/9-file count to 145/18 files (waves 0–4, `test_agent_registry.py`, `test_tenant.py` had been added but never reflected here); added `test_ingestion.py`, `test_publishing.py`, `test_vector_store.py`, `test_api_products.py` closing all 6 previously-proposed gap tests |
 | 2026-07-31 | Initial document — 60 tests across 9 files; SSRF, citation gate, RBAC, supervisor, LLM integration added |
