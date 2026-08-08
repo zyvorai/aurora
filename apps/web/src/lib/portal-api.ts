@@ -3,9 +3,13 @@ import { getPortalToken } from './portal-auth';
 
 async function baseRequest<T>(path: string, token: string | null, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> | undefined),
   };
+  // Let the browser set its own multipart boundary for FormData bodies -- forcing
+  // application/json here would break file uploads.
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let response: Response;
@@ -42,6 +46,15 @@ function portalRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
 function adminPortalRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const employeeToken = typeof window === 'undefined' ? null : localStorage.getItem('token');
   return baseRequest<T>(`/portal${path}`, employeeToken, options);
+}
+
+/** Proof-of-business document upload -- unauthenticated (the account isn't approved/
+ * tokened yet), the account_id itself (a random UUID returned only to the applicant)
+ * is the only thing gating it, mirroring the backend's design. */
+function portalUploadRequest<T>(path: string, file: File): Promise<T> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return baseRequest<T>(`/portal${path}`, null, { method: 'POST', body: formData });
 }
 
 export interface PortalSignupRequest {
@@ -97,6 +110,7 @@ export interface ResellerAccount {
   business_id?: string | null;
   margin_tier: string;
   authorized_product_ids?: string[] | null;
+  proof_document_key?: string | null;
   status: 'pending' | 'approved' | 'rejected' | 'suspended';
   rejected_reason?: string | null;
   created_at: string;
@@ -124,6 +138,7 @@ export interface SalesPersonAccount {
   contact_name?: string | null;
   commission_rate: number;
   territory?: string | null;
+  proof_document_key?: string | null;
   status: 'pending' | 'approved' | 'rejected' | 'suspended';
   rejected_reason?: string | null;
   created_at: string;
@@ -171,6 +186,9 @@ export const portal = {
     }),
 
   me: () => portalRequest<CustomerAccount>('/customer/me'),
+
+  updateMe: (req: { company_name?: string; contact_name?: string }) =>
+    portalRequest<CustomerAccount>('/customer/me', { method: 'PATCH', body: JSON.stringify(req) }),
 };
 
 export const resellerPortal = {
@@ -188,6 +206,9 @@ export const resellerPortal = {
 
   me: () => portalRequest<ResellerAccount>('/reseller/me'),
 
+  updateMe: (req: { company_name?: string; contact_name?: string }) =>
+    portalRequest<ResellerAccount>('/reseller/me', { method: 'PATCH', body: JSON.stringify(req) }),
+
   registerDeal: (req: { product_id: string; company_name: string; domain?: string; industry?: string; company_size?: string; geo?: string }) =>
     portalRequest<DealRegistration>('/reseller/deals', {
       method: 'POST',
@@ -195,6 +216,9 @@ export const resellerPortal = {
     }),
 
   myDeals: () => portalRequest<DealRegistration[]>('/reseller/deals'),
+
+  uploadDocument: (accountId: string, file: File) =>
+    portalUploadRequest<{ proof_document_key: string }>(`/reseller/signup/${accountId}/document`, file),
 };
 
 export const salesPersonPortal = {
@@ -212,7 +236,13 @@ export const salesPersonPortal = {
 
   me: () => portalRequest<SalesPersonAccount>('/salesperson/me'),
 
+  updateMe: (req: { contact_name?: string; territory?: string }) =>
+    portalRequest<SalesPersonAccount>('/salesperson/me', { method: 'PATCH', body: JSON.stringify(req) }),
+
   myPipeline: () => portalRequest<SalesPersonPipeline>('/salesperson/my-pipeline'),
+
+  uploadDocument: (accountId: string, file: File) =>
+    portalUploadRequest<{ proof_document_key: string }>(`/salesperson/signup/${accountId}/document`, file),
 };
 
 export const portalAdmin = {
@@ -244,6 +274,9 @@ export const portalAdmin = {
       body: JSON.stringify({ reason }),
     }),
 
+  getResellerDocumentUrl: (accountId: string) =>
+    adminPortalRequest<{ url: string }>(`/reseller/accounts/${accountId}/document`),
+
   listSalesPersonAccounts: (statusFilter?: string) => {
     const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : '';
     return adminPortalRequest<SalesPersonAccount[]>(`/salesperson/accounts${query}`);
@@ -257,4 +290,7 @@ export const portalAdmin = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }),
+
+  getSalesPersonDocumentUrl: (accountId: string) =>
+    adminPortalRequest<{ url: string }>(`/salesperson/accounts/${accountId}/document`),
 };

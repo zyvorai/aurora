@@ -213,6 +213,153 @@ class TestCrossPortalTypeDiscrimination:
         assert response.status_code == 401
 
 
+class TestSelfServiceProfileUpdate:
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_approved_reseller_can_update_own_profile(self):
+        reseller = _reseller_account(status=PortalAccountStatus.APPROVED, contact_name="Old Name")
+        token = create_portal_token(reseller.id, reseller.tenant_id, portal_type="reseller")
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: reseller))
+        mock_db.flush = AsyncMock()
+        mock_db.refresh = AsyncMock()
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/v1/portal/reseller/me",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"contact_name": "New Name"},
+            )
+        assert response.status_code == 200
+        assert reseller.contact_name == "New Name"
+
+    def test_customer_token_rejected_by_reseller_profile_update(self):
+        customer = CustomerAccount(
+            id=uuid.uuid4(), tenant_id=uuid.uuid4(), product_id=uuid.uuid4(),
+            email="cust@example.com", hashed_password=hash_password("x"),
+            status=PortalAccountStatus.APPROVED, is_active=True,
+            created_at=datetime.now(timezone.utc),
+        )
+        token = create_portal_token(customer.id, customer.tenant_id, portal_type="customer")
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: customer))
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/v1/portal/reseller/me",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"contact_name": "New Name"},
+            )
+        assert response.status_code == 403
+
+
+class TestProofOfBusinessDocument:
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_pending_reseller_can_upload_document(self, monkeypatch):
+        reseller = _reseller_account(status=PortalAccountStatus.PENDING)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: reseller))
+        mock_db.flush = AsyncMock()
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        mock_put = MagicMock(side_effect=lambda key, data, content_type: key)
+        monkeypatch.setattr("gtm_api.routers.portal.storage_service.put_bytes", mock_put)
+
+        with TestClient(app) as client:
+            response = client.post(
+                f"/api/v1/portal/reseller/signup/{reseller.id}/document",
+                files={"file": ("license.pdf", b"%PDF-1.4 fake", "application/pdf")},
+            )
+        assert response.status_code == 200
+        expected_key = f"portal-documents/{reseller.tenant_id}/reseller/{reseller.id}/license.pdf"
+        assert response.json()["proof_document_key"] == expected_key
+        assert reseller.proof_document_key == expected_key
+        mock_put.assert_called_once()
+
+    def test_upload_rejected_once_account_is_no_longer_pending(self):
+        reseller = _reseller_account(status=PortalAccountStatus.APPROVED)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: reseller))
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.post(
+                f"/api/v1/portal/reseller/signup/{reseller.id}/document",
+                files={"file": ("license.pdf", b"%PDF-1.4 fake", "application/pdf")},
+            )
+        assert response.status_code == 409
+
+    def test_upload_rejects_oversized_file(self, monkeypatch):
+        from gtm_api.routers import portal as portal_router
+
+        reseller = _reseller_account(status=PortalAccountStatus.PENDING)
+        monkeypatch.setattr(portal_router, "PORTAL_DOCUMENT_MAX_BYTES", 10)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: reseller))
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.post(
+                f"/api/v1/portal/reseller/signup/{reseller.id}/document",
+                files={"file": ("license.pdf", b"this payload is definitely over ten bytes", "application/pdf")},
+            )
+        assert response.status_code == 413
+
+    def test_admin_gets_presigned_download_url(self, monkeypatch):
+        tenant = _tenant()
+        admin = _admin_user(tenant.id)
+        reseller = _reseller_account(tenant_id=tenant.id, proof_document_key="portal-documents/some-key")
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            side_effect=[
+                MagicMock(scalar_one_or_none=lambda: tenant),
+                MagicMock(scalar_one_or_none=lambda: reseller),
+            ]
+        )
+        app.dependency_overrides[get_current_user] = _override_current_user(admin)
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        monkeypatch.setattr(
+            "gtm_api.routers.portal.storage_service.presigned_get",
+            MagicMock(return_value="https://minio.example/signed-url"),
+        )
+
+        with TestClient(app) as client:
+            response = client.get(f"/api/v1/portal/reseller/accounts/{reseller.id}/document")
+        assert response.status_code == 200
+        assert response.json()["url"] == "https://minio.example/signed-url"
+
+    def test_admin_gets_404_when_no_document_uploaded(self):
+        tenant = _tenant()
+        admin = _admin_user(tenant.id)
+        reseller = _reseller_account(tenant_id=tenant.id, proof_document_key=None)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            side_effect=[
+                MagicMock(scalar_one_or_none=lambda: tenant),
+                MagicMock(scalar_one_or_none=lambda: reseller),
+            ]
+        )
+        app.dependency_overrides[get_current_user] = _override_current_user(admin)
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.get(f"/api/v1/portal/reseller/accounts/{reseller.id}/document")
+        assert response.status_code == 404
+
+
 class TestDealRegistration:
     def teardown_method(self):
         app.dependency_overrides.clear()

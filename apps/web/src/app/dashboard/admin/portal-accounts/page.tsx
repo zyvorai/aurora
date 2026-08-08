@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShieldAlert, Users } from 'lucide-react';
+import { FileText, ShieldAlert, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
@@ -82,6 +82,18 @@ export default function PortalAccountsAdminPage() {
     }
   }
 
+  async function handleViewDocument(account: PortalAccount) {
+    try {
+      const { url } =
+        tab === 'reseller'
+          ? await portalAdmin.getResellerDocumentUrl(account.id)
+          : await portalAdmin.getSalesPersonDocumentUrl(account.id);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to load document');
+    }
+  }
+
   async function handleReject() {
     if (!rejectTarget || !rejectReason.trim()) return;
     setBusyId(rejectTarget.id);
@@ -156,6 +168,7 @@ export default function PortalAccountsAdminPage() {
                 <TableHeaderCell>{tab === 'salesperson' ? 'Name' : 'Company'}</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>
                 <TableHeaderCell>Requested</TableHeaderCell>
+                {tab !== 'customer' && <TableHeaderCell>Document</TableHeaderCell>}
                 <TableHeaderCell>{''}</TableHeaderCell>
               </TableRow>
             </TableHead>
@@ -168,6 +181,17 @@ export default function PortalAccountsAdminPage() {
                     <Badge variant={STATUS_VARIANT[account.status]}>{account.status}</Badge>
                   </TableCell>
                   <TableCell>{new Date(account.created_at).toLocaleDateString()}</TableCell>
+                  {tab !== 'customer' && (
+                    <TableCell>
+                      {'proof_document_key' in account && account.proof_document_key ? (
+                        <Button size="sm" variant="ghost" onClick={() => handleViewDocument(account)}>
+                          <FileText className="w-4 h-4 mr-1.5" aria-hidden /> View
+                        </Button>
+                      ) : (
+                        <span className="text-muted text-body-sm">—</span>
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell>
                     {account.status === 'pending' && (
                       <div className="flex gap-2 justify-end">

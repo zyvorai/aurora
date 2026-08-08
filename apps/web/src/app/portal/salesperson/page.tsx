@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Briefcase, LogOut, Sparkles, TrendingUp } from 'lucide-react';
+import { Briefcase, LogOut, Pencil, Sparkles, TrendingUp } from 'lucide-react';
 import { PageHero } from '@/components/layout/PageHero';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { showToast } from '@/lib/toast';
 import { salesPersonPortal, type SalesPersonAccount, type SalesPersonPipeline } from '@/lib/portal-api';
 import { clearPortalSession, getPortalToken } from '@/lib/portal-auth';
 
@@ -24,6 +27,9 @@ export default function SalesPersonHomePage() {
   const [account, setAccount] = useState<SalesPersonAccount | null>(null);
   const [pipeline, setPipeline] = useState<SalesPersonPipeline>({ leads: [], opportunities: [] });
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ contact_name: '', territory: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!getPortalToken()) {
@@ -48,6 +54,27 @@ export default function SalesPersonHomePage() {
   function handleSignOut() {
     clearPortalSession();
     router.push('/portal/salesperson/login');
+  }
+
+  function openEditModal() {
+    if (!account) return;
+    setEditForm({ contact_name: account.contact_name || '', territory: account.territory || '' });
+    setShowEditModal(true);
+  }
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updated = await salesPersonPortal.updateMe(editForm);
+      setAccount(updated);
+      setShowEditModal(false);
+      showToast('success', 'Profile updated');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {
@@ -76,6 +103,11 @@ export default function SalesPersonHomePage() {
           eyebrow="Account"
           title={account.contact_name || account.email}
           description={account.territory ? `Territory: ${account.territory}` : 'My assigned pipeline'}
+          actions={
+            <Button variant="secondary" size="sm" onClick={openEditModal}>
+              <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
+            </Button>
+          }
         />
 
         <Card>
@@ -161,6 +193,29 @@ export default function SalesPersonHomePage() {
           </>
         )}
       </main>
+
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Edit profile">
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <Input
+            placeholder="Your name"
+            value={editForm.contact_name}
+            onChange={(e) => setEditForm({ ...editForm, contact_name: e.target.value })}
+          />
+          <Input
+            placeholder="Territory"
+            value={editForm.territory}
+            onChange={(e) => setEditForm({ ...editForm, territory: e.target.value })}
+          />
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

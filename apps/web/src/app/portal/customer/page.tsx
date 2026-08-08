@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, LogOut, Sparkles } from 'lucide-react';
+import { Building2, LogOut, Pencil, Sparkles } from 'lucide-react';
 import { PageHero } from '@/components/layout/PageHero';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { showToast } from '@/lib/toast';
 import { portal, type CustomerAccount } from '@/lib/portal-api';
 import { clearPortalSession, getPortalToken } from '@/lib/portal-auth';
 
@@ -22,6 +25,9 @@ export default function CustomerHomePage() {
   const [account, setAccount] = useState<CustomerAccount | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ company_name: '', contact_name: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!getPortalToken()) {
@@ -42,6 +48,27 @@ export default function CustomerHomePage() {
   function handleSignOut() {
     clearPortalSession();
     router.push('/portal/customer/login');
+  }
+
+  function openEditModal() {
+    if (!account) return;
+    setEditForm({ company_name: account.company_name || '', contact_name: account.contact_name || '' });
+    setShowEditModal(true);
+  }
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updated = await portal.updateMe(editForm);
+      setAccount(updated);
+      setShowEditModal(false);
+      showToast('success', 'Profile updated');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {
@@ -72,6 +99,11 @@ export default function CustomerHomePage() {
           eyebrow="Account"
           title={account.company_name || account.contact_name || account.email}
           description="Your account status and details."
+          actions={
+            <Button variant="secondary" size="sm" onClick={openEditModal}>
+              <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
+            </Button>
+          }
         />
 
         <Card className="mt-6">
@@ -97,6 +129,29 @@ export default function CustomerHomePage() {
           </CardBody>
         </Card>
       </main>
+
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Edit profile">
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <Input
+            placeholder="Company name"
+            value={editForm.company_name}
+            onChange={(e) => setEditForm({ ...editForm, company_name: e.target.value })}
+          />
+          <Input
+            placeholder="Your name"
+            value={editForm.contact_name}
+            onChange={(e) => setEditForm({ ...editForm, contact_name: e.target.value })}
+          />
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

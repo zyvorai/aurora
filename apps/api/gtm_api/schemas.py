@@ -107,8 +107,24 @@ class CustomerAccountResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CustomerProfileUpdateRequest(BaseModel):
+    """Self-service profile edit -- deliberately excludes email/status/product_id/
+    tenant_id, which only an admin (via the approve/reject endpoints) may change."""
+
+    company_name: Optional[str] = Field(None, max_length=255)
+    contact_name: Optional[str] = Field(None, max_length=255)
+
+
 class PortalRejectRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=1000)
+
+
+class DocumentUploadResponse(BaseModel):
+    proof_document_key: str
+
+
+class DocumentDownloadUrlResponse(BaseModel):
+    url: str
 
 
 class ResellerSignupRequest(BaseModel):
@@ -129,11 +145,20 @@ class ResellerAccountResponse(BaseModel):
     business_id: Optional[str] = None
     margin_tier: str = "standard"
     authorized_product_ids: Optional[list[uuid.UUID]] = None
+    proof_document_key: Optional[str] = None
     status: str
     rejected_reason: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ResellerProfileUpdateRequest(BaseModel):
+    """Self-service profile edit -- excludes email/status/margin_tier/
+    authorized_product_ids, which only an admin may change."""
+
+    company_name: Optional[str] = Field(None, max_length=255)
+    contact_name: Optional[str] = Field(None, max_length=255)
 
 
 class DealRegistrationRequest(BaseModel):
@@ -169,11 +194,20 @@ class SalesPersonAccountResponse(BaseModel):
     contact_name: Optional[str] = None
     commission_rate: float = 0.0
     territory: Optional[str] = None
+    proof_document_key: Optional[str] = None
     status: str
     rejected_reason: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class SalesPersonProfileUpdateRequest(BaseModel):
+    """Self-service profile edit -- excludes email/status/commission_rate, which only
+    an admin may change."""
+
+    contact_name: Optional[str] = Field(None, max_length=255)
+    territory: Optional[str] = Field(None, max_length=255)
 
 
 class SalesPersonLeadResponse(BaseModel):

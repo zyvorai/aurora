@@ -64,6 +64,20 @@ class StorageService:
         )
         return key
 
+    def put_bytes(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+        """Generic upload for callers that build their own key (e.g. portal
+        proof-of-business documents), unlike put_object() which is tied to the
+        tenant/product/source key layout used by source-file uploads."""
+        self._ensure_bucket()
+        self.client.put_object(
+            settings.minio_bucket,
+            key,
+            io.BytesIO(data),
+            length=len(data),
+            content_type=content_type,
+        )
+        return key
+
     def get_object(self, storage_key: str) -> bytes:
         self._ensure_bucket()
         response = self.client.get_object(settings.minio_bucket, storage_key)

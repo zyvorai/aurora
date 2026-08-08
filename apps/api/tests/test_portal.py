@@ -267,6 +267,71 @@ class TestPortalTokenDiscrimination:
         assert response.status_code == 401
 
 
+class TestSelfServiceProfileUpdate:
+    """PATCH /portal/customer/me -- an approved customer can edit their own
+    contact_name/company_name, but the request schema whitelists only those fields
+    (status/email/product_id are never accepted, regardless of what's sent)."""
+
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_approved_customer_can_update_own_profile(self):
+        account = _customer_account(status=PortalAccountStatus.APPROVED, contact_name="Old Name")
+        token = create_portal_token(account.id, account.tenant_id)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: account))
+        mock_db.add = MagicMock()
+        mock_db.flush = AsyncMock()
+        mock_db.refresh = AsyncMock()
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/v1/portal/customer/me",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"contact_name": "New Name"},
+            )
+        assert response.status_code == 200
+        assert account.contact_name == "New Name"
+
+    def test_status_field_is_ignored_not_editable_via_self_service(self):
+        account = _customer_account(status=PortalAccountStatus.APPROVED)
+        token = create_portal_token(account.id, account.tenant_id)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: account))
+        mock_db.flush = AsyncMock()
+        mock_db.refresh = AsyncMock()
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/v1/portal/customer/me",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"contact_name": "New Name", "status": "rejected", "email": "hijack@example.com"},
+            )
+        assert response.status_code == 200
+        assert account.status == PortalAccountStatus.APPROVED
+        assert account.email != "hijack@example.com"
+
+    def test_unapproved_customer_cannot_update_profile(self):
+        account = _customer_account(status=PortalAccountStatus.PENDING)
+        token = create_portal_token(account.id, account.tenant_id)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: account))
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/v1/portal/customer/me",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"contact_name": "New Name"},
+            )
+        assert response.status_code == 401
+
+
 class TestAdminApproval:
     def teardown_method(self):
         app.dependency_overrides.clear()
@@ -308,6 +373,37 @@ class TestAdminApproval:
         # audit_log() calls db.add() with an AuditLog row in addition to nothing else here
         added_types = [type(call.args[0]).__name__ for call in mock_db.add.call_args_list]
         assert "AuditLog" in added_types
+
+    def test_admin_approve_sends_notification_email(self, monkeypatch):
+        tenant = _tenant()
+        admin = _admin_user(tenant.id)
+        account = _customer_account(tenant_id=tenant.id, status=PortalAccountStatus.PENDING)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            side_effect=[
+                MagicMock(scalar_one_or_none=lambda: tenant),
+                MagicMock(scalar_one_or_none=lambda: account),
+            ]
+        )
+        mock_db.add = MagicMock()
+        mock_db.flush = AsyncMock()
+        mock_db.refresh = AsyncMock()
+
+        mock_send = AsyncMock()
+        monkeypatch.setattr("gtm_api.routers.portal.send_transactional_email", mock_send)
+
+        app.dependency_overrides[get_current_user] = _override_current_user(admin)
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.post(f"/api/v1/portal/customer/accounts/{account.id}/approve")
+
+        assert response.status_code == 200
+        mock_send.assert_awaited_once()
+        call_args = mock_send.call_args.args
+        assert call_args[0] == account.email
+        assert "approved" in call_args[1].lower()
 
     def test_admin_reject_records_reason(self):
         tenant = _tenant()

@@ -10,7 +10,7 @@ non-employee login can never satisfy an internal `Depends(get_current_user)`.
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,9 @@ from gtm_api.auth import (
     PortalIdentity,
 )
 from gtm_api.database import get_db
+from gtm_api.services.publishing_adapters.email_adapter import send_transactional_email
+from gtm_api.services.rate_limit import enforce_portal_signup_rate_limit
+from gtm_api.services.storage import storage_service
 from gtm_api.models import (
     CustomerAccount,
     DiscoveredAccount,
@@ -37,8 +40,11 @@ from gtm_api.models import (
 )
 from gtm_api.schemas import (
     CustomerAccountResponse,
+    CustomerProfileUpdateRequest,
     DealRegistrationRequest,
     DealRegistrationResponse,
+    DocumentDownloadUrlResponse,
+    DocumentUploadResponse,
     OpportunityResponse,
     PortalLoginRequest,
     PortalRejectRequest,
@@ -46,14 +52,21 @@ from gtm_api.schemas import (
     PortalSignupResponse,
     PortalTokenResponse,
     ResellerAccountResponse,
+    ResellerProfileUpdateRequest,
     ResellerSignupRequest,
     SalesPersonAccountResponse,
     SalesPersonPipelineResponse,
+    SalesPersonProfileUpdateRequest,
     SalesPersonSignupRequest,
 )
 from gtm_api.tenant import audit_log, get_tenant_context
 
 router = APIRouter(prefix="/portal", tags=["portal"])
+
+# Proof-of-business documents (tax ID, business license, etc) are small scanned/photo
+# documents, not the bulk source-file uploads products.py handles -- 10MB is generous
+# for that and deliberately tighter than settings.upload_max_bytes (100MB).
+PORTAL_DOCUMENT_MAX_BYTES = 10 * 1024 * 1024
 
 
 async def _get_active_tenant_by_slug(db: AsyncSession, tenant_slug: str) -> Tenant:
@@ -66,7 +79,30 @@ async def _get_active_tenant_by_slug(db: AsyncSession, tenant_slug: str) -> Tena
     return tenant
 
 
-@router.post("/customer/signup", response_model=PortalSignupResponse, status_code=201)
+def _notify_portal_decision(
+    background_tasks: BackgroundTasks, email: str, portal_label: str, approved: bool, reason: str | None = None
+) -> None:
+    """Fire-and-forget email so the applicant learns the outcome without polling by
+    trying to log in. Scheduled as a background task so it never adds latency to (or
+    fails) the approve/reject request itself -- send_transactional_email already
+    degrades to a no-op ProviderResult when SMTP isn't configured."""
+    if approved:
+        subject = f"Your {portal_label} account has been approved"
+        body = f"Good news -- your {portal_label} account has been approved. You can now sign in."
+    else:
+        subject = f"Your {portal_label} account application was not approved"
+        body = f"Your {portal_label} account application was not approved."
+        if reason:
+            body += f"\n\nReason: {reason}"
+    background_tasks.add_task(send_transactional_email, email, subject, body)
+
+
+@router.post(
+    "/customer/signup",
+    response_model=PortalSignupResponse,
+    status_code=201,
+    dependencies=[Depends(enforce_portal_signup_rate_limit)],
+)
 async def customer_signup(req: PortalSignupRequest, db: AsyncSession = Depends(get_db)):
     tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
 
@@ -133,6 +169,27 @@ async def customer_me(identity: PortalIdentity = Depends(get_current_portal_acco
     return identity.account
 
 
+@router.patch("/customer/me", response_model=CustomerAccountResponse)
+async def update_customer_me(
+    req: CustomerProfileUpdateRequest,
+    identity: PortalIdentity = Depends(get_current_portal_account),
+    db: AsyncSession = Depends(get_db),
+):
+    if identity.portal_type != "customer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a customer account")
+    account = identity.account
+    updates = req.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(account, field, value)
+    await audit_log(
+        db, identity.tenant_id, None, "update_own_profile", "customer_account",
+        resource_id=str(identity.account_id), details=updates,
+    )
+    await db.flush()
+    await db.refresh(account)
+    return account
+
+
 @router.get("/customer/accounts", response_model=list[CustomerAccountResponse])
 async def list_customer_accounts(
     status_filter: str | None = None,
@@ -150,6 +207,7 @@ async def list_customer_accounts(
 @router.post("/customer/accounts/{account_id}/approve", response_model=CustomerAccountResponse)
 async def approve_customer_account(
     account_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_permission("manage_users")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -172,6 +230,7 @@ async def approve_customer_account(
     )
     await db.flush()
     await db.refresh(account)
+    _notify_portal_decision(background_tasks, account.email, "customer", approved=True)
     return account
 
 
@@ -179,6 +238,7 @@ async def approve_customer_account(
 async def reject_customer_account(
     account_id: uuid.UUID,
     req: PortalRejectRequest,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_permission("manage_users")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -202,13 +262,19 @@ async def reject_customer_account(
     )
     await db.flush()
     await db.refresh(account)
+    _notify_portal_decision(background_tasks, account.email, "customer", approved=False, reason=req.reason)
     return account
 
 
 # ---- Reseller portal: same lifecycle as customer, plus deal registration ----
 
 
-@router.post("/reseller/signup", response_model=PortalSignupResponse, status_code=201)
+@router.post(
+    "/reseller/signup",
+    response_model=PortalSignupResponse,
+    status_code=201,
+    dependencies=[Depends(enforce_portal_signup_rate_limit)],
+)
 async def reseller_signup(req: ResellerSignupRequest, db: AsyncSession = Depends(get_db)):
     tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
 
@@ -240,6 +306,61 @@ async def reseller_signup(req: ResellerSignupRequest, db: AsyncSession = Depends
     return PortalSignupResponse(id=account.id, status=account.status.value)
 
 
+async def _upload_proof_document(
+    db: AsyncSession, model: type, portal_type: str, account_id: uuid.UUID, file: UploadFile
+) -> str:
+    """Shared by the reseller/salesperson signup-document endpoints below. A follow-up
+    request (not bundled into signup) so the signup body stays plain JSON like the
+    customer/salesperson signups, keeping the existing frontend signup forms unchanged.
+
+    Authorization here is deliberately lightweight: account_id is a random UUID
+    returned only to the applicant in the signup response (122 bits of entropy, not
+    enumerable), and upload is only accepted while the account is still PENDING -- once
+    an admin has reviewed it, the window closes."""
+    result = await db.execute(select(model).where(model.id == account_id))
+    account = result.scalar_one_or_none()
+    if account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+    if account.status != PortalAccountStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Documents can only be uploaded while the application is pending review",
+        )
+
+    data = await file.read()
+    if len(data) > PORTAL_DOCUMENT_MAX_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"File exceeds max size ({PORTAL_DOCUMENT_MAX_BYTES} bytes)",
+        )
+
+    filename = (file.filename or "document").replace("/", "_").replace("\\", "_")
+    key = f"portal-documents/{account.tenant_id}/{portal_type}/{account_id}/{filename}"
+    storage_service.put_bytes(key, data, file.content_type or "application/octet-stream")
+
+    account.proof_document_key = key
+    await audit_log(
+        db, account.tenant_id, None, "upload_proof_document", f"{portal_type}_account",
+        resource_id=str(account_id),
+    )
+    await db.flush()
+    return key
+
+
+@router.post(
+    "/reseller/signup/{account_id}/document",
+    response_model=DocumentUploadResponse,
+    dependencies=[Depends(enforce_portal_signup_rate_limit)],
+)
+async def upload_reseller_document(
+    account_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    key = await _upload_proof_document(db, ResellerAccount, "reseller", account_id, file)
+    return DocumentUploadResponse(proof_document_key=key)
+
+
 @router.post("/reseller/login", response_model=PortalTokenResponse)
 async def reseller_login(req: PortalLoginRequest, db: AsyncSession = Depends(get_db)):
     tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
@@ -267,6 +388,27 @@ async def reseller_me(identity: PortalIdentity = Depends(get_current_portal_acco
     if identity.portal_type != "reseller":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a reseller account")
     return identity.account
+
+
+@router.patch("/reseller/me", response_model=ResellerAccountResponse)
+async def update_reseller_me(
+    req: ResellerProfileUpdateRequest,
+    identity: PortalIdentity = Depends(get_current_portal_account),
+    db: AsyncSession = Depends(get_db),
+):
+    if identity.portal_type != "reseller":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a reseller account")
+    account = identity.account
+    updates = req.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(account, field, value)
+    await audit_log(
+        db, identity.tenant_id, None, "update_own_profile", "reseller_account",
+        resource_id=str(identity.account_id), details=updates,
+    )
+    await db.flush()
+    await db.refresh(account)
+    return account
 
 
 @router.post("/reseller/deals", response_model=DealRegistrationResponse, status_code=201)
@@ -331,9 +473,28 @@ async def list_reseller_accounts(
     return list(result.scalars().all())
 
 
+@router.get("/reseller/accounts/{account_id}/document", response_model=DocumentDownloadUrlResponse)
+async def get_reseller_document_url(
+    account_id: uuid.UUID,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    result = await db.execute(
+        select(ResellerAccount).where(
+            ResellerAccount.id == account_id, ResellerAccount.tenant_id == ctx.tenant_id
+        )
+    )
+    account = result.scalar_one_or_none()
+    if account is None or not account.proof_document_key:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No document on file")
+    return DocumentDownloadUrlResponse(url=storage_service.presigned_get(account.proof_document_key))
+
+
 @router.post("/reseller/accounts/{account_id}/approve", response_model=ResellerAccountResponse)
 async def approve_reseller_account(
     account_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_permission("manage_users")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -356,6 +517,7 @@ async def approve_reseller_account(
     )
     await db.flush()
     await db.refresh(account)
+    _notify_portal_decision(background_tasks, account.email, "reseller", approved=True)
     return account
 
 
@@ -363,6 +525,7 @@ async def approve_reseller_account(
 async def reject_reseller_account(
     account_id: uuid.UUID,
     req: PortalRejectRequest,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_permission("manage_users")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -386,6 +549,7 @@ async def reject_reseller_account(
     )
     await db.flush()
     await db.refresh(account)
+    _notify_portal_decision(background_tasks, account.email, "reseller", approved=False, reason=req.reason)
     return account
 
 
@@ -393,7 +557,12 @@ async def reject_reseller_account(
 # assigned Lead/Opportunity rows via assigned_sales_person_id ----
 
 
-@router.post("/salesperson/signup", response_model=PortalSignupResponse, status_code=201)
+@router.post(
+    "/salesperson/signup",
+    response_model=PortalSignupResponse,
+    status_code=201,
+    dependencies=[Depends(enforce_portal_signup_rate_limit)],
+)
 async def salesperson_signup(req: SalesPersonSignupRequest, db: AsyncSession = Depends(get_db)):
     tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
 
@@ -424,6 +593,20 @@ async def salesperson_signup(req: SalesPersonSignupRequest, db: AsyncSession = D
     return PortalSignupResponse(id=account.id, status=account.status.value)
 
 
+@router.post(
+    "/salesperson/signup/{account_id}/document",
+    response_model=DocumentUploadResponse,
+    dependencies=[Depends(enforce_portal_signup_rate_limit)],
+)
+async def upload_salesperson_document(
+    account_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    key = await _upload_proof_document(db, SalesPersonAccount, "salesperson", account_id, file)
+    return DocumentUploadResponse(proof_document_key=key)
+
+
 @router.post("/salesperson/login", response_model=PortalTokenResponse)
 async def salesperson_login(req: PortalLoginRequest, db: AsyncSession = Depends(get_db)):
     tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
@@ -451,6 +634,27 @@ async def salesperson_me(identity: PortalIdentity = Depends(get_current_portal_a
     if identity.portal_type != "salesperson":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a sales-person account")
     return identity.account
+
+
+@router.patch("/salesperson/me", response_model=SalesPersonAccountResponse)
+async def update_salesperson_me(
+    req: SalesPersonProfileUpdateRequest,
+    identity: PortalIdentity = Depends(get_current_portal_account),
+    db: AsyncSession = Depends(get_db),
+):
+    if identity.portal_type != "salesperson":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a sales-person account")
+    account = identity.account
+    updates = req.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(account, field, value)
+    await audit_log(
+        db, identity.tenant_id, None, "update_own_profile", "sales_person_account",
+        resource_id=str(identity.account_id), details=updates,
+    )
+    await db.flush()
+    await db.refresh(account)
+    return account
 
 
 @router.get("/salesperson/my-pipeline", response_model=SalesPersonPipelineResponse)
@@ -507,9 +711,28 @@ async def list_salesperson_accounts(
     return list(result.scalars().all())
 
 
+@router.get("/salesperson/accounts/{account_id}/document", response_model=DocumentDownloadUrlResponse)
+async def get_salesperson_document_url(
+    account_id: uuid.UUID,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    result = await db.execute(
+        select(SalesPersonAccount).where(
+            SalesPersonAccount.id == account_id, SalesPersonAccount.tenant_id == ctx.tenant_id
+        )
+    )
+    account = result.scalar_one_or_none()
+    if account is None or not account.proof_document_key:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No document on file")
+    return DocumentDownloadUrlResponse(url=storage_service.presigned_get(account.proof_document_key))
+
+
 @router.post("/salesperson/accounts/{account_id}/approve", response_model=SalesPersonAccountResponse)
 async def approve_salesperson_account(
     account_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_permission("manage_users")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -532,6 +755,7 @@ async def approve_salesperson_account(
     )
     await db.flush()
     await db.refresh(account)
+    _notify_portal_decision(background_tasks, account.email, "sales rep", approved=True)
     return account
 
 
@@ -539,6 +763,7 @@ async def approve_salesperson_account(
 async def reject_salesperson_account(
     account_id: uuid.UUID,
     req: PortalRejectRequest,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_permission("manage_users")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -562,4 +787,5 @@ async def reject_salesperson_account(
     )
     await db.flush()
     await db.refresh(account)
+    _notify_portal_decision(background_tasks, account.email, "sales rep", approved=False, reason=req.reason)
     return account

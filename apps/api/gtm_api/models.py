@@ -599,6 +599,11 @@ class ResellerAccount(Base):
     business_id: Mapped[Optional[str]] = mapped_column(String(255))
     margin_tier: Mapped[str] = mapped_column(String(50), default="standard")
     authorized_product_ids: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
+    # MinIO object key for an uploaded proof-of-business document (tax ID, business
+    # license, etc). Nullable -- upload is optional, done via a follow-up multipart
+    # request after signup rather than bundled into it (keeps the signup body plain
+    # JSON like the customer/salesperson signups).
+    proof_document_key: Mapped[Optional[str]] = mapped_column(String(1024))
     status: Mapped[PortalAccountStatus] = mapped_column(
         Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
     )
@@ -632,6 +637,8 @@ class SalesPersonAccount(Base):
     commission_rate: Mapped[float] = mapped_column(Float, default=0.0)
     territory: Mapped[Optional[str]] = mapped_column(String(255))
     assigned_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    # See ResellerAccount.proof_document_key -- same optional, follow-up-upload pattern.
+    proof_document_key: Mapped[Optional[str]] = mapped_column(String(1024))
     status: Mapped[PortalAccountStatus] = mapped_column(
         Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
     )

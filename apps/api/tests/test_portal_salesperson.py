@@ -203,6 +203,46 @@ class TestCrossPortalTypeDiscrimination:
         assert response.status_code == 403
 
 
+class TestSelfServiceProfileUpdate:
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_approved_salesperson_can_update_own_profile(self):
+        rep = _salesperson_account(status=PortalAccountStatus.APPROVED, territory="East")
+        token = create_portal_token(rep.id, rep.tenant_id, portal_type="salesperson")
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: rep))
+        mock_db.flush = AsyncMock()
+        mock_db.refresh = AsyncMock()
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/v1/portal/salesperson/me",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"territory": "West"},
+            )
+        assert response.status_code == 200
+        assert rep.territory == "West"
+
+    def test_unapproved_salesperson_cannot_update_profile(self):
+        rep = _salesperson_account(status=PortalAccountStatus.PENDING)
+        token = create_portal_token(rep.id, rep.tenant_id, portal_type="salesperson")
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: rep))
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.patch(
+                "/api/v1/portal/salesperson/me",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"territory": "West"},
+            )
+        assert response.status_code == 401
+
+
 class TestSalesPersonPipeline:
     def teardown_method(self):
         app.dependency_overrides.clear()
@@ -257,6 +297,46 @@ class TestSalesPersonPipeline:
         assert body["leads"][0]["id"] == str(lead.id)
         assert len(body["opportunities"]) == 1
         assert body["opportunities"][0]["id"] == str(opportunity.id)
+
+
+class TestProofOfBusinessDocument:
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_pending_salesperson_can_upload_document(self, monkeypatch):
+        rep = _salesperson_account(status=PortalAccountStatus.PENDING)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: rep))
+        mock_db.flush = AsyncMock()
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        mock_put = MagicMock(side_effect=lambda key, data, content_type: key)
+        monkeypatch.setattr("gtm_api.routers.portal.storage_service.put_bytes", mock_put)
+
+        with TestClient(app) as client:
+            response = client.post(
+                f"/api/v1/portal/salesperson/signup/{rep.id}/document",
+                files={"file": ("w9.pdf", b"%PDF-1.4 fake", "application/pdf")},
+            )
+        assert response.status_code == 200
+        expected_key = f"portal-documents/{rep.tenant_id}/salesperson/{rep.id}/w9.pdf"
+        assert response.json()["proof_document_key"] == expected_key
+        assert rep.proof_document_key == expected_key
+
+    def test_upload_rejected_once_account_is_no_longer_pending(self):
+        rep = _salesperson_account(status=PortalAccountStatus.APPROVED)
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: rep))
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.post(
+                f"/api/v1/portal/salesperson/signup/{rep.id}/document",
+                files={"file": ("w9.pdf", b"%PDF-1.4 fake", "application/pdf")},
+            )
+        assert response.status_code == 409
 
 
 class TestAdminApprovalSalesPerson:

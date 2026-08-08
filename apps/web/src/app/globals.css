@@ -86,6 +86,131 @@
   --glass-highlight: rgba(255, 255, 255, 0.5);
 }
 
+/* ---- accent variants (ported from hyper2kvm's steel/aurora dashboard themes) ----
+ * Dark-mode-only by design (hyper2kvm's source variants have no light counterpart);
+ * toggled via ThemeContext's colorVariant state, independent of the light/dark axis. */
+.steel-theme {
+  --glass-bg: rgba(26, 31, 39, 0.72);
+  --glass-bg-elevated: rgba(34, 40, 50, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --foreground: #d7dde5;
+}
+
+.steel-theme body {
+  background:
+    radial-gradient(circle at top center, rgba(120, 140, 160, 0.15), transparent 30%),
+    linear-gradient(180deg, #06080d 0%, #0b1017 40%, #101722 70%, #0b1018 100%);
+}
+
+@keyframes aurora-drift {
+  0%, 100% { opacity: 0.55; transform: translate(0, 0) scale(1); }
+  33% { opacity: 0.9; transform: translate(2%, -1%) scale(1.03); }
+  66% { opacity: 0.7; transform: translate(-1%, 1%) scale(0.99); }
+}
+
+.aurora-theme {
+  --glass-bg: rgba(12, 8, 28, 0.68);
+  --glass-bg-elevated: rgba(20, 12, 40, 0.82);
+  --glass-border: rgba(167, 139, 250, 0.18);
+  --foreground: #e8e4f8;
+  --accent: #22d3ee;
+}
+
+.aurora-theme body {
+  position: relative;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -15%, rgba(34, 211, 238, 0.14), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 90% 60%, rgba(168, 85, 247, 0.12), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 8% 75%, rgba(236, 72, 153, 0.08), transparent 45%),
+    linear-gradient(180deg, #020408 0%, #050816 35%, #0a0618 65%, #030712 100%);
+}
+
+.aurora-theme body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 55% 40% at 20% 10%, rgba(34, 211, 238, 0.06), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 75% 85%, rgba(168, 85, 247, 0.07), transparent 55%);
+  animation: aurora-drift 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-theme body::before {
+    animation: none;
+  }
+}
+
+/* ---- classic design style (ported from hyper2kvm's classic-zinc.css) -- solid zinc
+ * surfaces, no glassmorphism blur, restores a pre-Tahoe industrial look. Independent
+ * of the color-variant axis above; toggled via ThemeContext's designStyle state. */
+.classic-theme {
+  --glass-bg: rgba(24, 24, 27, 0.95);
+  --glass-bg-elevated: rgba(39, 39, 42, 0.98);
+  --glass-bg-strong: rgba(24, 24, 27, 1);
+  --glass-border: rgba(63, 63, 70, 0.5);
+  --glass-border-strong: rgba(82, 82, 91, 0.6);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.2);
+  --glass-highlight: rgba(255, 255, 255, 0.04);
+  --foreground: #e4e4e7;
+  --muted-foreground: #a1a1aa;
+  --blur-liquid: 0px;
+  --blur-liquid-lg: 0px;
+  --blur-liquid-sm: 0px;
+  --radius-liquid: 10px;
+  --radius-liquid-lg: 14px;
+}
+
+.classic-theme body {
+  background-color: #09090b;
+  background-image:
+    linear-gradient(168deg, rgba(63, 63, 70, 0.25) 0%, transparent 42%),
+    linear-gradient(320deg, rgba(24, 24, 27, 0.95) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 60% at 50% -15%, rgba(113, 113, 122, 0.12), transparent 50%),
+    linear-gradient(180deg, #09090b 0%, #0c0c0d 100%);
+  background-attachment: fixed;
+}
+
+.classic-theme .glass,
+.classic-theme .glass-elevated,
+.classic-theme .glass-strong,
+.classic-theme .tahoe-glass-card,
+.classic-theme .tahoe-hero,
+.classic-theme .tahoe-stat-tile {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.65) 0%, rgba(24, 24, 27, 0.35) 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: rgba(63, 63, 70, 0.5) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 1px 0 rgba(161, 161, 170, 0.04) !important;
+}
+
+.classic-theme .tahoe-icon-badge {
+  background: linear-gradient(135deg, rgba(39, 39, 42, 0.65) 0%, rgba(24, 24, 27, 0.35) 100%) !important;
+  border-color: rgba(63, 63, 70, 0.5) !important;
+  box-shadow: none !important;
+}
+
+.classic-theme .tahoe-hero-shine {
+  display: none !important;
+}
+
+.classic-theme .tahoe-stat-sky .tahoe-stat-value,
+.classic-theme .tahoe-stat-violet .tahoe-stat-value,
+.classic-theme .tahoe-stat-emerald .tahoe-stat-value,
+.classic-theme .tahoe-stat-amber .tahoe-stat-value {
+  color: #e4e4e7 !important;
+}
+
+.classic-theme ::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+
+.classic-theme ::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
 body {
   font-family: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
   font-size: var(--font-size-base);

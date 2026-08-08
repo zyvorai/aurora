@@ -21,13 +21,24 @@ function SignupForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentUploadError, setDocumentUploadError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      await salesPersonPortal.signup(form);
+      const result = await salesPersonPortal.signup(form);
+      if (documentFile) {
+        try {
+          await salesPersonPortal.uploadDocument(result.id, documentFile);
+        } catch (err) {
+          setDocumentUploadError(
+            err instanceof Error ? err.message : 'Document upload failed -- you can skip this and provide it later.',
+          );
+        }
+      }
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -46,6 +57,9 @@ function SignupForm() {
             An administrator will review your sales rep application. You&apos;ll be able to sign
             in once approved.
           </p>
+          {documentUploadError && (
+            <p className="text-danger text-body-sm mt-3">{documentUploadError}</p>
+          )}
         </CardBody>
       </Card>
     );
@@ -95,6 +109,17 @@ function SignupForm() {
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
+          <div>
+            <label className="text-body-sm text-muted mb-1.5 block">
+              Proof of business (optional)
+            </label>
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg"
+              onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
+              className="w-full text-body-sm text-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--glass-bg)] file:text-foreground hover:file:bg-[var(--glass-bg-elevated)] file:cursor-pointer cursor-pointer"
+            />
+          </div>
           {error && <TextSmall className="text-danger">{error}</TextSmall>}
           <Button type="submit" disabled={loading} className="w-full" size="lg">
             {loading ? 'Submitting…' : 'Apply as Sales Rep'}

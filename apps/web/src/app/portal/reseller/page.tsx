@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, LogOut, Plus, Sparkles } from 'lucide-react';
+import { Building2, LogOut, Pencil, Plus, Sparkles } from 'lucide-react';
 import { PageHero } from '@/components/layout/PageHero';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { showToast } from '@/lib/toast';
 import { resellerPortal, type ResellerAccount, type DealRegistration } from '@/lib/portal-api';
 import { clearPortalSession, getPortalToken } from '@/lib/portal-auth';
 
@@ -30,6 +31,9 @@ export default function ResellerHomePage() {
   const [dealForm, setDealForm] = useState({ product_id: '', company_name: '', domain: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ company_name: '', contact_name: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!getPortalToken()) {
@@ -51,6 +55,27 @@ export default function ResellerHomePage() {
   function handleSignOut() {
     clearPortalSession();
     router.push('/portal/reseller/login');
+  }
+
+  function openEditModal() {
+    if (!account) return;
+    setEditForm({ company_name: account.company_name || '', contact_name: account.contact_name || '' });
+    setShowEditModal(true);
+  }
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updated = await resellerPortal.updateMe(editForm);
+      setAccount(updated);
+      setShowEditModal(false);
+      showToast('success', 'Profile updated');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleRegisterDeal(e: React.FormEvent) {
@@ -96,11 +121,16 @@ export default function ResellerHomePage() {
           title={account.company_name || account.contact_name || account.email}
           description={`Margin tier: ${account.margin_tier}`}
           actions={
-            account.status === 'approved' ? (
-              <Button onClick={() => setShowModal(true)}>
-                <Plus className="w-4 h-4 mr-1.5" aria-hidden /> Register Deal
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={openEditModal}>
+                <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
               </Button>
-            ) : undefined
+              {account.status === 'approved' && (
+                <Button onClick={() => setShowModal(true)}>
+                  <Plus className="w-4 h-4 mr-1.5" aria-hidden /> Register Deal
+                </Button>
+              )}
+            </div>
           }
         />
 
@@ -180,6 +210,29 @@ export default function ResellerHomePage() {
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting ? 'Registering…' : 'Register'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Edit profile">
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <Input
+            placeholder="Company name"
+            value={editForm.company_name}
+            onChange={(e) => setEditForm({ ...editForm, company_name: e.target.value })}
+          />
+          <Input
+            placeholder="Your name"
+            value={editForm.contact_name}
+            onChange={(e) => setEditForm({ ...editForm, contact_name: e.target.value })}
+          />
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
             </Button>
           </div>
         </form>
