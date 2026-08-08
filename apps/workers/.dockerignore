@@ -1,0 +1,10 @@
+# NOTE: this app builds from the repo root context (see Dockerfile comment),
+# so Docker actually honors the root .dockerignore for this build, not this
+# file. Kept for documentation and in case the build context is ever narrowed.
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.git
+.env
+.env.*

@@ -1,0 +1,13 @@
+# Used when the build context is the repo root (apps/workers/Dockerfile).
+apps/api/.venv/
+apps/api/**/__pycache__/
+apps/api/**/*.pyc
+apps/api/.pytest_cache/
+apps/api/htmlcov/
+apps/api/**/*.egg-info/
+apps/web/node_modules/
+apps/web/.next/
+.git
+.env
+.env.*
+!.env.*.example

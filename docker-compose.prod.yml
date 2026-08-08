@@ -1,0 +1,87 @@
+# Production app-layer overlay. Run alongside the backing-infra compose file:
+#
+#   docker compose -f infra/docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# infra/docker-compose.yml (dev-oriented, untouched) provides postgres/qdrant/
+# neo4j/redis/minio/ollama. This file adds the three application services and
+# points them at those services by Docker DNS name instead of localhost.
+#
+# .env at the repo root is used both for compose variable substitution below
+# (NEXT_PUBLIC_API_URL) and, via env_file:, as each container's base runtime
+# env -- the environment: blocks then override the handful of host-dependent
+# URLs so they resolve inside the compose network.
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    # Credentials below mirror infra/docker-compose.yml's hardcoded postgres/
+    # neo4j service definitions -- if you change credentials there, update
+    # them here too. Only host is swapped from localhost to the service name.
+    environment:
+      DATABASE_URL: postgresql+asyncpg://gtm:gtm_dev@postgres:5432/gtm_platform
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      NEO4J_URI: bolt://neo4j:7687
+      MINIO_ENDPOINT: minio:9000
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_started
+      minio:
+        condition: service_started
+      ollama:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  workers:
+    build:
+      context: .
+      dockerfile: apps/workers/Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://gtm:gtm_dev@postgres:5432/gtm_platform
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      NEO4J_URI: bolt://neo4j:7687
+      MINIO_ENDPOINT: minio:9000
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_started
+      minio:
+        condition: service_started
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
