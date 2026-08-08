@@ -94,6 +94,13 @@ class Settings(BaseSettings):
     minio_secret_key: str = "gtm_minio_dev"
     minio_bucket: str = "gtm-artifacts"
     minio_secure: bool = False
+    # Presigned URLs are opened by a browser outside the Docker network, so they need a
+    # host the browser can actually resolve -- unlike minio_endpoint above (used for
+    # container-to-container put/get), which is typically an internal service name like
+    # "minio:9000". Empty means "same as minio_endpoint" (fine for local dev where both
+    # are localhost).
+    minio_public_endpoint: str = ""
+    minio_public_secure: bool = False
 
     # SMTP (publishing email channel adapter)
     smtp_host: str = ""

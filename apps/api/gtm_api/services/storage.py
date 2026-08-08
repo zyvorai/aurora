@@ -17,6 +17,7 @@ settings = get_settings()
 class StorageService:
     def __init__(self) -> None:
         self._client: Optional[Minio] = None
+        self._public_client: Optional[Minio] = None
 
     @property
     def client(self) -> Minio:
@@ -28,6 +29,20 @@ class StorageService:
                 secure=settings.minio_secure,
             )
         return self._client
+
+    @property
+    def public_client(self) -> Minio:
+        """Separate client used only for presigned URL generation -- the URL is opened
+        by a browser outside the Docker network, so it must be built against a host the
+        browser can resolve, not the internal service name `client` above talks to."""
+        if self._public_client is None:
+            self._public_client = Minio(
+                settings.minio_public_endpoint or settings.minio_endpoint,
+                access_key=settings.minio_access_key,
+                secret_key=settings.minio_secret_key,
+                secure=settings.minio_public_secure if settings.minio_public_endpoint else settings.minio_secure,
+            )
+        return self._public_client
 
     def _ensure_bucket(self) -> None:
         bucket = settings.minio_bucket
@@ -98,7 +113,7 @@ class StorageService:
         from datetime import timedelta
 
         self._ensure_bucket()
-        return self.client.presigned_get_object(
+        return self.public_client.presigned_get_object(
             settings.minio_bucket,
             storage_key,
             expires=timedelta(hours=expires_hours),
