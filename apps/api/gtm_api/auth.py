@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
-from gtm_api.models import ApiKey, CustomerAccount, PortalAccountStatus, User
+from gtm_api.models import ApiKey, CustomerAccount, PortalAccountStatus, ResellerAccount, User
 
 settings = get_settings()
 # auto_error=False so a request can authenticate via X-API-Key instead of Bearer JWT;
@@ -79,7 +79,15 @@ class PortalIdentity:
     account_id: uuid.UUID
     tenant_id: uuid.UUID
     portal_type: str
-    account: CustomerAccount
+    account: "CustomerAccount | ResellerAccount"
+
+
+# One model per external portal type. Adding a new portal type (e.g. salesperson) means
+# adding one entry here -- create_portal_token/get_current_portal_account need no changes.
+PORTAL_ACCOUNT_MODELS: dict[str, type] = {
+    "customer": CustomerAccount,
+    "reseller": ResellerAccount,
+}
 
 
 def create_portal_token(account_id: uuid.UUID, tenant_id: uuid.UUID, portal_type: str = "customer") -> str:
@@ -118,16 +126,17 @@ async def get_current_portal_account(
 
     account_id = payload.get("sub")
     portal_type = payload.get("portal_type")
-    if account_id is None or portal_type != "customer":
+    model = PORTAL_ACCOUNT_MODELS.get(portal_type)
+    if account_id is None or model is None:
         raise invalid
 
-    result = await db.execute(select(CustomerAccount).where(CustomerAccount.id == uuid.UUID(account_id)))
+    result = await db.execute(select(model).where(model.id == uuid.UUID(account_id)))
     account = result.scalar_one_or_none()
     if account is None or not account.is_active or account.status != PortalAccountStatus.APPROVED:
         raise invalid
 
     return PortalIdentity(
-        account_id=account.id, tenant_id=account.tenant_id, portal_type="customer", account=account
+        account_id=account.id, tenant_id=account.tenant_id, portal_type=portal_type, account=account
     )
 
 

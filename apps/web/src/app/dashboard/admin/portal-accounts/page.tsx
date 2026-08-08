@@ -12,9 +12,13 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
-import { portalAdmin, type CustomerAccount } from '@/lib/portal-api';
+import { cn } from '@/lib/cn';
+import { portalAdmin, type CustomerAccount, type ResellerAccount } from '@/lib/portal-api';
 
-const STATUS_VARIANT: Record<CustomerAccount['status'], BadgeVariant> = {
+type PortalAccount = CustomerAccount | ResellerAccount;
+type PortalTab = 'customer' | 'reseller';
+
+const STATUS_VARIANT: Record<PortalAccount['status'], BadgeVariant> = {
   pending: 'warning',
   approved: 'success',
   rejected: 'danger',
@@ -23,9 +27,10 @@ const STATUS_VARIANT: Record<CustomerAccount['status'], BadgeVariant> = {
 
 export default function PortalAccountsAdminPage() {
   const { ready, role } = useAuth();
-  const [accounts, setAccounts] = useState<CustomerAccount[]>([]);
+  const [tab, setTab] = useState<PortalTab>('customer');
+  const [accounts, setAccounts] = useState<PortalAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [rejectTarget, setRejectTarget] = useState<CustomerAccount | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<PortalAccount | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -33,21 +38,23 @@ export default function PortalAccountsAdminPage() {
     if (role === 'admin') {
       refresh();
     }
-  }, [role]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, tab]);
 
   function refresh() {
     setLoading(true);
-    portalAdmin
-      .listAccounts()
-      .then(setAccounts)
+    const call = tab === 'customer' ? portalAdmin.listAccounts() : portalAdmin.listResellerAccounts();
+    call
+      .then((result) => setAccounts(result))
       .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load accounts'))
       .finally(() => setLoading(false));
   }
 
-  async function handleApprove(account: CustomerAccount) {
+  async function handleApprove(account: PortalAccount) {
     setBusyId(account.id);
     try {
-      await portalAdmin.approve(account.id);
+      if (tab === 'customer') await portalAdmin.approve(account.id);
+      else await portalAdmin.approveReseller(account.id);
       showToast('success', `Approved ${account.email}`);
       refresh();
     } catch (err) {
@@ -61,7 +68,8 @@ export default function PortalAccountsAdminPage() {
     if (!rejectTarget || !rejectReason.trim()) return;
     setBusyId(rejectTarget.id);
     try {
-      await portalAdmin.reject(rejectTarget.id, rejectReason.trim());
+      if (tab === 'customer') await portalAdmin.reject(rejectTarget.id, rejectReason.trim());
+      else await portalAdmin.rejectReseller(rejectTarget.id, rejectReason.trim());
       showToast('success', `Rejected ${rejectTarget.email}`);
       setRejectTarget(null);
       setRejectReason('');
@@ -97,13 +105,29 @@ export default function PortalAccountsAdminPage() {
         icon={Users}
         eyebrow="Admin"
         title="Portal Accounts"
-        description="Review and approve customer portal signup requests."
+        description="Review and approve external portal signup requests."
       />
+
+      <div className="flex gap-2">
+        {(['customer', 'reseller'] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={cn(
+              'px-4 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring capitalize',
+              tab === t ? 'bg-primary text-primary-foreground' : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
+            )}
+          >
+            {t}s
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="text-muted">Loading…</div>
       ) : accounts.length === 0 ? (
-        <EmptyState icon={Users} title="No signup requests yet" description="Customer portal signups will appear here." />
+        <EmptyState icon={Users} title="No signup requests yet" description={`${tab === 'customer' ? 'Customer' : 'Reseller'} portal signups will appear here.`} />
       ) : (
         <Card>
           <Table>

@@ -79,6 +79,36 @@ export interface CustomerAccount {
   created_at: string;
 }
 
+export interface ResellerSignupRequest {
+  tenant_slug: string;
+  email: string;
+  password: string;
+  company_name?: string;
+  contact_name?: string;
+  business_id?: string;
+}
+
+export interface ResellerAccount {
+  id: string;
+  tenant_id: string;
+  email: string;
+  company_name?: string | null;
+  contact_name?: string | null;
+  business_id?: string | null;
+  margin_tier: string;
+  authorized_product_ids?: string[] | null;
+  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  rejected_reason?: string | null;
+  created_at: string;
+}
+
+export interface DealRegistration {
+  id: string;
+  company_name: string;
+  status: string;
+  created_at: string;
+}
+
 export const portal = {
   signup: (req: PortalSignupRequest) =>
     portalRequest<PortalSignupResponse>('/customer/signup', {
@@ -95,6 +125,30 @@ export const portal = {
   me: () => portalRequest<CustomerAccount>('/customer/me'),
 };
 
+export const resellerPortal = {
+  signup: (req: ResellerSignupRequest) =>
+    portalRequest<PortalSignupResponse>('/reseller/signup', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+
+  login: (req: { tenant_slug: string; email: string; password: string }) =>
+    portalRequest<PortalTokenResponse>('/reseller/login', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+
+  me: () => portalRequest<ResellerAccount>('/reseller/me'),
+
+  registerDeal: (req: { product_id: string; company_name: string; domain?: string; industry?: string; company_size?: string; geo?: string }) =>
+    portalRequest<DealRegistration>('/reseller/deals', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    }),
+
+  myDeals: () => portalRequest<DealRegistration[]>('/reseller/deals'),
+};
+
 export const portalAdmin = {
   listAccounts: (statusFilter?: string) => {
     const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : '';
@@ -106,6 +160,20 @@ export const portalAdmin = {
 
   reject: (accountId: string, reason: string) =>
     adminPortalRequest<CustomerAccount>(`/customer/accounts/${accountId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+
+  listResellerAccounts: (statusFilter?: string) => {
+    const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : '';
+    return adminPortalRequest<ResellerAccount[]>(`/reseller/accounts${query}`);
+  },
+
+  approveReseller: (accountId: string) =>
+    adminPortalRequest<ResellerAccount>(`/reseller/accounts/${accountId}/approve`, { method: 'POST' }),
+
+  rejectReseller: (accountId: string, reason: string) =>
+    adminPortalRequest<ResellerAccount>(`/reseller/accounts/${accountId}/reject`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }),

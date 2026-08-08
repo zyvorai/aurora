@@ -23,14 +23,18 @@ from gtm_api.auth import (
     PortalIdentity,
 )
 from gtm_api.database import get_db
-from gtm_api.models import CustomerAccount, PortalAccountStatus, Product, Tenant, User
+from gtm_api.models import CustomerAccount, DiscoveredAccount, PortalAccountStatus, Product, ResellerAccount, Tenant, User
 from gtm_api.schemas import (
     CustomerAccountResponse,
+    DealRegistrationRequest,
+    DealRegistrationResponse,
     PortalLoginRequest,
     PortalRejectRequest,
     PortalSignupRequest,
     PortalSignupResponse,
     PortalTokenResponse,
+    ResellerAccountResponse,
+    ResellerSignupRequest,
 )
 from gtm_api.tenant import audit_log, get_tenant_context
 
@@ -109,6 +113,8 @@ async def customer_login(req: PortalLoginRequest, db: AsyncSession = Depends(get
 
 @router.get("/customer/me", response_model=CustomerAccountResponse)
 async def customer_me(identity: PortalIdentity = Depends(get_current_portal_account)):
+    if identity.portal_type != "customer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a customer account")
     return identity.account
 
 
@@ -177,6 +183,190 @@ async def reject_customer_account(
     account.reviewed_at = datetime.now(timezone.utc)
     await audit_log(
         db, ctx.tenant_id, user.id, "reject_customer_account", "customer_account",
+        resource_id=str(account_id), details={"reason": req.reason},
+    )
+    await db.flush()
+    await db.refresh(account)
+    return account
+
+
+# ---- Reseller portal: same lifecycle as customer, plus deal registration ----
+
+
+@router.post("/reseller/signup", response_model=PortalSignupResponse, status_code=201)
+async def reseller_signup(req: ResellerSignupRequest, db: AsyncSession = Depends(get_db)):
+    tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
+
+    existing = await db.execute(
+        select(ResellerAccount).where(
+            ResellerAccount.tenant_id == tenant.id, ResellerAccount.email == req.email
+        )
+    )
+    if existing.scalar_one_or_none() is not None:
+        raise HTTPException(status_code=409, detail="An account with this email already exists")
+
+    account = ResellerAccount(
+        tenant_id=tenant.id,
+        email=req.email,
+        hashed_password=hash_password(req.password),
+        company_name=req.company_name,
+        contact_name=req.contact_name,
+        business_id=req.business_id,
+        status=PortalAccountStatus.PENDING,
+    )
+    db.add(account)
+    await audit_log(
+        db, tenant.id, None, "portal_signup", "reseller_account",
+        details={"email": req.email, "company_name": req.company_name},
+    )
+    await db.flush()
+    await db.refresh(account)
+
+    return PortalSignupResponse(id=account.id, status=account.status.value)
+
+
+@router.post("/reseller/login", response_model=PortalTokenResponse)
+async def reseller_login(req: PortalLoginRequest, db: AsyncSession = Depends(get_db)):
+    tenant = await _get_active_tenant_by_slug(db, req.tenant_slug)
+
+    result = await db.execute(
+        select(ResellerAccount).where(
+            ResellerAccount.tenant_id == tenant.id, ResellerAccount.email == req.email
+        )
+    )
+    account = result.scalar_one_or_none()
+    if not account or not verify_password(req.password, account.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    if account.status != PortalAccountStatus.APPROVED or not account.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Account is {account.status.value}, not yet approved for login",
+        )
+
+    token = create_portal_token(account.id, tenant.id, portal_type="reseller")
+    return PortalTokenResponse(access_token=token, portal_type="reseller", account_id=account.id, tenant_id=tenant.id)
+
+
+@router.get("/reseller/me", response_model=ResellerAccountResponse)
+async def reseller_me(identity: PortalIdentity = Depends(get_current_portal_account)):
+    if identity.portal_type != "reseller":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a reseller account")
+    return identity.account
+
+
+@router.post("/reseller/deals", response_model=DealRegistrationResponse, status_code=201)
+async def register_deal(
+    req: DealRegistrationRequest,
+    identity: PortalIdentity = Depends(get_current_portal_account),
+    db: AsyncSession = Depends(get_db),
+):
+    if identity.portal_type != "reseller":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a reseller account")
+
+    product_result = await db.execute(
+        select(Product).where(Product.id == req.product_id, Product.tenant_id == identity.tenant_id)
+    )
+    if product_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    deal = DiscoveredAccount(
+        product_id=req.product_id,
+        tenant_id=identity.tenant_id,
+        company_name=req.company_name,
+        domain=req.domain,
+        industry=req.industry,
+        company_size=req.company_size,
+        geo=req.geo,
+        source="reseller_referral",
+        registered_by_reseller_id=identity.account_id,
+    )
+    db.add(deal)
+    await audit_log(
+        db, identity.tenant_id, None, "register_deal", "discovered_account",
+        details={"company_name": req.company_name, "reseller_account_id": str(identity.account_id)},
+    )
+    await db.flush()
+    await db.refresh(deal)
+    return deal
+
+
+@router.get("/reseller/deals", response_model=list[DealRegistrationResponse])
+async def list_my_deals(identity: PortalIdentity = Depends(get_current_portal_account), db: AsyncSession = Depends(get_db)):
+    if identity.portal_type != "reseller":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a reseller account")
+    result = await db.execute(
+        select(DiscoveredAccount)
+        .where(DiscoveredAccount.registered_by_reseller_id == identity.account_id)
+        .order_by(DiscoveredAccount.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.get("/reseller/accounts", response_model=list[ResellerAccountResponse])
+async def list_reseller_accounts(
+    status_filter: str | None = None,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    query = select(ResellerAccount).where(ResellerAccount.tenant_id == ctx.tenant_id)
+    if status_filter:
+        query = query.where(ResellerAccount.status == status_filter)
+    result = await db.execute(query.order_by(ResellerAccount.created_at.desc()))
+    return list(result.scalars().all())
+
+
+@router.post("/reseller/accounts/{account_id}/approve", response_model=ResellerAccountResponse)
+async def approve_reseller_account(
+    account_id: uuid.UUID,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    result = await db.execute(
+        select(ResellerAccount).where(
+            ResellerAccount.id == account_id, ResellerAccount.tenant_id == ctx.tenant_id
+        )
+    )
+    account = result.scalar_one_or_none()
+    if account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+    account.status = PortalAccountStatus.APPROVED
+    account.reviewed_by = user.id
+    account.reviewed_at = datetime.now(timezone.utc)
+    await audit_log(
+        db, ctx.tenant_id, user.id, "approve_reseller_account", "reseller_account",
+        resource_id=str(account_id),
+    )
+    await db.flush()
+    await db.refresh(account)
+    return account
+
+
+@router.post("/reseller/accounts/{account_id}/reject", response_model=ResellerAccountResponse)
+async def reject_reseller_account(
+    account_id: uuid.UUID,
+    req: PortalRejectRequest,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    result = await db.execute(
+        select(ResellerAccount).where(
+            ResellerAccount.id == account_id, ResellerAccount.tenant_id == ctx.tenant_id
+        )
+    )
+    account = result.scalar_one_or_none()
+    if account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+    account.status = PortalAccountStatus.REJECTED
+    account.rejected_reason = req.reason
+    account.reviewed_by = user.id
+    account.reviewed_at = datetime.now(timezone.utc)
+    await audit_log(
+        db, ctx.tenant_id, user.id, "reject_reseller_account", "reseller_account",
         resource_id=str(account_id), details={"reason": req.reason},
     )
     await db.flush()

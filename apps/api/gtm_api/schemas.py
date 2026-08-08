@@ -111,6 +111,49 @@ class PortalRejectRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=1000)
 
 
+class ResellerSignupRequest(BaseModel):
+    tenant_slug: str = Field(..., min_length=1, max_length=100)
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    company_name: str = ""
+    contact_name: str = ""
+    business_id: str = ""
+
+
+class ResellerAccountResponse(BaseModel):
+    id: uuid.UUID
+    tenant_id: uuid.UUID
+    email: str
+    company_name: Optional[str] = None
+    contact_name: Optional[str] = None
+    business_id: Optional[str] = None
+    margin_tier: str = "standard"
+    authorized_product_ids: Optional[list[uuid.UUID]] = None
+    status: str
+    rejected_reason: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DealRegistrationRequest(BaseModel):
+    product_id: uuid.UUID
+    company_name: str = Field(..., min_length=1, max_length=255)
+    domain: Optional[str] = None
+    industry: Optional[str] = None
+    company_size: Optional[str] = None
+    geo: Optional[str] = None
+
+
+class DealRegistrationResponse(BaseModel):
+    id: uuid.UUID
+    company_name: str
+    status: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # Products
 class ProductCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)

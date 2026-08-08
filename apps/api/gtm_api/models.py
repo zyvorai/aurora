@@ -383,6 +383,11 @@ class DiscoveredAccount(Base):
     source: Mapped[str] = mapped_column(String(50), default="rules")
     status: Mapped[str] = mapped_column(String(50), default="new")
     metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    # Set when a reseller registers this account as their deal (portal self-service);
+    # null for accounts discovered by the tenant's own agents.
+    registered_by_reseller_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("reseller_accounts.id"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
@@ -564,6 +569,38 @@ class CustomerAccount(Base):
     )
 
     __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_customer_account_tenant_email"),)
+
+
+class ResellerAccount(Base):
+    """External identity for channel partners/MSPs reselling the tenant's product --
+    same isolation rationale as CustomerAccount (separate table/token type, never a
+    `User` row). Deal registration (DiscoveredAccount.registered_by_reseller_id) links
+    prospects a reseller brings in back to this account."""
+
+    __tablename__ = "reseller_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    company_name: Mapped[Optional[str]] = mapped_column(String(255))
+    contact_name: Mapped[Optional[str]] = mapped_column(String(255))
+    business_id: Mapped[Optional[str]] = mapped_column(String(255))
+    margin_tier: Mapped[str] = mapped_column(String(50), default="standard")
+    authorized_product_ids: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
+    status: Mapped[PortalAccountStatus] = mapped_column(
+        Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
+    )
+    rejected_reason: Mapped[Optional[str]] = mapped_column(Text)
+    reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_reseller_account_tenant_email"),)
 
 
 class SourceCredential(Base):
