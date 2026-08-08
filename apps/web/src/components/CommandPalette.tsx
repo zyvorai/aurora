@@ -98,10 +98,10 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
       onClick={onClose}
     >
       <div
-        className="animate-fade-up w-full max-w-lg overflow-hidden rounded-lg border border-border bg-surface-elevated shadow-xl"
+        className="animate-glass-in glass-strong w-full max-w-lg overflow-hidden rounded-[var(--radius-liquid-lg)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2 border-b border-[var(--glass-border)] px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-muted" />
           <input
             ref={inputRef}

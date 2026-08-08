@@ -43,7 +43,7 @@ export function AppHeader({
   ) : null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-[var(--blur-liquid)]">
       <div className="flex h-14 items-center justify-between gap-4 px-4 md:px-6">
         <div className="flex items-center gap-3 min-w-0">
           {showMenuButton && (
@@ -88,6 +88,14 @@ export function AppHeader({
           >
             Settings
           </Link>
+          {role === 'admin' && (
+            <Link
+              href="/dashboard/admin/danger"
+              className="hidden sm:inline text-body-sm text-danger/80 hover:text-danger focus-ring rounded-sm px-2 py-1"
+            >
+              Admin
+            </Link>
+          )}
           <Button
             variant="ghost"
             size="sm"

@@ -8,9 +8,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import content_hash
+from gtm_api.config import get_settings
 from gtm_api.models import Approval, ApprovalStatus, Artifact, ChannelPost
+from gtm_api.services.enterprise import is_suppressed
 from gtm_api.services.publishing_adapters import ADAPTER_REGISTRY
 from gtm_api.tenant import audit_log
+
+settings = get_settings()
+
+EMAIL_CHANNELS = {"email", "newsletter"}
 
 
 CHANNEL_HANDLERS = {
@@ -32,6 +38,7 @@ async def publish_artifact(
     user_id: uuid.UUID,
     channel: str,
     scheduled_at: Optional[datetime] = None,
+    recipient: Optional[str] = None,
 ) -> ChannelPost:
     approval_result = await db.execute(
         select(Approval).where(
@@ -63,12 +70,30 @@ async def publish_artifact(
     db.add(post)
 
     if not scheduled_at:
+        resolved_recipient = None
+        if channel in EMAIL_CHANNELS:
+            resolved_recipient = (
+                recipient
+                or (artifact.metadata_ or {}).get("recipient_email")
+                or settings.email_channel_recipient
+                or settings.smtp_from
+            )
+            if await is_suppressed(db, tenant_id, resolved_recipient):
+                post.status = "blocked"
+                post.error_message = f"Recipient {resolved_recipient} is on the suppression list."
+                await audit_log(
+                    db, tenant_id, user_id, "publish_blocked", "channel_post",
+                    resource_id=str(post.id),
+                    details={"channel": channel, "artifact_id": str(artifact.id), "recipient": resolved_recipient},
+                )
+                return post
+
         adapter = ADAPTER_REGISTRY.get(channel)
         if adapter is None:
             post.status = "failed"
             post.error_message = f"No adapter registered for channel '{channel}'"
         else:
-            result = await adapter(artifact, post)
+            result = await adapter(artifact, post, resolved_recipient)
             post.status = result.status
             post.provider_message_id = result.provider_message_id
             post.error_message = result.error

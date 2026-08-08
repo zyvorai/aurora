@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError
 
 from gtm_api.config import get_settings
 from gtm_api.database import DB_SETUP_HINT, check_database
-from gtm_api.routers import auth, products, marketing, agents, workflows, pipeline, crm, success, mcp
+from gtm_api.routers import auth, products, marketing, agents, workflows, pipeline, crm, success, mcp, admin
 from gtm_api.services.embeddings import LLMServiceError
 from gtm_api.services.llm import check_llm_health
 
@@ -114,6 +114,7 @@ app.include_router(pipeline.router, prefix=settings.api_prefix)
 app.include_router(crm.router, prefix=settings.api_prefix)
 app.include_router(success.router, prefix=settings.api_prefix)
 app.include_router(mcp.router, prefix=settings.api_prefix)
+app.include_router(admin.router, prefix=settings.api_prefix)
 
 
 @app.get("/health")

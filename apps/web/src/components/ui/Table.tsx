@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 export function Table({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('overflow-x-auto rounded-lg border border-border', className)}>
+    <div className={cn('glass overflow-x-auto', className)}>
       <table className="w-full text-body-sm">{children}</table>
     </div>
   );
@@ -11,7 +11,7 @@ export function Table({ children, className }: { children: ReactNode; className?
 
 export function TableHead({ children }: { children: ReactNode }) {
   return (
-    <thead className="bg-surface text-muted text-left">
+    <thead className="bg-[var(--glass-bg-elevated)] text-muted text-left">
       {children}
     </thead>
   );
@@ -23,7 +23,7 @@ export function TableBody({ children }: { children: ReactNode }) {
 
 export function TableRow({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <tr className={cn('border-t border-border first:border-t-0', className)}>
+    <tr className={cn('border-t border-[var(--glass-border)] first:border-t-0', className)}>
       {children}
     </tr>
   );

@@ -20,6 +20,8 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Kanban } from 'lucide-react';
 import { showToast } from '@/lib/toast';
 import { workflowProgressPercent } from '@/lib/workflow-progress';
+import AccountHealthPanel from '@/components/success/AccountHealthPanel';
+import OpportunityDetailModal from '@/components/pipeline/OpportunityDetailModal';
 import { Stat, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 const STAGE_LABELS: Record<string, string> = {
@@ -39,6 +41,7 @@ export default function PipelinePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [workflowStatus, setWorkflowStatus] = useState<WorkflowRunStatus | null>(null);
+  const [selectedOppId, setSelectedOppId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     products.opportunities(id).then(setOpportunities).catch(() => setOpportunities([]));
@@ -199,7 +202,11 @@ export default function PipelinePage() {
                   {(byStage[stage] ?? []).map((opp) => (
                     <div
                       key={opp.id}
-                      className="rounded-md border border-border bg-background p-2 text-body-sm"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedOppId(opp.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') setSelectedOppId(opp.id); }}
+                      className="rounded-[var(--radius-liquid)] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-2 text-body-sm cursor-pointer hover:border-[var(--glass-border-strong)] transition-colors"
                     >
                       <Text className="font-medium truncate">{opp.name}</Text>
                       {opp.company && (
@@ -209,6 +216,7 @@ export default function PipelinePage() {
                         className="mt-2 w-full text-body-sm bg-transparent border border-border rounded px-1 py-0.5 focus-ring"
                         value={opp.stage}
                         onChange={(e) => handleStageChange(opp.id, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
                         aria-label={`Stage for ${opp.name}`}
                       >
                         {OPPORTUNITY_STAGES.map((s) => (
@@ -237,6 +245,17 @@ export default function PipelinePage() {
           />
         )}
       </section>
+
+      <AccountHealthPanel productId={id} />
+
+      {selectedOppId && (
+        <OpportunityDetailModal
+          productId={id}
+          opportunityId={selectedOppId}
+          onClose={() => setSelectedOppId(null)}
+          onChanged={load}
+        />
+      )}
     </div>
   );
 }

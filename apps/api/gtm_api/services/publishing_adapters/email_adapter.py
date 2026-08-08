@@ -6,6 +6,7 @@ import asyncio
 import smtplib
 from email.message import EmailMessage
 from email.utils import make_msgid
+from typing import Optional
 
 from gtm_api.config import get_settings
 from gtm_api.models import Artifact, ChannelPost
@@ -14,22 +15,31 @@ from gtm_api.services.publishing_adapters.base import ProviderResult
 settings = get_settings()
 
 
-async def publish(artifact: Artifact, channel_post: ChannelPost) -> ProviderResult:
+async def publish(
+    artifact: Artifact,
+    channel_post: ChannelPost,
+    recipient: Optional[str] = None,
+) -> ProviderResult:
     if not settings.smtp_configured:
         return ProviderResult(
             status="not_configured",
             error="SMTP_HOST, SMTP_USER, and SMTP_PASSWORD must be set to send email.",
         )
-    return await asyncio.to_thread(_send_sync, artifact)
+    return await asyncio.to_thread(_send_sync, artifact, recipient)
 
 
-def _send_sync(artifact: Artifact) -> ProviderResult:
-    recipient = settings.email_channel_recipient or settings.smtp_from
+def _send_sync(artifact: Artifact, recipient: Optional[str] = None) -> ProviderResult:
+    resolved_recipient = (
+        recipient
+        or (artifact.metadata_ or {}).get("recipient_email")
+        or settings.email_channel_recipient
+        or settings.smtp_from
+    )
 
     message = EmailMessage()
     message["Subject"] = artifact.title or "Emissary Update"
     message["From"] = settings.smtp_from
-    message["To"] = recipient
+    message["To"] = resolved_recipient
     message["Message-Id"] = make_msgid()
     message.set_content(artifact.content or "")
 

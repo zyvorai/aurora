@@ -16,5 +16,10 @@ class ProviderResult:
 
 
 class PublishAdapter(Protocol):
-    async def publish(self, artifact: Artifact, channel_post: ChannelPost) -> ProviderResult:
+    async def publish(
+        self,
+        artifact: Artifact,
+        channel_post: ChannelPost,
+        recipient: Optional[str] = None,
+    ) -> ProviderResult:
         ...

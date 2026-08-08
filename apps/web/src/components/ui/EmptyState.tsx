@@ -1,7 +1,6 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { Card, CardBody } from './Card';
 import { Button } from './Button';
 import { SectionTitle, TextMuted } from './Typography';
 import { cn } from '@/lib/cn';
@@ -22,10 +21,11 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon: Icon, title, description, actions, className }: EmptyStateProps) {
   return (
-    <Card elevated className={cn('animate-fade-up py-16 text-center', className)}>
-      <CardBody>
+    <div className={cn('tahoe-empty animate-fade-up py-16 px-6 text-center', className)}>
+      <div className="tahoe-empty-orb" aria-hidden />
+      <div className="relative">
         {Icon && (
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div className="tahoe-empty-icon mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full text-primary">
             <Icon className="h-6 w-6" />
           </div>
         )}
@@ -47,7 +47,7 @@ export function EmptyState({ icon: Icon, title, description, actions, className 
             ))}
           </div>
         )}
-      </CardBody>
-    </Card>
+      </div>
+    </div>
   );
 }

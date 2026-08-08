@@ -11,28 +11,9 @@ from sqlalchemy.dialects import postgresql
 
 
 def upgrade() -> None:
-    op.execute("ALTER TYPE sourcetype ADD VALUE IF NOT EXISTS 'file'")
-    op.execute("ALTER TYPE sourcetype ADD VALUE IF NOT EXISTS 'audio'")
-    op.execute("ALTER TYPE sourcetype ADD VALUE IF NOT EXISTS 'spreadsheet'")
-    op.execute("ALTER TYPE sourcetype ADD VALUE IF NOT EXISTS 'database'")
-
-    op.alter_column("sources", "url", existing_type=sa.String(2048), nullable=True)
-    op.add_column("sources", sa.Column("display_name", sa.String(512), nullable=True))
-    op.add_column("sources", sa.Column("storage_key", sa.String(1024), nullable=True))
-    op.add_column("sources", sa.Column("mime_type", sa.String(255), nullable=True))
-    op.add_column("sources", sa.Column("file_size_bytes", sa.Integer(), nullable=True))
-    op.add_column(
-        "sources",
-        sa.Column("credential_id", postgresql.UUID(as_uuid=True), nullable=True),
-    )
-    op.create_foreign_key(
-        "fk_sources_credential_id",
-        "sources",
-        "source_credentials",
-        ["credential_id"],
-        ["id"],
-    )
-    op.create_index("ix_sources_credential_id", "sources", ["credential_id"])
+    # No-op: 001_initial now creates the full current schema (including these
+    # columns/enum values on `sources`) via Base.metadata.create_all().
+    pass
 
 
 def downgrade() -> None:

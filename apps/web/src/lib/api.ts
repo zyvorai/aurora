@@ -320,7 +320,7 @@ export const products = {
 
   outreach(
     id: string,
-    params: { company_url: string; target_persona?: string; campaign_name?: string },
+    params: { company_url: string; target_persona?: string; campaign_name?: string; recipient_email?: string },
   ): Promise<Record<string, unknown>> {
     return request(`/products/${id}/outreach`, {
       method: 'POST',
@@ -328,6 +328,7 @@ export const products = {
         company_url: params.company_url,
         target_persona: params.target_persona ?? 'CTO',
         campaign_name: params.campaign_name,
+        recipient_email: params.recipient_email,
       }),
       timeoutMs: AGENT_TIMEOUT_MS,
     });
@@ -500,7 +501,27 @@ export const products = {
   accountHealth(id: string): Promise<AccountHealthRecord[]> {
     return request<AccountHealthRecord[]>(`/products/${id}/account-health`);
   },
+
+  createSuccessPlan(id: string, opportunityId: string): Promise<SuccessPlanResponse> {
+    return request(`/products/${id}/opportunities/${opportunityId}/success-plan`, { method: 'POST', body: '{}' });
+  },
+
+  refreshCsBriefs(id: string): Promise<Record<string, unknown>> {
+    return request(`/products/${id}/refresh-cs-briefs`, { method: 'POST', body: '{}' });
+  },
+
+  getOpportunity(id: string, opportunityId: string): Promise<Opportunity> {
+    return request(`/products/${id}/opportunities/${opportunityId}`);
+  },
 };
+
+export interface SuccessPlanResponse {
+  opportunity_id: string;
+  health_score: number;
+  status: string;
+  playbook: Record<string, unknown>;
+  cs_brief: Record<string, unknown>;
+}
 
 export interface AuditLogEntry {
   id: string;
@@ -513,6 +534,158 @@ export interface AuditLogEntry {
 export const audit = {
   list(): Promise<AuditLogEntry[]> {
     return request<AuditLogEntry[]>('/audit');
+  },
+};
+
+export interface ApprovalResponse {
+  id: string;
+  artifact_id: string;
+  status: string;
+  reviewer_id: string | null;
+  created_at: string;
+}
+
+export interface PublishResponse {
+  channel_post_id: string;
+  status: string;
+  idempotency_key: string;
+}
+
+export const PUBLISH_CHANNELS = [
+  'email', 'newsletter', 'linkedin', 'x', 'medium', 'devto', 'reddit', 'blog',
+] as const;
+export type PublishChannel = typeof PUBLISH_CHANNELS[number];
+
+export interface Campaign {
+  id: string;
+  name: string;
+  campaign_type: string;
+  status: string;
+  config: Record<string, unknown>;
+}
+
+export interface CampaignStatusReport {
+  campaign_id: string;
+  name: string;
+  status: string;
+  stored_status: string;
+  campaign_type: string;
+  channels: string[];
+  focus_industries: string[];
+  progress: Record<string, { target: number; actual: number }>;
+  on_track: boolean;
+  last_checked_at: string;
+}
+
+export const campaigns = {
+  list(productId: string): Promise<Campaign[]> {
+    return request(`/products/${productId}/campaigns`);
+  },
+
+  create(
+    productId: string,
+    data: { name: string; campaign_type?: string; template?: string; channels?: string[]; focus_industries?: string[] },
+  ): Promise<Campaign> {
+    return request(`/products/${productId}/campaigns`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  status(productId: string, campaignId: string): Promise<CampaignStatusReport> {
+    return request(`/products/${productId}/campaigns/${campaignId}/status`);
+  },
+};
+
+export interface AgentRegistryEntry {
+  agent_id: string;
+  display_name: string;
+  compute_tier: string;
+  async_required: boolean;
+  implemented: boolean;
+  model_key: string;
+  description: string;
+}
+
+export interface AdminPlanInfo {
+  plan: string;
+  tenant_slug: string;
+  features: { products: number; sso: boolean; audit: boolean; private_deploy: boolean };
+  usage: { products_used: number; products_limit: number };
+}
+
+export interface SuppressionEntry {
+  id: string;
+  email: string;
+  reason: string;
+  created_at: string;
+}
+
+export const admin = {
+  plan(): Promise<AdminPlanInfo> {
+    return request('/admin/plan');
+  },
+
+  listSuppressions(): Promise<SuppressionEntry[]> {
+    return request('/admin/suppression');
+  },
+
+  addSuppression(email: string, reason?: string): Promise<SuppressionEntry> {
+    return request('/admin/suppression', {
+      method: 'POST',
+      body: JSON.stringify({ email, reason }),
+    });
+  },
+
+  async exportData(): Promise<void> {
+    const token = getToken();
+    const response = await fetch(`${resolveApiBase()}/admin/export`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) {
+      throw new Error(`Export failed (${response.status})`);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'tenant-export.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
+
+  purge(confirm: string): Promise<{ status: string; tenant_id: string }> {
+    return request('/admin/purge', {
+      method: 'POST',
+      body: JSON.stringify({ confirm }),
+    });
+  },
+};
+
+export const agents = {
+  registry(): Promise<AgentRegistryEntry[]> {
+    return request('/agents/registry');
+  },
+};
+
+export const artifacts = {
+  approve(artifactId: string, data: { status: 'approved' | 'rejected'; comment?: string }): Promise<ApprovalResponse> {
+    return request(`/artifacts/${artifactId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  publish(
+    artifactId: string,
+    data: { channel: PublishChannel; scheduled_at?: string; recipient?: string },
+  ): Promise<PublishResponse> {
+    return request(`/artifacts/${artifactId}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({ artifact_id: artifactId, ...data }),
+    });
   },
 };
 

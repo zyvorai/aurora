@@ -7,14 +7,18 @@ interface CardProps {
   children: ReactNode;
   className?: string;
   elevated?: boolean;
+  strong?: boolean;
+  hover?: boolean;
 }
 
-export function Card({ children, className, elevated }: CardProps) {
+export function Card({ children, className, elevated, strong, hover }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-lg border border-border',
-        elevated ? 'bg-surface-elevated shadow-sm' : 'bg-surface/50',
+        'glass',
+        elevated && 'glass-elevated',
+        strong && 'glass-strong',
+        hover && 'glass-hover-lift',
         className,
       )}
     >

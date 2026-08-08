@@ -105,6 +105,7 @@ async def run_outreach(
     company_url: str,
     target_persona: str = "CTO",
     campaign_name: str | None = None,
+    recipient_email: str | None = None,
 ) -> Artifact:
     graph = build_outreach_graph()
     app = graph.compile()
@@ -121,6 +122,8 @@ async def run_outreach(
     })
 
     outreach = result["result"]
+    if recipient_email:
+        outreach["recipient_email"] = recipient_email
     content = outreach.get("email_draft", "")
 
     campaign = Campaign(

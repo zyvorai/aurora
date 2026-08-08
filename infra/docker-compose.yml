@@ -23,7 +23,9 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      # qdrant/qdrant ships neither curl nor wget -- bash IS present, so use
+      # its /dev/tcp pseudo-device for a dependency-free port check instead.
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/6333"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -39,7 +41,8 @@ services:
     volumes:
       - neo4j_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7474"]
+      # neo4j image also has no curl -- it does have wget.
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7474"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -80,7 +83,8 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      # ollama image has neither curl nor wget -- bash is present, use /dev/tcp.
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/11434"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -188,7 +188,9 @@ async def publish_content(
         raise HTTPException(status_code=404, detail="Artifact not found")
 
     try:
-        post = await publish_artifact(db, artifact, ctx.tenant_id, user.id, req.channel, req.scheduled_at)
+        post = await publish_artifact(
+            db, artifact, ctx.tenant_id, user.id, req.channel, req.scheduled_at, req.recipient,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

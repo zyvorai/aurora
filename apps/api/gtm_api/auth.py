@@ -21,7 +21,7 @@ settings = get_settings()
 security = HTTPBearer()
 
 ROLE_PERMISSIONS = {
-    "admin": {"read", "write", "approve", "publish", "manage_users", "manage_billing"},
+    "admin": {"read", "write", "approve", "publish", "manage_users", "manage_billing", "manage_tenant"},
     "editor": {"read", "write"},
     "approver": {"read", "write", "approve"},
     "viewer": {"read"},

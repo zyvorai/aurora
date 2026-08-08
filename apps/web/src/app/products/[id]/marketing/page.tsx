@@ -12,6 +12,7 @@ import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import CampaignsPanel from '@/components/campaigns/CampaignsPanel';
 import { SectionTitle, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 export default function MarketingPage() {
@@ -125,6 +126,8 @@ export default function MarketingPage() {
           </Link>
         </div>
       </section>
+
+      <CampaignsPanel productId={id} />
     </div>
   );
 }

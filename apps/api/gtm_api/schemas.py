@@ -252,6 +252,7 @@ class OutreachRequest(BaseModel):
     company_url: str
     target_persona: str = "CTO"
     campaign_name: Optional[str] = None
+    recipient_email: Optional[str] = None
 
 
 class OutreachResponse(BaseModel):
@@ -270,6 +271,7 @@ class PublishRequest(BaseModel):
     artifact_id: uuid.UUID
     channel: str
     scheduled_at: Optional[datetime] = None
+    recipient: Optional[str] = None
 
 
 class PublishResponse(BaseModel):
@@ -551,6 +553,37 @@ class SyncStatusResponse(BaseModel):
     enabled: bool
     provider: Optional[str] = None
     deployment_profile: str = "full"
+
+
+# Admin (Phase 12)
+class AdminPlanResponse(BaseModel):
+    plan: str
+    tenant_slug: str
+    features: dict[str, Any]
+    usage: dict[str, int]
+
+
+class SuppressionEntryResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+    reason: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AddSuppressionRequest(BaseModel):
+    email: str
+    reason: str = "opt_out"
+
+
+class PurgeRequest(BaseModel):
+    confirm: str
+
+
+class PurgeResponse(BaseModel):
+    status: str
+    tenant_id: str
 
 
 # Generic

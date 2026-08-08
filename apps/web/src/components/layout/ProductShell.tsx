@@ -66,7 +66,7 @@ export function ProductShell({ children }: ProductShellProps) {
         onSignOut={signOut}
       />
       <div className="flex flex-1 min-h-0">
-        <aside className="hidden md:flex w-56 shrink-0 border-r border-border bg-surface/30 flex-col">
+        <aside className="hidden md:flex w-56 shrink-0 border-r border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-[var(--blur-liquid-sm)] flex-col">
           <SidebarNav productId={productId} />
         </aside>
 
@@ -77,14 +77,14 @@ export function ProductShell({ children }: ProductShellProps) {
               onClick={() => setMobileOpen(false)}
               aria-hidden
             />
-            <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-surface-elevated border-r border-border md:hidden pt-14">
+            <aside className="glass-strong fixed inset-y-0 left-0 z-50 w-64 md:hidden pt-14">
               <SidebarNav productId={productId} onNavigate={() => setMobileOpen(false)} />
             </aside>
           </>
         )}
 
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="px-4 md:px-6 py-3 border-b border-border bg-surface/20">
+          <div className="px-4 md:px-6 py-3 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-[var(--blur-liquid-sm)]">
             <Breadcrumbs
               items={[
                 { label: 'Dashboard', href: '/dashboard' },

@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { products, type Artifact } from '@/lib/api';
+import { products, type Artifact, type WorkflowRunStatus } from '@/lib/api';
 import { useIngestPolling } from '@/lib/useIngestPolling';
 import { showToast } from '@/lib/toast';
+import { readStoredRole } from '@/lib/role-routing';
+import { workflowProgressPercent } from '@/lib/workflow-progress';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useProduct } from '@/context/ProductContext';
 import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
@@ -16,12 +19,13 @@ import ProductProfileView from '@/components/ProductProfileView';
 import ResultPanel from '@/components/ResultPanel';
 import ChatWidget from '@/components/ChatWidget';
 import SourcesPanel from '@/components/sources/SourcesPanel';
+import ArtifactList from '@/components/artifacts/ArtifactList';
 import AgentTaskProgress from '@/components/AgentTaskProgress';
 import { taskButtonLabel, type AgentTaskId } from '@/lib/agent-tasks';
 import { cn } from '@/lib/cn';
 import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
-type Tab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'analytics';
+type Tab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'analytics';
 
 const TAB_GROUPS: { label: string; tabs: { key: Tab; label: string }[] }[] = [
   { label: 'Foundation', tabs: [{ key: 'overview', label: 'Overview' }, { key: 'query', label: 'Q&A' }] },
@@ -35,6 +39,7 @@ const TAB_GROUPS: { label: string; tabs: { key: Tab; label: string }[] }[] = [
       { key: 'proposal', label: 'Proposal' },
     ],
   },
+  { label: 'Distribution', tabs: [{ key: 'publish', label: 'Publish' }] },
   { label: 'Intelligence', tabs: [{ key: 'analytics', label: 'Analytics' }] },
 ];
 
@@ -58,11 +63,18 @@ export default function ProductForgePageInner() {
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [query, setQuery] = useState('');
   const [outreachUrl, setOutreachUrl] = useState('');
+  const [outreachRecipient, setOutreachRecipient] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [chatInput, setChatInput] = useState('');
   const [architectQuestion, setArchitectQuestion] = useState('');
   const [proposalScope, setProposalScope] = useState('');
+  const [refreshingKnowledge, setRefreshingKnowledge] = useState(false);
+  const [asyncProposalRun, setAsyncProposalRun] = useState<WorkflowRunStatus | null>(null);
+  const [generatingProposalAsync, setGeneratingProposalAsync] = useState(false);
   const sessionId = useState(() => crypto.randomUUID())[0];
+  const role = readStoredRole();
+  const canApprove = role === 'admin' || role === 'approver';
+  const canPublish = role === 'admin';
 
   const { polling: ingestPolling, startPolling: startIngestPolling } = useIngestPolling({
     productId: id,
@@ -119,7 +131,7 @@ export default function ProductForgePageInner() {
         case 'understand': res = await products.understand(id); break;
         case 'strategy': res = await products.strategy(id); break;
         case 'content': res = await products.content(id, params as { content_type: string; topic: string }); break;
-        case 'outreach': res = await products.outreach(id, params as { company_url: string }); break;
+        case 'outreach': res = await products.outreach(id, params as { company_url: string; target_persona?: string; recipient_email?: string }); break;
         case 'architect': res = await products.architect(id, params?.question as string); break;
         case 'proposal': res = await products.proposal(id, params?.scope as string); break;
         case 'analytics': res = await products.analytics(id); break;
@@ -134,6 +146,51 @@ export default function ProductForgePageInner() {
       setTaskDetail(undefined);
     }
   }, [id]);
+
+  async function handleRefreshKnowledge() {
+    setRefreshingKnowledge(true);
+    try {
+      const res = await products.refresh(id);
+      if (res.status === 'queued') {
+        startIngestPolling();
+        showToast('success', 'Knowledge refresh queued.');
+      } else {
+        showToast('success', 'Knowledge refreshed.');
+      }
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Refresh failed');
+    } finally {
+      setRefreshingKnowledge(false);
+    }
+  }
+
+  async function handleGenerateProposalAsync() {
+    if (!proposalScope.trim()) return;
+    setGeneratingProposalAsync(true);
+    setAsyncProposalRun(null);
+    try {
+      const accepted = await products.startGenerateProposal(id, { scope: proposalScope });
+      const poll = async () => {
+        const run = await products.pollWorkflow(accepted.workflow_run_id);
+        setAsyncProposalRun(run);
+        if (run.status === 'queued' || run.status === 'running') {
+          setTimeout(poll, 3000);
+          return;
+        }
+        setGeneratingProposalAsync(false);
+        if (run.status === 'completed') {
+          showToast('success', 'Proposal generated in background.');
+          products.artifacts(id).then(setArtifacts).catch(() => {});
+        } else {
+          showToast('error', run.error_message || 'Background proposal generation failed');
+        }
+      };
+      setTimeout(poll, 2000);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to start background proposal');
+      setGeneratingProposalAsync(false);
+    }
+  }
 
   async function handleQuery(e: React.FormEvent) {
     e.preventDefault();
@@ -226,6 +283,9 @@ export default function ProductForgePageInner() {
                 <Button variant="secondary" disabled={loading} onClick={() => runAction('understand')}>
                   {taskButtonLabel(loadingAction, loading, 'Build Product Profile', 'understand')}
                 </Button>
+                <Button variant="secondary" disabled={loading || refreshingKnowledge || ingestPolling} onClick={handleRefreshKnowledge}>
+                  {refreshingKnowledge ? 'Refreshing…' : 'Refresh Knowledge'}
+                </Button>
               </div>
               {product.profile && Object.keys(product.profile).length > 0 && (
                 <Card elevated>
@@ -237,7 +297,18 @@ export default function ProductForgePageInner() {
               )}
               {artifacts.length > 0 && (
                 <section>
-                  <SectionHeader title="Recent Artifacts" />
+                  <SectionHeader
+                    title="Recent Artifacts"
+                    action={
+                      <button
+                        type="button"
+                        onClick={() => selectTab('publish')}
+                        className="text-body-sm text-primary hover:underline"
+                      >
+                        View all →
+                      </button>
+                    }
+                  />
                   <div className="space-y-2">
                     {artifacts.slice(0, 5).map((a) => (
                       <Card key={a.id}>
@@ -307,8 +378,12 @@ export default function ProductForgePageInner() {
             <form onSubmit={(e) => {
               e.preventDefault();
               if (!outreachUrl.trim()) return;
-              runAction('outreach', { company_url: outreachUrl, target_persona: 'CTO' });
-            }} className="flex gap-3">
+              runAction('outreach', {
+                company_url: outreachUrl,
+                target_persona: 'CTO',
+                recipient_email: outreachRecipient || undefined,
+              });
+            }} className="flex flex-col gap-3 sm:flex-row">
               <Input
                 name="company_url"
                 type="url"
@@ -316,6 +391,15 @@ export default function ProductForgePageInner() {
                 onChange={(e) => setOutreachUrl(e.target.value)}
                 placeholder="https://prospect-company.com"
                 required
+                disabled={loading}
+                className="flex-1"
+              />
+              <Input
+                name="recipient_email"
+                type="email"
+                value={outreachRecipient}
+                onChange={(e) => setOutreachRecipient(e.target.value)}
+                placeholder="Recipient email (optional)"
                 disabled={loading}
                 className="flex-1"
               />
@@ -344,7 +428,19 @@ export default function ProductForgePageInner() {
             }} className="flex gap-3">
               <Input value={proposalScope} onChange={(e) => setProposalScope(e.target.value)} placeholder="Enterprise scope…" className="flex-1" disabled={loading} />
               <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Generate Proposal', 'proposal')}</Button>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={loading || generatingProposalAsync || !proposalScope.trim()}
+                onClick={handleGenerateProposalAsync}
+              >
+                {generatingProposalAsync ? 'Generating…' : 'Generate in background'}
+              </Button>
             </form>
+          )}
+
+          {tab === 'proposal' && asyncProposalRun && (
+            <ProgressBar percent={workflowProgressPercent(asyncProposalRun)} label={`Background proposal: ${asyncProposalRun.status}`} />
           )}
 
           {tab === 'proposal' && typeof result?.artifact_id === 'string' && (
@@ -360,6 +456,15 @@ export default function ProductForgePageInner() {
                 </Button>
               ))}
             </div>
+          )}
+
+          {tab === 'publish' && (
+            <ArtifactList
+              artifacts={artifacts}
+              canApprove={canApprove}
+              canPublish={canPublish}
+              onChanged={() => products.artifacts(id).then(setArtifacts).catch(() => {})}
+            />
           )}
 
           {tab === 'analytics' && (

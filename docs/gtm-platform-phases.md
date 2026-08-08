@@ -591,7 +591,7 @@ compose file — see [Dockerfiles + compose overlay](../docker-compose.prod.yml)
 
 ```bash
 cp .env.prod.example .env   # then edit secrets
-docker compose -f infra/docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
 Full local dev guide (setup, scripts, Makefile, troubleshooting): [dev-guide.md](./dev-guide.md)

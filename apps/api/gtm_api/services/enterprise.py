@@ -33,12 +33,16 @@ def get_plan_features(plan: str) -> dict:
     return ENTERPRISE_FEATURES.get(plan, ENTERPRISE_FEATURES["starter"])
 
 
+async def count_active_products(db: AsyncSession, tenant_id: uuid.UUID) -> int:
+    result = await db.execute(
+        select(Product).where(Product.tenant_id == tenant_id, Product.is_active.is_(True))
+    )
+    return len(result.scalars().all())
+
+
 async def check_product_limit(db: AsyncSession, tenant: Tenant) -> bool:
     features = get_plan_features(tenant.plan.value)
-    result = await db.execute(
-        select(Product).where(Product.tenant_id == tenant.id, Product.is_active.is_(True))
-    )
-    count = len(result.scalars().all())
+    count = await count_active_products(db, tenant.id)
     return count < features["products"]
 
 
@@ -82,6 +86,20 @@ async def is_suppressed(
         )
     )
     return result.scalar_one_or_none() is not None
+
+
+async def list_suppressions(
+    db: AsyncSession,
+    tenant_id: uuid.UUID,
+    limit: int = 200,
+) -> list[SuppressionEntry]:
+    result = await db.execute(
+        select(SuppressionEntry)
+        .where(SuppressionEntry.tenant_id == tenant_id)
+        .order_by(SuppressionEntry.created_at.desc())
+        .limit(limit)
+    )
+    return list(result.scalars().all())
 
 
 async def get_audit_trail(

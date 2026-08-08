@@ -114,8 +114,9 @@ async def test_publish_email_channel_real_adapter_not_configured_without_smtp():
     mock_db = AsyncMock()
     mock_db.execute = AsyncMock(
         side_effect=[
-            MagicMock(scalar_one_or_none=lambda: approval),
-            MagicMock(scalar_one_or_none=lambda: None),
+            MagicMock(scalar_one_or_none=lambda: approval),  # approval lookup
+            MagicMock(scalar_one_or_none=lambda: None),  # idempotency dedupe check
+            MagicMock(scalar_one_or_none=lambda: None),  # is_suppressed check -> not suppressed
         ]
     )
     mock_db.add = MagicMock()
@@ -125,3 +126,37 @@ async def test_publish_email_channel_real_adapter_not_configured_without_smtp():
 
     assert post.status == "not_configured"
     assert post.error_message
+
+
+@pytest.mark.asyncio
+async def test_publish_email_blocked_when_recipient_suppressed():
+    tenant_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    artifact = _make_artifact(tenant_id)
+    artifact.metadata_ = {"recipient_email": "blocked@example.com"}
+    approval = Approval(
+        id=uuid.uuid4(),
+        artifact_id=artifact.id,
+        tenant_id=tenant_id,
+        artifact_version=artifact.version,
+        content_hash=artifact.content_hash,
+        status=ApprovalStatus.APPROVED,
+        reviewer_id=user_id,
+    )
+    suppression_entry = MagicMock()
+
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            MagicMock(scalar_one_or_none=lambda: approval),  # approval lookup
+            MagicMock(scalar_one_or_none=lambda: None),  # idempotency dedupe check
+            MagicMock(scalar_one_or_none=lambda: suppression_entry),  # is_suppressed -> suppressed
+        ]
+    )
+    mock_db.add = MagicMock()
+    mock_db.flush = AsyncMock()
+
+    post = await publish_artifact(mock_db, artifact, tenant_id, user_id, "email")
+
+    assert post.status == "blocked"
+    assert "suppression" in post.error_message.lower()

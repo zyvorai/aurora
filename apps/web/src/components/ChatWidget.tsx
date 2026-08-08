@@ -76,8 +76,8 @@ export default function ChatWidget({ productId }: ChatWidgetProps) {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[500px] bg-surface-elevated border border-border rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-border bg-surface">
+        <div className="glass-strong fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[500px] rounded-[var(--radius-liquid-lg)] flex flex-col z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--glass-border)]">
             <p className="font-semibold text-sm">Product Assistant</p>
             <p className="text-xs text-muted">Powered by Emissary</p>
           </div>

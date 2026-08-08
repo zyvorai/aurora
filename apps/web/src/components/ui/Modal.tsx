@@ -28,7 +28,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/55 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -36,12 +36,12 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     >
       <div
         className={cn(
-          'bg-surface-elevated border border-border rounded-lg w-full max-w-md shadow-xl animate-fade-up',
+          'glass-strong rounded-[var(--radius-liquid-lg)] w-full max-w-md animate-glass-in',
           className,
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--glass-border)]">
           <SubsectionTitle as="h2" id="modal-title">{title}</SubsectionTitle>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
             <X className="w-4 h-4" />

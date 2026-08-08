@@ -69,6 +69,7 @@ async def generate_outreach(
     artifact = await run_outreach(
         db, product, ctx.tenant_id, user.id,
         req.company_url, req.target_persona, req.campaign_name,
+        req.recipient_email,
     )
     meta = artifact.metadata_ or {}
     return OutreachResponse(

@@ -410,6 +410,7 @@ async def _execute_outreach(
         company_url,
         agent_input.payload.get("target_persona", "CTO"),
         agent_input.payload.get("campaign_name"),
+        agent_input.payload.get("recipient_email"),
     )
     meta = artifact.metadata_ or {}
     return AgentOutput(

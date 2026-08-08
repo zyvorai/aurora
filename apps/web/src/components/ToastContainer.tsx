@@ -25,8 +25,8 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
     <div
       role="alert"
       className={cn(
-        'animate-slide-in flex items-start gap-2 rounded-md border px-4 py-3 shadow-lg backdrop-blur-sm',
-        'bg-surface-elevated text-body-sm',
+        'animate-slide-in flex items-start gap-2 rounded-[var(--radius-liquid)] border px-4 py-3 shadow-lg',
+        'bg-[var(--glass-bg-elevated)] backdrop-blur-[var(--blur-liquid-sm)] text-body-sm',
         VARIANT_CLASSES[toast.variant],
       )}
     >
