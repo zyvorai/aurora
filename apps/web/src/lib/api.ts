@@ -497,7 +497,11 @@ export const products = {
   },
 
   refreshInsights(id: string, force = false): Promise<Record<string, unknown>> {
-    return request(`/products/${id}/refresh-insights?force=${force}`, { method: 'POST', body: '{}' });
+    return request(`/products/${id}/refresh-insights?force=${force}`, {
+      method: 'POST',
+      body: '{}',
+      timeoutMs: AGENT_TIMEOUT_MS,
+    });
   },
 
   accountHealth(id: string): Promise<AccountHealthRecord[]> {
