@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Moon, Settings as SettingsIcon, Sun } from 'lucide-react';
+import { LogOut, Moon, Settings as SettingsIcon, Sun } from 'lucide-react';
 import { useTheme, type ColorVariant, type DesignStyle } from '@/context/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/cn';
 
 const COLOR_VARIANTS: { value: ColorVariant; label: string }[] = [
@@ -18,6 +19,7 @@ const DESIGN_STYLES: { value: DesignStyle; label: string }[] = [
 
 export function DesktopControlCenter() {
   const { theme, toggleTheme, colorVariant, setColorVariant, designStyle, setDesignStyle } = useTheme();
+  const { signOut } = useAuth({ requireAuth: false });
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -90,6 +92,15 @@ export function DesktopControlCenter() {
               ))}
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={signOut}
+            className="flex items-center gap-1.5 w-full px-2.5 py-1.5 rounded-md text-xs font-medium text-muted hover:text-foreground bg-[var(--glass-bg)] transition-colors focus-ring"
+          >
+            <LogOut className="w-3.5 h-3.5" aria-hidden />
+            Sign out
+          </button>
         </div>
       )}
     </div>

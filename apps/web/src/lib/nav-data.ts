@@ -90,8 +90,8 @@ export function getNavGroups(hasProduct: boolean, role: AppRole | null): NavGrou
 
   const systemItems: NavItem[] = [
     { id: 'settings', label: 'Settings', icon: Settings, href: () => '/dashboard/settings', inDock: true },
-    { id: 'audit', label: 'Audit Log', icon: Activity, href: () => '/dashboard/audit' },
-    { id: 'agents', label: 'Agent Registry', icon: Users, href: () => '/dashboard/agents' },
+    { id: 'audit', label: 'Audit Log', icon: Activity, href: () => '/dashboard/audit', inDock: true },
+    { id: 'agents', label: 'Agent Registry', icon: Users, href: () => '/dashboard/agents', inDock: true },
     {
       id: 'portal-accounts',
       label: 'Portal Accounts',

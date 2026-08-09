@@ -57,7 +57,7 @@ export function DesktopSidebar({ hasProduct, role, productId, productName }: Des
     <aside
       className={cn(
         'mac-finder-sidebar tahoe-sidebar-expanded glass glass-elevated hidden lg:flex flex-col shrink-0 border-r border-[var(--glass-border)] transition-[width] duration-200',
-        sidebarCollapsed ? 'w-[60px]' : 'w-[280px]',
+        sidebarCollapsed ? 'w-[56px]' : 'w-[220px]',
       )}
     >
       {!sidebarCollapsed && (

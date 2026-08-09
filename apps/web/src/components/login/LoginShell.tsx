@@ -69,7 +69,7 @@ export function LoginShell({
   return (
     <div className="min-h-screen flex flex-col">
       <div className="login-page flex-1 flex flex-col lg:flex-row relative overflow-hidden">
-        <aside className="login-hero hidden lg:flex lg:w-[55%] flex-col justify-between p-10 xl:p-12 overflow-hidden relative">
+        <aside className="login-hero hidden lg:flex lg:w-[55%] flex-col justify-between p-8 xl:p-10 overflow-hidden relative">
           <div className="login-hero-mesh" aria-hidden />
           <div className="login-spotlight" aria-hidden />
 
@@ -105,21 +105,21 @@ export function LoginShell({
           </div>
 
           <div className="relative z-10">
-            <div className="login-fade-in flex items-center gap-4 mb-8">
+            <div className="login-fade-in flex items-center gap-3 mb-6">
               <div className="login-logo-ring">{logo}</div>
               <div>
-                <span className="text-4xl font-bold tracking-tight text-white block">{productName}</span>
+                <span className="text-3xl font-bold tracking-tight text-white block">{productName}</span>
                 <span className="text-xs font-medium uppercase tracking-[0.28em] text-sky-300/80 mt-0.5 block">
                   {productSubtitle}
                 </span>
               </div>
             </div>
 
-            <h2 className="login-fade-in login-fade-in-d1 text-4xl xl:text-[2.75rem] font-extrabold text-white leading-[1.08] mb-4 max-w-xl">
+            <h2 className="login-fade-in login-fade-in-d1 text-3xl xl:text-4xl font-extrabold text-white leading-[1.1] mb-3 max-w-xl">
               {heroHeadline}
             </h2>
 
-            <p className="login-fade-in login-fade-in-d2 text-lg text-slate-300/90 max-w-lg leading-relaxed">
+            <p className="login-fade-in login-fade-in-d2 text-base text-slate-300/90 max-w-lg leading-relaxed">
               {heroSubheadline}
             </p>
 
@@ -137,11 +137,11 @@ export function LoginShell({
             {features.map((f, i) => (
               <div
                 key={f.title}
-                className="login-feature-card login-fade-in flex items-start gap-4 p-4 rounded-xl backdrop-blur-md bg-white/[0.04] border border-white/10"
+                className="login-feature-card login-fade-in flex items-start gap-3 p-3 rounded-xl backdrop-blur-md bg-white/[0.04] border border-white/10"
                 style={{ animationDelay: `${0.35 + i * 0.07}s`, opacity: 0 }}
               >
                 <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-gradient-to-br ${f.gradient} shadow-lg ${f.glow}`}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-gradient-to-br ${f.gradient} shadow-lg ${f.glow}`}
                 >
                   {f.icon}
                 </div>
@@ -161,21 +161,21 @@ export function LoginShell({
         <main className="login-panel flex-1 flex items-center justify-center relative px-6 py-12 min-h-screen lg:min-h-0">
           <div className="login-panel-grid" aria-hidden />
           <div className="login-panel-glow" aria-hidden />
-          <div className="w-full max-w-[420px] relative z-10">
-            <div className="lg:hidden text-center mb-8">
-              <div className="login-logo-ring inline-block mb-4">{logo}</div>
-              <h1 className="text-2xl font-bold text-white">{productName}</h1>
+          <div className="w-full max-w-[360px] relative z-10">
+            <div className="lg:hidden text-center mb-6">
+              <div className="login-logo-ring inline-block mb-3">{logo}</div>
+              <h1 className="text-xl font-bold text-white">{productName}</h1>
               <p className="text-sm mt-1 text-slate-400">{mobileSubtitle}</p>
             </div>
 
-            <div className="hidden lg:block mb-8">
-              <h2 className="text-2xl font-bold mb-1 text-white">{panelTitle}</h2>
+            <div className="hidden lg:block mb-6">
+              <h2 className="text-xl font-bold mb-1 text-white">{panelTitle}</h2>
               <p className="text-sm text-slate-400">{panelSubtitle}</p>
             </div>
 
-            <div className="login-glass login-glass-border rounded-2xl p-8 shadow-2xl">{children}</div>
+            <div className="login-glass login-glass-border rounded-xl p-6 shadow-lg">{children}</div>
 
-            <div className="mt-6 text-center">{footer}</div>
+            <div className="mt-5 text-center">{footer}</div>
           </div>
         </main>
       </div>
