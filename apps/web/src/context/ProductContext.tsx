@@ -9,10 +9,14 @@ interface ProductContextValue {
   loading: boolean;
 }
 
+// Default (no <ProductProvider> ancestor -- e.g. /dashboard/* pages that aren't
+// scoped to a product) is "not loading, no product", not "loading forever". Only
+// pages actually wrapped in a ProductProvider (see products/[id]/layout.tsx) start
+// out loading while they fetch the product.
 const ProductContext = createContext<ProductContextValue>({
   product: null,
   productId: '',
-  loading: true,
+  loading: false,
 });
 
 export function ProductProvider({

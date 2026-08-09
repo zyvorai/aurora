@@ -96,7 +96,23 @@
   --foreground: #d7dde5;
 }
 
-.steel-theme body {
+.aurora-theme {
+  --glass-bg: rgba(12, 8, 28, 0.68);
+  --glass-bg-elevated: rgba(20, 12, 40, 0.82);
+  --glass-border: rgba(167, 139, 250, 0.18);
+  --foreground: #e8e4f8;
+  --accent: #22d3ee;
+}
+
+/* Wallpaper backgrounds live on .mac-desktop-root (the desktop shell's own root div),
+ * not <body> -- matches hyper2kvm's actual shellBg[theme] class placement, and means
+ * the login page and portal pages (neither of which mount the desktop shell) are
+ * unaffected by whatever color variant an authenticated admin has picked. */
+.dashboard-liquid-glass {
+  background: var(--background);
+}
+
+.dashboard-steel {
   background:
     radial-gradient(circle at top center, rgba(120, 140, 160, 0.15), transparent 30%),
     linear-gradient(180deg, #06080d 0%, #0b1017 40%, #101722 70%, #0b1018 100%);
@@ -108,15 +124,7 @@
   66% { opacity: 0.7; transform: translate(-1%, 1%) scale(0.99); }
 }
 
-.aurora-theme {
-  --glass-bg: rgba(12, 8, 28, 0.68);
-  --glass-bg-elevated: rgba(20, 12, 40, 0.82);
-  --glass-border: rgba(167, 139, 250, 0.18);
-  --foreground: #e8e4f8;
-  --accent: #22d3ee;
-}
-
-.aurora-theme body {
+.dashboard-aurora {
   position: relative;
   background:
     radial-gradient(ellipse 80% 50% at 50% -15%, rgba(34, 211, 238, 0.14), transparent 55%),
@@ -125,7 +133,7 @@
     linear-gradient(180deg, #020408 0%, #050816 35%, #0a0618 65%, #030712 100%);
 }
 
-.aurora-theme body::before {
+.dashboard-aurora::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -138,7 +146,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aurora-theme body::before {
+  .dashboard-aurora::before {
     animation: none;
   }
 }
@@ -471,7 +479,9 @@ code, pre {
   box-shadow: 0 12px 32px -12px rgba(14, 165, 233, 0.35);
 }
 
-/* ---- login hero ---- */
+/* ---- login page (exact 1:1 port of hyper2kvm's PremiumLoginShell, macOS variant --
+   values below are hyper2kvm's actual .login-page-macos overrides, not its base
+   premium-login defaults, since that's what its real running login screen uses) ---- */
 
 @keyframes login-gradient-shift {
   0%, 100% { background-position: 0% 50%; }
@@ -486,29 +496,277 @@ code, pre {
   animation: login-gradient-shift 24s ease infinite;
 }
 
-.login-orb {
+.login-hero::before {
+  content: '';
   position: absolute;
-  border-radius: 50%;
-  filter: blur(1px);
-  opacity: 0.55;
-  animation: tahoe-orb-pulse 9s ease-in-out infinite;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 80% at 40% 30%, black 10%, transparent 70%);
   pointer-events: none;
 }
 
-.login-orb-primary { background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%); }
+.login-hero-mesh {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 90% 80% at 40% 30%, black 10%, transparent 70%);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.login-spotlight {
+  position: absolute;
+  top: -20%;
+  left: 10%;
+  width: 70%;
+  height: 60%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(147, 197, 253, 0.18) 0%, transparent 60%);
+  opacity: 0.45;
+  animation: login-spotlight-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes login-spotlight-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes login-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-18px) scale(1.02); }
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: 0.55;
+  filter: blur(1px);
+  animation: login-float var(--login-duration, 10s) ease-in-out infinite;
+  animation-delay: var(--login-delay, 0s);
+  pointer-events: none;
+}
+
+.login-orb-blue { background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%); }
 .login-orb-violet { background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%); }
-.login-orb-sky { background: radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, transparent 70%); }
+.login-orb-cyan { background: radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, transparent 70%); }
+.login-orb-indigo { background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%); }
+
+.login-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  display: none; /* macOS variant hides particles -- mounted for structural parity only */
+}
+
+.login-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(147, 197, 253, 0.8);
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+  animation: login-particle-float 4s ease-in-out infinite;
+}
+
+@keyframes login-particle-float {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-12px); opacity: 0.9; }
+}
+
+.login-logo-ring {
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.35), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+@keyframes login-fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-fade-in { animation: login-fade-in-up 0.65s ease-out forwards; }
+.login-fade-in-d1 { animation-delay: 0.1s; opacity: 0; }
+.login-fade-in-d2 { animation-delay: 0.2s; opacity: 0; }
+.login-fade-in-d3 { animation-delay: 0.3s; opacity: 0; }
+.login-fade-in-d4 { animation-delay: 0.4s; opacity: 0; }
+
+.login-text-gradient {
+  background: linear-gradient(90deg, rgb(125, 211, 252), rgb(96, 165, 250), rgb(129, 140, 248));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.login-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.85);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
 
 .login-feature-card {
-  transition: border-color 0.2s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: border-color 0.25s cubic-bezier(0.23, 1, 0.32, 1), transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.login-panel-glass {
+.login-feature-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.login-feature-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.login-beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  z-index: 5;
+  background: linear-gradient(180deg, transparent, rgba(96, 165, 250, 0.9) 30%, rgba(167, 139, 250, 0.9) 70%, transparent);
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.6), 0 0 48px rgba(139, 92, 246, 0.3);
+  opacity: 0.35;
+  animation: login-beam-pulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.login-beam-w55 { left: 55%; }
+
+@keyframes login-beam-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.login-panel-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.9) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+.login-panel-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 440px);
+  height: 360px;
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.login-glass {
   background: rgba(28, 31, 40, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
   backdrop-filter: blur(28px) saturate(1.35);
   -webkit-backdrop-filter: blur(28px) saturate(1.35);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  position: relative;
 }
+
+.login-glass-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.04));
+  opacity: 0.9;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.login-input {
+  width: 100%;
+  padding: 0.65rem 0.9rem 0.65rem 2.5rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-input::placeholder { color: rgba(148, 163, 184, 0.55); }
+
+.login-input:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.65);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.login-field-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: rgba(148, 163, 184, 0.6);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.group:focus-within .login-field-icon { color: #60a5fa; }
+
+.login-btn-primary {
+  position: relative;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgb(56, 189, 248) 0%, rgb(37, 99, 235) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 8px 20px -6px rgba(37, 99, 235, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 12px 28px -6px rgba(37, 99, 235, 0.55);
+}
+
+.login-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-btn-primary::after {
+  display: none; /* macOS variant disables the shimmer sweep */
+}
+
+@keyframes login-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.login-shake { animation: login-shake 0.45s ease-out; }
 
 /* ---- accessibility fallbacks: no backdrop-filter support ---- */
 
@@ -560,9 +818,11 @@ code, pre {
 
 @media (prefers-reduced-motion: reduce) {
   .glass-hover-lift:hover { transform: none; }
-  .tahoe-empty-orb, .login-orb { animation: none; }
+  .tahoe-empty-orb, .login-orb, .login-particle, .login-spotlight, .login-beam { animation: none; }
   .login-hero { animation: none !important; }
-  .animate-fade-up, .animate-slide-in, .animate-glass-in {
+  .login-shake { animation: none; }
+  .animate-fade-up, .animate-slide-in, .animate-glass-in,
+  .login-fade-in, .login-fade-in-d1, .login-fade-in-d2, .login-fade-in-d3, .login-fade-in-d4 {
     animation: none;
     opacity: 1;
     transform: none;
@@ -574,6 +834,250 @@ code, pre {
     radial-gradient(ellipse at 20% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
     var(--background);
+}
+
+/* ---- macOS desktop shell (ported from hyper2kvm's desktop/ components) ---- */
+
+.mac-desktop-root {
+  position: relative;
+}
+
+.mac-menubar-inner {
+  background: var(--glass-bg);
+  background-image: linear-gradient(to bottom, var(--glass-highlight), transparent 45%);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tahoe-context-bar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-liquid-sm));
+  -webkit-backdrop-filter: blur(var(--blur-liquid-sm));
+}
+
+.tahoe-canvas {
+  position: relative;
+}
+
+.tahoe-mesh {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 10%, transparent 70%);
+}
+
+.mac-desktop-main {
+  overflow: hidden;
+}
+
+/* ---- Finder-style sidebar ---- */
+
+.mac-finder-sidebar {
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(calc(var(--blur-liquid) + 10px)) saturate(1.45);
+  -webkit-backdrop-filter: blur(calc(var(--blur-liquid) + 10px)) saturate(1.45);
+  box-shadow: inset -1px 0 0 var(--glass-highlight), 4px 0 24px rgba(0, 0, 0, 0.2);
+}
+
+.tahoe-sidebar-expanded {
+  border-top-right-radius: 1.25rem;
+  border-bottom-right-radius: 1.25rem;
+}
+
+/* ---- dock ---- */
+
+.mac-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.mac-dock-inner {
+  pointer-events: auto;
+  border-radius: var(--radius-liquid);
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(26px) saturate(1.45);
+  -webkit-backdrop-filter: blur(26px) saturate(1.45);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--glass-shadow);
+  padding: 0.4rem 0.6rem;
+}
+
+.mac-dock-inner-scroll {
+  max-width: min(100vw - 2rem, 56rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.mac-dock-inner-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mac-dock-item {
+  position: relative;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.mac-dock-item:hover {
+  transform: scale(1.14) translateY(-5px);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--foreground);
+}
+
+.mac-dock-item-active {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--primary);
+}
+
+.mac-dock-tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.375rem;
+  background: rgba(15, 17, 23, 0.92);
+  color: white;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.mac-dock-item:hover .mac-dock-tooltip {
+  opacity: 1;
+}
+
+.mac-dock-dot {
+  position: absolute;
+  bottom: 0.15rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.2rem;
+  height: 0.2rem;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+}
+
+.mac-dock-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 0.25rem 0.25rem;
+  background: var(--glass-border-strong);
+}
+
+.mac-dock-spotlight {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mac-dock-spotlight:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--foreground);
+}
+
+@media (max-width: 1023px) {
+  .mac-dock {
+    display: flex !important;
+  }
+  .mac-dock-item {
+    width: 2.65rem;
+    height: 2.65rem;
+  }
+}
+
+/* ---- Mission Control ---- */
+
+@keyframes mission-control-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mission-control-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(2, 6, 12, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  overflow-y: auto;
+  animation: mission-control-fade-in 0.2s ease;
+}
+
+.mission-control-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.mission-control-zone-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.mission-control-launchpad {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 1rem;
+}
+
+.mission-control-app-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.mission-control-app-icon:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  transform: scale(1.05);
+}
+
+.mission-control-app-icon-active {
+  color: rgb(125, 211, 252);
+}
+
+.mission-control-app-icon-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mission-control-app-icon-label {
+  font-size: 0.75rem;
+  text-align: center;
 }
 
 .focus-ring {

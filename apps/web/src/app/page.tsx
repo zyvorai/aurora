@@ -2,42 +2,55 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Globe, Sparkles, Workflow, Zap, ShieldCheck } from 'lucide-react';
-import { Card, CardBody } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { AppFooter } from '@/components/layout/AppHeader';
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Globe,
+  Loader2,
+  Lock,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+  User,
+  Workflow,
+  Zap,
+} from 'lucide-react';
+import { LoginShell, LoginError, LoginField } from '@/components/login/LoginShell';
 import { cn } from '@/lib/cn';
 import { resolvePostLoginRoute, storeAuthSession } from '@/lib/role-routing';
-import { TextSmall } from '@/components/ui/Typography';
 
 const FEATURES = [
   {
-    icon: Globe,
+    icon: <Globe className="w-5 h-5 text-blue-100" />,
+    gradient: 'from-blue-500/95 to-indigo-700/95',
+    glow: 'shadow-blue-500/25',
     title: 'Auto-Discovery',
     description: 'Point at a URL — agents crawl and build a product profile automatically',
   },
   {
-    icon: Workflow,
+    icon: <Workflow className="w-5 h-5 text-sky-100" />,
+    gradient: 'from-sky-500/95 to-indigo-800/95',
+    glow: 'shadow-sky-500/25',
     title: 'Background Agents',
     description: 'Outbound sprints, technical evals, and proposals run without blocking the UI',
   },
   {
-    icon: ShieldCheck,
+    icon: <ShieldCheck className="w-5 h-5 text-violet-100" />,
+    gradient: 'from-violet-500/95 to-purple-800/95',
+    glow: 'shadow-violet-500/25',
     title: 'Grounded Answers',
     description: 'Every claim cited against real product knowledge — no hallucinated pitches',
   },
   {
-    icon: Zap,
+    icon: <Zap className="w-5 h-5 text-cyan-100" />,
+    gradient: 'from-cyan-500/95 to-blue-800/95',
+    glow: 'shadow-cyan-500/25',
     title: 'Lean & Fast',
     description: 'Executive brief loads instantly — SQL-first, LLM only when you trigger it',
   },
-];
-
-const LOGIN_ORBS = [
-  { size: 320, top: '2%', left: '4%', hue: 'primary' as const },
-  { size: 220, top: '58%', left: '10%', hue: 'violet' as const },
-  { size: 260, top: '30%', left: '68%', hue: 'sky' as const },
 ];
 
 export default function HomePage() {
@@ -46,6 +59,7 @@ export default function HomePage() {
   const [form, setForm] = useState({ tenant_name: '', email: '', password: '', full_name: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,134 +81,150 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 flex flex-col lg:flex-row">
-        {/* Hero — dark glass panel with orb decorations and feature showcase */}
-        <section className="login-hero hidden lg:flex lg:w-[56%] flex-col justify-between p-12 xl:p-16 relative">
-          {LOGIN_ORBS.map((orb, i) => (
-            <div
-              key={i}
-              className={`login-orb login-orb-${orb.hue}`}
-              style={{ width: orb.size, height: orb.size, top: orb.top, left: orb.left }}
-            />
-          ))}
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-10">
-              <div className="tahoe-icon-badge">
-                <Sparkles className="w-6 h-6" aria-hidden />
-              </div>
-              <span className="text-2xl font-bold tracking-tight text-white">Emissary</span>
-            </div>
-            <h1 className="text-4xl xl:text-[2.75rem] font-extrabold text-white leading-[1.1] mb-4 max-w-xl">
-              Turn your technical product into an AI-powered GTM engine
-            </h1>
-            <p className="text-lg text-slate-300/90 max-w-lg leading-relaxed">
-              Enterprise-grade go-to-market orchestration for sales, marketing, and partners — built for lean hardware.
-            </p>
-          </div>
-
-          <div className="relative z-10 space-y-3">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="login-feature-card glass flex items-start gap-4 p-4"
-              >
-                <div className="tahoe-icon-badge shrink-0 !w-10 !h-10 !rounded-lg">
-                  <f.icon className="w-5 h-5" aria-hidden />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white">{f.title}</div>
-                  <p className="text-xs mt-1 text-slate-400 leading-relaxed">{f.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Auth panel */}
-        <section className="flex-1 flex items-center justify-center px-6 py-16 lg:px-16 min-h-screen lg:min-h-0">
-          <div className="w-full max-w-md animate-glass-in">
-            {/* Mobile-only brand header (hero is hidden below lg) */}
-            <div className="lg:hidden text-center mb-8">
-              <div className="tahoe-icon-badge inline-flex mb-4">
-                <Sparkles className="w-6 h-6" aria-hidden />
-              </div>
-              <h1 className="text-2xl font-bold">Emissary</h1>
-              <p className="text-sm mt-1 text-muted">AI-powered GTM orchestration</p>
-            </div>
-
-            <Card strong className="login-panel-glass">
-              <CardBody className="p-8">
-                <div className="flex gap-2 mb-6">
-                  {(['register', 'login'] as const).map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setMode(m)}
-                      className={cn(
-                        'flex-1 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring',
-                        mode === m
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted hover:text-foreground',
-                      )}
-                    >
-                      {m === 'register' ? 'Get Started' : 'Sign In'}
-                    </button>
-                  ))}
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {mode === 'register' && (
-                    <>
-                      <Input
-                        type="text"
-                        placeholder="Company name"
-                        required
-                        value={form.tenant_name}
-                        onChange={(e) => setForm({ ...form, tenant_name: e.target.value })}
-                      />
-                      <Input
-                        type="text"
-                        placeholder="Your name"
-                        value={form.full_name}
-                        onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                      />
-                    </>
-                  )}
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    required
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    required
-                    minLength={8}
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  />
-                  {error && <TextSmall className="text-danger">{error}</TextSmall>}
-                  <Button type="submit" disabled={loading} className="w-full" size="lg">
-                    {loading ? 'Loading…' : mode === 'register' ? 'Create Account' : 'Sign In'}
-                  </Button>
-                </form>
-              </CardBody>
-            </Card>
-
-            {mode === 'register' && (
-              <p className="text-xs text-center mt-4 text-muted flex items-center justify-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
-                No credit card required — onboard your first product in minutes
-              </p>
+    <LoginShell
+      logo={
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-600/30 border border-white/20">
+          <Sparkles className="w-7 h-7 text-white" aria-hidden />
+        </div>
+      }
+      productName="Emissary"
+      productSubtitle="GTM Orchestration Platform"
+      heroHeadline={
+        <>
+          Turn your product into
+          <br />
+          <span className="login-text-gradient">an AI-powered GTM engine</span>
+        </>
+      }
+      heroSubheadline="Enterprise-grade go-to-market orchestration for sales, marketing, and partners — built for lean hardware."
+      pills={[
+        { icon: <Zap className="w-3 h-3" />, label: 'Background agents' },
+        { label: 'SQL-first briefs' },
+        { label: 'Multi-tenant' },
+      ]}
+      features={FEATURES}
+      heroFooter={
+        <div className="flex items-center gap-2 text-blue-100/40 text-sm">
+          <span>Auto-discovery</span>
+          <span className="text-blue-200/30">·</span>
+          <span>Grounded answers</span>
+          <span className="text-blue-200/30">·</span>
+          <span>Emissary</span>
+        </div>
+      }
+      mobileSubtitle="GTM Orchestration Platform"
+      panelTitle={mode === 'register' ? 'Get started' : 'Welcome back'}
+      panelSubtitle={mode === 'register' ? 'Create your workspace in minutes' : 'Sign in to your workspace'}
+      footer={
+        mode === 'register' ? (
+          <p className="text-xs text-center text-white/45 flex items-center justify-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 text-blue-400/80 shrink-0" aria-hidden />
+            No credit card required — onboard your first product in minutes
+          </p>
+        ) : null
+      }
+    >
+      <div className="flex gap-2 mb-6">
+        {(['register', 'login'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            className={cn(
+              'flex-1 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring',
+              mode === m ? 'bg-primary text-primary-foreground' : 'text-white/60 hover:text-white',
             )}
-          </div>
-        </section>
-      </main>
-      <AppFooter />
-    </div>
+          >
+            {m === 'register' ? 'Get Started' : 'Sign In'}
+          </button>
+        ))}
+      </div>
+
+      {error ? <LoginError message={error} /> : null}
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {mode === 'register' && (
+          <>
+            <LoginField id="tenant_name" label="Company name" icon={<Building2 className="login-field-icon" aria-hidden />}>
+              <input
+                id="tenant_name"
+                type="text"
+                placeholder="Acme Corp"
+                required
+                className="login-input"
+                value={form.tenant_name}
+                onChange={(e) => setForm({ ...form, tenant_name: e.target.value })}
+              />
+            </LoginField>
+            <LoginField id="full_name" label="Your name" icon={<User className="login-field-icon" aria-hidden />}>
+              <input
+                id="full_name"
+                type="text"
+                placeholder="Jordan Smith"
+                className="login-input"
+                value={form.full_name}
+                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              />
+            </LoginField>
+          </>
+        )}
+
+        <LoginField id="email" label="Email" icon={<Mail className="login-field-icon" aria-hidden />}>
+          <input
+            id="email"
+            type="email"
+            placeholder="you@company.com"
+            autoComplete="email"
+            required
+            className="login-input"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+        </LoginField>
+
+        <LoginField id="password" label="Password" icon={<Lock className="login-field-icon" aria-hidden />}>
+          <input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+            required
+            minLength={8}
+            className="login-input pr-11"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/45 hover:text-white/75 transition-colors"
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </LoginField>
+
+        <button type="submit" disabled={loading} className="login-btn-primary group">
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin relative z-10" />
+              <span className="relative z-10">
+                {mode === 'register' ? 'Creating account…' : 'Signing in…'}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="relative z-10">{mode === 'register' ? 'Create Account' : 'Sign In'}</span>
+              <ArrowRight className="h-4 w-4 relative z-10" />
+            </>
+          )}
+        </button>
+      </form>
+
+      <div className="mt-6 pt-5 border-t border-white/[0.08] flex items-center justify-center gap-2 text-xs text-white/45">
+        <ShieldCheck className="h-3.5 w-3.5 text-blue-400/80" />
+        <span>Secured with JWT session authentication</span>
+      </div>
+    </LoginShell>
   );
 }

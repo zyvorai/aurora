@@ -37,7 +37,7 @@ function LoginForm() {
   }
 
   return (
-    <Card strong className="login-panel-glass">
+    <Card strong className="login-glass login-glass-border">
       <CardBody className="p-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="tahoe-icon-badge !w-10 !h-10 !rounded-lg">

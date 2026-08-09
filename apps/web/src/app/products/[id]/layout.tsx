@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { products, type Product } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { ProductProvider } from '@/context/ProductContext';
-import { ProductShell } from '@/components/layout/ProductShell';
+import { AppShell } from '@/components/layout/AppShell';
 
 export default function ProductLayout({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +32,7 @@ export default function ProductLayout({ children }: { children: ReactNode }) {
 
   return (
     <ProductProvider productId={id} product={product} loading={loading}>
-      <ProductShell>{children}</ProductShell>
+      <AppShell>{children}</AppShell>
     </ProductProvider>
   );
 }

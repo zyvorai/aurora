@@ -8,7 +8,7 @@ import { products } from '@/lib/api';
 /** RBAC roles returned by the API (`/auth/login`, `/auth/me`). */
 export type AppRole = 'admin' | 'editor' | 'approver' | 'viewer';
 
-export type PersonaPath = 'brief' | 'sales' | 'marketing' | 'partner' | 'forge';
+export type PersonaPath = 'brief' | 'sales' | 'pipeline' | 'marketing' | 'partner' | 'forge';
 
 /** Default persona view after login or when opening a product. */
 export const ROLE_DEFAULT_PERSONA: Record<AppRole, PersonaPath> = {
@@ -21,6 +21,7 @@ export const ROLE_DEFAULT_PERSONA: Record<AppRole, PersonaPath> = {
 const PERSONA_LABELS: Record<PersonaPath, string> = {
   brief: 'Executive Brief',
   sales: 'Sales Workspace',
+  pipeline: 'Pipeline',
   marketing: 'Marketing Hub',
   partner: 'Partner Enablement',
   forge: 'Full Forge',
@@ -29,6 +30,7 @@ const PERSONA_LABELS: Record<PersonaPath, string> = {
 const PERSONA_DESCRIPTIONS: Record<PersonaPath, string> = {
   brief: 'KPIs, GTM readiness, and risks — no LLM at page load.',
   sales: 'Qualified leads, outreach, and pipeline actions.',
+  pipeline: 'Kanban-style opportunity board and account health.',
   marketing: 'ICP, campaigns, and content workflows.',
   partner: 'Product facts, templates, and deal registration.',
   forge: 'Ingest, agents, and all workflow tabs.',
