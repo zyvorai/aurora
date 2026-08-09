@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Menu as MenuIcon, Moon, Sun, X } from 'lucide-react';
+import { ArrowUpCircle, LogOut, Menu as MenuIcon, Moon, Sun, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProduct } from '@/context/ProductContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -17,7 +17,7 @@ import { cn } from '@/lib/cn';
 export function ClassicShell({ children }: { children: ReactNode }) {
   const { role, signOut } = useAuth({ requireAuth: false });
   const { productId, product } = useProduct();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setDesignStyle } = useTheme();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const hasProduct = Boolean(productId);
@@ -73,6 +73,15 @@ export function ClassicShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setDesignStyle('modern')}
+              title="Switch to the Modern desktop shell"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs text-muted hover:text-foreground bg-[var(--glass-bg)] transition-colors focus-ring"
+            >
+              <ArrowUpCircle className="w-3.5 h-3.5" aria-hidden />
+              Modern
+            </button>
             <button
               type="button"
               onClick={toggleTheme}
