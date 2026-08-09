@@ -894,6 +894,15 @@ code, pre {
   border-bottom-right-radius: 1.25rem;
 }
 
+/* The active-link colors above are literal sky-blue values tuned for a dark
+   sidebar; they read as near-invisible light-on-light in light mode, so give
+   light mode its own readable pairing. */
+.light-theme .sidebar-link-active {
+  background: rgba(59, 130, 246, 0.12) !important;
+  color: var(--primary-hover) !important;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.25) !important;
+}
+
 /* ---- dock ---- */
 
 .mac-dock {

@@ -97,7 +97,7 @@ export function DesktopSidebar({ hasProduct, role, productId, productName }: Des
                           'w-full flex items-center gap-3 px-3 py-2.5 text-body-sm font-medium transition-[color,background-color,transform] focus-ring',
                           sidebarCollapsed ? 'justify-center rounded-xl' : 'rounded-full',
                           active
-                            ? 'bg-[rgba(56,189,248,0.14)] text-[rgb(186,230,253)] shadow-[inset_0_0_0_1px_rgba(56,189,248,0.22),0_2px_12px_-4px_rgba(14,165,233,0.35)]'
+                            ? 'sidebar-link-active bg-[rgba(56,189,248,0.14)] text-[rgb(186,230,253)] shadow-[inset_0_0_0_1px_rgba(56,189,248,0.22),0_2px_12px_-4px_rgba(14,165,233,0.35)]'
                             : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
                         )}
                       >
