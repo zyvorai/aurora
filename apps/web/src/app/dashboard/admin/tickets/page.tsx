@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 import { portalAdmin, type TicketWithCustomer, type TicketStatus } from '@/lib/portal-api';
 
@@ -42,6 +43,7 @@ export default function TicketsAdminPage() {
   const [tickets, setTickets] = useState<TicketWithCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [detailTicket, setDetailTicket] = useState<TicketWithCustomer | null>(null);
 
   useEffect(() => {
     if (role === 'admin') {
@@ -62,8 +64,9 @@ export default function TicketsAdminPage() {
   async function handleStatusChange(ticketId: string, status: TicketStatus) {
     setBusyId(ticketId);
     try {
-      await portalAdmin.updateTicketStatus(ticketId, status);
+      const updated = await portalAdmin.updateTicketStatus(ticketId, status);
       showToast('success', 'Ticket updated');
+      setDetailTicket((prev) => (prev && prev.id === ticketId ? { ...prev, ...updated } : prev));
       refresh();
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Failed to update ticket');
@@ -135,7 +138,15 @@ export default function TicketsAdminPage() {
             <TableBody>
               {tickets.map((ticket) => (
                 <TableRow key={ticket.id}>
-                  <TableCell>{ticket.subject}</TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      onClick={() => setDetailTicket(ticket)}
+                      className="text-left hover:text-primary hover:underline focus-ring rounded-sm"
+                    >
+                      {ticket.subject}
+                    </button>
+                  </TableCell>
                   <TableCell>{ticket.customer_company_name || ticket.customer_email}</TableCell>
                   <TableCell>
                     <Badge variant={PRIORITY_VARIANT[ticket.priority]}>{ticket.priority}</Badge>
@@ -163,6 +174,45 @@ export default function TicketsAdminPage() {
           </Table>
         </Card>
       )}
+
+      <Modal
+        open={detailTicket !== null}
+        onClose={() => setDetailTicket(null)}
+        title={detailTicket?.subject ?? ''}
+      >
+        {detailTicket && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant={PRIORITY_VARIANT[detailTicket.priority]}>{detailTicket.priority}</Badge>
+              <Badge variant={STATUS_VARIANT[detailTicket.status]}>{detailTicket.status.replace('_', ' ')}</Badge>
+              <span className="text-muted text-body-sm">
+                {detailTicket.customer_company_name || detailTicket.customer_email}
+              </span>
+            </div>
+            <p className="text-body-sm whitespace-pre-wrap">{detailTicket.description}</p>
+            <div className="text-muted text-body-sm">
+              Opened {new Date(detailTicket.created_at).toLocaleString()}
+              {detailTicket.resolved_at && (
+                <> · Resolved {new Date(detailTicket.resolved_at).toLocaleString()}</>
+              )}
+            </div>
+            <div>
+              <label className="text-body-sm text-muted mb-1.5 block">Status</label>
+              <select
+                value={detailTicket.status}
+                disabled={busyId === detailTicket.id}
+                onChange={(e) => handleStatusChange(detailTicket.id, e.target.value as TicketStatus)}
+                className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md px-3 py-2 text-body-sm text-foreground focus-ring"
+              >
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
