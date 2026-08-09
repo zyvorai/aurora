@@ -282,6 +282,7 @@ export const products = {
     return request(`/products/${id}/query`, {
       method: 'POST',
       body: JSON.stringify({ question }),
+      timeoutMs: AGENT_TIMEOUT_MS,
     });
   },
 
@@ -315,6 +316,7 @@ export const products = {
     return request(`/products/${id}/chat`, {
       method: 'POST',
       body: JSON.stringify({ message, session_id }),
+      timeoutMs: AGENT_TIMEOUT_MS,
     });
   },
 
