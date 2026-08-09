@@ -299,6 +299,64 @@ class TestSalesPersonPipeline:
         assert body["opportunities"][0]["id"] == str(opportunity.id)
 
 
+class TestSalesPersonActivity:
+    """Admin overview: who's working which client at what stage."""
+
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_non_admin_blocked(self):
+        tenant_id = uuid.uuid4()
+        editor = User(
+            id=uuid.uuid4(), tenant_id=tenant_id, email="editor@acme.com",
+            hashed_password="x", role="editor", is_active=True,
+        )
+        app.dependency_overrides[get_current_user] = _override_current_user(editor)
+        app.dependency_overrides[get_db] = _override_db(AsyncMock())
+
+        with TestClient(app) as client:
+            response = client.get("/api/v1/portal/salesperson/activity")
+        assert response.status_code == 403
+
+    def test_admin_sees_assigned_leads_and_opportunities_per_rep(self):
+        tenant = _tenant()
+        admin = _admin_user(tenant.id)
+        rep = _salesperson_account(tenant_id=tenant.id, status=PortalAccountStatus.APPROVED)
+
+        lead = Lead(
+            id=uuid.uuid4(), product_id=uuid.uuid4(), tenant_id=tenant.id,
+            company="Prospect Co", name="Pat Prospect", stage="qualification", score=0.5,
+            assigned_sales_person_id=rep.id, created_at=datetime.now(timezone.utc),
+        )
+        opportunity = Opportunity(
+            id=uuid.uuid4(), product_id=uuid.uuid4(), tenant_id=tenant.id,
+            name="Prospect Co deal", stage="proposal", probability=0.4,
+            assigned_sales_person_id=rep.id, metadata_={},
+            created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+        )
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(
+            side_effect=[
+                MagicMock(scalar_one_or_none=lambda: tenant),  # get_tenant_context
+                MagicMock(scalars=lambda: MagicMock(all=lambda: [rep])),  # reps query
+                MagicMock(scalars=lambda: MagicMock(all=lambda: [lead])),  # rep's leads
+                MagicMock(scalars=lambda: MagicMock(all=lambda: [opportunity])),  # rep's opportunities
+            ]
+        )
+        app.dependency_overrides[get_current_user] = _override_current_user(admin)
+        app.dependency_overrides[get_db] = _override_db(mock_db)
+
+        with TestClient(app) as client:
+            response = client.get("/api/v1/portal/salesperson/activity")
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["salesperson"]["id"] == str(rep.id)
+        assert body[0]["leads"][0]["stage"] == "qualification"
+        assert body[0]["opportunities"][0]["stage"] == "proposal"
+
+
 class TestProofOfBusinessDocument:
     def teardown_method(self):
         app.dependency_overrides.clear()

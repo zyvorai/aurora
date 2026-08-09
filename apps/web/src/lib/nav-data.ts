@@ -12,9 +12,11 @@ import {
   Handshake,
   Kanban,
   LayoutDashboard,
+  LifeBuoy,
   Megaphone,
   Settings,
   ShieldAlert,
+  TrendingUp,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -95,6 +97,20 @@ export function getNavGroups(hasProduct: boolean, role: AppRole | null): NavGrou
       label: 'Portal Accounts',
       icon: Handshake,
       href: () => '/dashboard/admin/portal-accounts',
+      roles: ['admin'],
+    },
+    {
+      id: 'sales-activity',
+      label: 'Sales Activity',
+      icon: TrendingUp,
+      href: () => '/dashboard/admin/sales-activity',
+      roles: ['admin'],
+    },
+    {
+      id: 'tickets',
+      label: 'Support Tickets',
+      icon: LifeBuoy,
+      href: () => '/dashboard/admin/tickets',
       roles: ['admin'],
     },
     {

@@ -78,6 +78,20 @@ class PortalAccountStatus(str, enum.Enum):
     SUSPENDED = "suspended"
 
 
+class TicketStatus(str, enum.Enum):
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+    CLOSED = "closed"
+
+
+class TicketPriority(str, enum.Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    URGENT = "urgent"
+
+
 class SourceProvenance(str, enum.Enum):
     TENANT_AUTHORITATIVE = "tenant_authoritative"
     PLATFORM_GENERATED = "platform_generated"
@@ -580,6 +594,32 @@ class CustomerAccount(Base):
     )
 
     __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_customer_account_tenant_email"),)
+
+
+class CustomerTicket(Base):
+    """Support ticket raised by a customer-portal account -- Jira-style status/priority
+    workflow (open -> in_progress -> resolved -> closed), scoped to the customer's own
+    tenant/account. Admin-side triage happens via routers/portal.py's admin ticket
+    endpoints, gated the same way as the rest of the admin portal-account surface
+    (require_permission("manage_users"))."""
+
+    __tablename__ = "customer_tickets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    customer_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("customer_accounts.id"), nullable=False, index=True
+    )
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[TicketStatus] = mapped_column(Enum(TicketStatus), default=TicketStatus.OPEN, index=True)
+    priority: Mapped[TicketPriority] = mapped_column(Enum(TicketPriority), default=TicketPriority.MEDIUM)
+    resolved_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class ResellerAccount(Base):

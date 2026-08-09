@@ -127,6 +127,40 @@ class DocumentDownloadUrlResponse(BaseModel):
     url: str
 
 
+class TicketCreateRequest(BaseModel):
+    subject: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(..., min_length=1, max_length=10000)
+    priority: str = Field("medium", pattern="^(low|medium|high|urgent)$")
+
+
+class TicketStatusUpdateRequest(BaseModel):
+    status: str = Field(..., pattern="^(open|in_progress|resolved|closed)$")
+
+
+class TicketResponse(BaseModel):
+    id: uuid.UUID
+    tenant_id: uuid.UUID
+    customer_account_id: uuid.UUID
+    subject: str
+    description: str
+    status: str
+    priority: str
+    resolved_by: Optional[uuid.UUID] = None
+    resolved_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TicketWithCustomerResponse(TicketResponse):
+    """Admin-facing list view -- includes enough of the reporting customer's identity
+    to triage without a second lookup."""
+
+    customer_email: str
+    customer_company_name: Optional[str] = None
+
+
 class ResellerSignupRequest(BaseModel):
     tenant_slug: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
@@ -642,6 +676,16 @@ class OpportunityResponse(BaseModel):
 
 
 class SalesPersonPipelineResponse(BaseModel):
+    leads: list[SalesPersonLeadResponse]
+    opportunities: list[OpportunityResponse]
+
+
+class SalesPersonActivityResponse(BaseModel):
+    """Admin-facing overview row: one sales rep plus everything currently assigned to
+    them, so an admin can see who's working which client at what stage without
+    cross-referencing the Leads/Opportunities tables by hand."""
+
+    salesperson: SalesPersonAccountResponse
     leads: list[SalesPersonLeadResponse]
     opportunities: list[OpportunityResponse]
 

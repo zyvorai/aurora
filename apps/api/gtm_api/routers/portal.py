@@ -28,6 +28,7 @@ from gtm_api.services.rate_limit import enforce_portal_signup_rate_limit
 from gtm_api.services.storage import storage_service
 from gtm_api.models import (
     CustomerAccount,
+    CustomerTicket,
     DiscoveredAccount,
     Lead,
     Opportunity,
@@ -36,6 +37,8 @@ from gtm_api.models import (
     ResellerAccount,
     SalesPersonAccount,
     Tenant,
+    TicketPriority,
+    TicketStatus,
     User,
 )
 from gtm_api.schemas import (
@@ -55,9 +58,15 @@ from gtm_api.schemas import (
     ResellerProfileUpdateRequest,
     ResellerSignupRequest,
     SalesPersonAccountResponse,
+    SalesPersonActivityResponse,
+    SalesPersonLeadResponse,
     SalesPersonPipelineResponse,
     SalesPersonProfileUpdateRequest,
     SalesPersonSignupRequest,
+    TicketCreateRequest,
+    TicketResponse,
+    TicketStatusUpdateRequest,
+    TicketWithCustomerResponse,
 )
 from gtm_api.tenant import audit_log, get_tenant_context
 
@@ -188,6 +197,136 @@ async def update_customer_me(
     await db.flush()
     await db.refresh(account)
     return account
+
+
+# ---- Support tickets (Jira-style: open -> in_progress -> resolved -> closed) ----
+# Admin routes live under /customer/admin/tickets, not /customer/tickets/{id}, so a
+# literal path segment can never collide with the {ticket_id} path parameter below.
+
+
+@router.post("/customer/tickets", response_model=TicketResponse, status_code=201)
+async def create_ticket(
+    req: TicketCreateRequest,
+    identity: PortalIdentity = Depends(get_current_portal_account),
+    db: AsyncSession = Depends(get_db),
+):
+    if identity.portal_type != "customer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a customer account")
+    ticket = CustomerTicket(
+        tenant_id=identity.tenant_id,
+        customer_account_id=identity.account_id,
+        subject=req.subject,
+        description=req.description,
+        priority=TicketPriority(req.priority),
+    )
+    db.add(ticket)
+    await audit_log(
+        db, identity.tenant_id, None, "create_ticket", "customer_ticket",
+        details={"subject": req.subject},
+    )
+    await db.flush()
+    await db.refresh(ticket)
+    return ticket
+
+
+@router.get("/customer/tickets", response_model=list[TicketResponse])
+async def list_my_tickets(
+    identity: PortalIdentity = Depends(get_current_portal_account),
+    db: AsyncSession = Depends(get_db),
+):
+    if identity.portal_type != "customer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a customer account")
+    result = await db.execute(
+        select(CustomerTicket)
+        .where(CustomerTicket.customer_account_id == identity.account_id)
+        .order_by(CustomerTicket.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.get("/customer/tickets/{ticket_id}", response_model=TicketResponse)
+async def get_my_ticket(
+    ticket_id: uuid.UUID,
+    identity: PortalIdentity = Depends(get_current_portal_account),
+    db: AsyncSession = Depends(get_db),
+):
+    if identity.portal_type != "customer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a customer account")
+    result = await db.execute(
+        select(CustomerTicket).where(
+            CustomerTicket.id == ticket_id, CustomerTicket.customer_account_id == identity.account_id
+        )
+    )
+    ticket = result.scalar_one_or_none()
+    if ticket is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
+    return ticket
+
+
+@router.get("/customer/admin/tickets", response_model=list[TicketWithCustomerResponse])
+async def list_all_tickets(
+    status_filter: str | None = None,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    query = (
+        select(CustomerTicket, CustomerAccount)
+        .join(CustomerAccount, CustomerTicket.customer_account_id == CustomerAccount.id)
+        .where(CustomerTicket.tenant_id == ctx.tenant_id)
+    )
+    if status_filter:
+        query = query.where(CustomerTicket.status == status_filter)
+    result = await db.execute(query.order_by(CustomerTicket.created_at.desc()))
+    return [
+        TicketWithCustomerResponse(
+            id=ticket.id,
+            tenant_id=ticket.tenant_id,
+            customer_account_id=ticket.customer_account_id,
+            subject=ticket.subject,
+            description=ticket.description,
+            status=ticket.status.value,
+            priority=ticket.priority.value,
+            resolved_by=ticket.resolved_by,
+            resolved_at=ticket.resolved_at,
+            created_at=ticket.created_at,
+            updated_at=ticket.updated_at,
+            customer_email=customer.email,
+            customer_company_name=customer.company_name,
+        )
+        for ticket, customer in result.all()
+    ]
+
+
+@router.post("/customer/admin/tickets/{ticket_id}/status", response_model=TicketResponse)
+async def update_ticket_status(
+    ticket_id: uuid.UUID,
+    req: TicketStatusUpdateRequest,
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    result = await db.execute(
+        select(CustomerTicket).where(CustomerTicket.id == ticket_id, CustomerTicket.tenant_id == ctx.tenant_id)
+    )
+    ticket = result.scalar_one_or_none()
+    if ticket is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
+
+    ticket.status = TicketStatus(req.status)
+    if ticket.status in (TicketStatus.RESOLVED, TicketStatus.CLOSED):
+        ticket.resolved_by = user.id
+        ticket.resolved_at = datetime.now(timezone.utc)
+    else:
+        ticket.resolved_by = None
+        ticket.resolved_at = None
+    await audit_log(
+        db, ctx.tenant_id, user.id, "update_ticket_status", "customer_ticket",
+        resource_id=str(ticket_id), details={"status": req.status},
+    )
+    await db.flush()
+    await db.refresh(ticket)
+    return ticket
 
 
 @router.get("/customer/accounts", response_model=list[CustomerAccountResponse])
@@ -709,6 +848,60 @@ async def list_salesperson_accounts(
         query = query.where(SalesPersonAccount.status == status_filter)
     result = await db.execute(query.order_by(SalesPersonAccount.created_at.desc()))
     return list(result.scalars().all())
+
+
+@router.get("/salesperson/activity", response_model=list[SalesPersonActivityResponse])
+async def list_salesperson_activity(
+    user: User = Depends(require_permission("manage_users")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin overview: every approved sales rep alongside the leads/opportunities
+    currently assigned to them and their pipeline stage -- answers "who's working
+    which client at what stage" without cross-referencing tables by hand."""
+    ctx = await get_tenant_context(user, db)
+    reps_result = await db.execute(
+        select(SalesPersonAccount).where(
+            SalesPersonAccount.tenant_id == ctx.tenant_id,
+            SalesPersonAccount.status == PortalAccountStatus.APPROVED,
+        ).order_by(SalesPersonAccount.created_at.desc())
+    )
+    reps = list(reps_result.scalars().all())
+
+    activity: list[SalesPersonActivityResponse] = []
+    for rep in reps:
+        leads_result = await db.execute(
+            select(Lead).where(Lead.assigned_sales_person_id == rep.id).order_by(Lead.created_at.desc())
+        )
+        opps_result = await db.execute(
+            select(Opportunity)
+            .where(Opportunity.assigned_sales_person_id == rep.id)
+            .order_by(Opportunity.created_at.desc())
+        )
+        opportunities = [
+            OpportunityResponse(
+                id=opp.id,
+                name=opp.name,
+                company=opp.company,
+                stage=opp.stage,
+                amount=opp.amount,
+                probability=opp.probability,
+                lead_id=opp.lead_id,
+                proposal_artifact_id=opp.proposal_artifact_id,
+                architect_artifact_id=opp.architect_artifact_id,
+                metadata=opp.metadata_ or {},
+                created_at=opp.created_at,
+                updated_at=opp.updated_at,
+            )
+            for opp in opps_result.scalars().all()
+        ]
+        activity.append(
+            SalesPersonActivityResponse(
+                salesperson=rep,
+                leads=list(leads_result.scalars().all()),
+                opportunities=opportunities,
+            )
+        )
+    return activity
 
 
 @router.get("/salesperson/accounts/{account_id}/document", response_model=DocumentDownloadUrlResponse)

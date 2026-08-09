@@ -92,6 +92,28 @@ export interface CustomerAccount {
   created_at: string;
 }
 
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface Ticket {
+  id: string;
+  tenant_id: string;
+  customer_account_id: string;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  resolved_by?: string | null;
+  resolved_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TicketWithCustomer extends Ticket {
+  customer_email: string;
+  customer_company_name?: string | null;
+}
+
 export interface ResellerSignupRequest {
   tenant_slug: string;
   email: string;
@@ -189,6 +211,13 @@ export const portal = {
 
   updateMe: (req: { company_name?: string; contact_name?: string }) =>
     portalRequest<CustomerAccount>('/customer/me', { method: 'PATCH', body: JSON.stringify(req) }),
+
+  createTicket: (req: { subject: string; description: string; priority?: string }) =>
+    portalRequest<Ticket>('/customer/tickets', { method: 'POST', body: JSON.stringify(req) }),
+
+  myTickets: () => portalRequest<Ticket[]>('/customer/tickets'),
+
+  getTicket: (ticketId: string) => portalRequest<Ticket>(`/customer/tickets/${ticketId}`),
 };
 
 export const resellerPortal = {
@@ -293,4 +322,23 @@ export const portalAdmin = {
 
   getSalesPersonDocumentUrl: (accountId: string) =>
     adminPortalRequest<{ url: string }>(`/salesperson/accounts/${accountId}/document`),
+
+  salesActivity: () => adminPortalRequest<SalesPersonActivity[]>('/salesperson/activity'),
+
+  listAllTickets: (statusFilter?: string) => {
+    const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : '';
+    return adminPortalRequest<TicketWithCustomer[]>(`/customer/admin/tickets${query}`);
+  },
+
+  updateTicketStatus: (ticketId: string, status: TicketStatus) =>
+    adminPortalRequest<Ticket>(`/customer/admin/tickets/${ticketId}/status`, {
+      method: 'POST',
+      body: JSON.stringify({ status }),
+    }),
 };
+
+export interface SalesPersonActivity {
+  salesperson: SalesPersonAccount;
+  leads: SalesPersonLead[];
+  opportunities: SalesPersonOpportunity[];
+}
