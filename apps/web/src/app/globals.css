@@ -848,6 +848,10 @@ code, pre {
   backdrop-filter: blur(24px) saturate(1.5);
   -webkit-backdrop-filter: blur(24px) saturate(1.5);
   border-bottom: 1px solid var(--glass-border);
+  /* Menu dropdowns are positioned absolute, extending below this 44px-tall header --
+     must not be clipped. Deliberately self-contained (not combined with .glass, which
+     sets overflow: hidden for its own card-shaped use cases). */
+  overflow: visible;
 }
 
 .tahoe-context-bar {

@@ -62,7 +62,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <header className="mac-menubar-inner glass shrink-0 relative z-40 flex items-center gap-2 px-2 lg:px-3 h-11 overflow-visible">
+      <header className="mac-menubar-inner shrink-0 relative z-40 flex items-center gap-2 px-2 lg:px-3 h-11">
         <DesktopMenubar
           hasProduct={hasProduct}
           role={role}
