@@ -6,6 +6,7 @@ import { products, type Artifact, type WorkflowRunStatus } from '@/lib/api';
 import { useIngestPolling } from '@/lib/useIngestPolling';
 import { showToast } from '@/lib/toast';
 import { readStoredRole } from '@/lib/role-routing';
+import { uuid } from '@/lib/uuid';
 import { workflowProgressPercent } from '@/lib/workflow-progress';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useProduct } from '@/context/ProductContext';
@@ -71,7 +72,7 @@ export default function ProductForgePageInner() {
   const [refreshingKnowledge, setRefreshingKnowledge] = useState(false);
   const [asyncProposalRun, setAsyncProposalRun] = useState<WorkflowRunStatus | null>(null);
   const [generatingProposalAsync, setGeneratingProposalAsync] = useState(false);
-  const sessionId = useState(() => crypto.randomUUID())[0];
+  const sessionId = useState(() => uuid())[0];
   const role = readStoredRole();
   const canApprove = role === 'admin' || role === 'approver';
   const canPublish = role === 'admin';

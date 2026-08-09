@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import SourcesUsedPanel from '@/components/SourcesUsedPanel';
 import { cn } from '@/lib/cn';
 import { resolveApiBase } from '@/lib/api-base';
+import { uuid } from '@/lib/uuid';
 
 interface ChatMessage {
   role: string;
@@ -23,7 +24,7 @@ export default function ChatWidget({ productId }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const sessionId = useRef(crypto.randomUUID());
+  const sessionId = useRef(uuid());
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
