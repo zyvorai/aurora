@@ -39,6 +39,20 @@ module.exports = {
         mono: ['JetBrains Mono', 'monospace'],
       },
       fontSize: {
+        // Trims Tailwind's default numeric scale (text-sm/lg/2xl/4xl/etc, used directly
+        // all over the app -- these don't reference the --font-size-* vars above at
+        // all) down to match: IBM Plex Sans has a notably large x-height and reads
+        // bigger than most UI fonts at the same px size.
+        xs: ['0.6875rem', { lineHeight: '1rem' }],
+        sm: ['0.8125rem', { lineHeight: '1.2rem' }],
+        base: ['0.9375rem', { lineHeight: '1.45rem' }],
+        lg: ['1.0625rem', { lineHeight: '1.6rem' }],
+        xl: ['1.1875rem', { lineHeight: '1.65rem' }],
+        '2xl': ['1.375rem', { lineHeight: '1.75rem' }],
+        '3xl': ['1.625rem', { lineHeight: '1.9rem' }],
+        '4xl': ['1.875rem', { lineHeight: '2.1rem' }],
+        '5xl': ['2.25rem', { lineHeight: '1' }],
+        '6xl': ['2.75rem', { lineHeight: '1' }],
         'body-sm': ['var(--font-size-sm)', { lineHeight: 'var(--leading-normal)' }],
         body: ['var(--font-size-base)', { lineHeight: 'var(--leading-relaxed)' }],
         'body-lg': ['var(--font-size-lg)', { lineHeight: 'var(--leading-relaxed)' }],
