@@ -278,6 +278,9 @@ Still **not** automated:
 | P2 | TC-AGT-002 | Generate GTM Strategy happy path | Same pattern |
 | P2 | TC-EXP-001 | Proposal PDF/DOCX/PPTX export renders valid files | Assert file magic bytes (`%PDF-`, `PK\x03\x04`) per format, per `services/proposal_export.py` |
 | P2 | TC-E2E-001 | Live Ollama smoke (optional, manual CI job) | `@pytest.mark.live` gated by env flag |
+| P1 | — | Response-model serialization against a real (non-mocked) `AsyncSession` for routes that construct the Pydantic response directly from an ORM object added earlier in the same request | New `pytest-asyncio` fixture backed by a real (e.g. SQLite or a throwaway Postgres schema) session — see note below |
+
+**Known blind spot:** `TestRBAC`/`test_publishing.py`'s approval-gate and idempotency cases all mock `AsyncSession`, so they never exercise real SQLAlchemy default-population timing. Two production bugs shipped past this suite as a result — `approve_artifact` (fixed in `b1aba20`) and `publish_artifact` (fixed in `39b9ee7`) both returned an ORM object straight into a `response_model=` without a `flush`/`commit` first, leaving a `default=uuid.uuid4` primary key `None`. A mocked session's `.refresh()`/attribute access doesn't reproduce that timing, so the existing tests passed even with the bug present. Any route that builds its response from an object added to `db` earlier in the same function should be checked for this pattern before trusting mocked-session tests as sufficient coverage.
 
 Mark live-service tests with a pytest marker so default CI stays fast and offline:
 
@@ -303,6 +306,7 @@ Mark live-service tests with a pytest marker so default CI stays fast and offlin
 
 | Date | Change |
 |------|--------|
+| 2026-08-10 | Documented the mocked-`AsyncSession` blind spot in Section 8 that let `approve_artifact` (`b1aba20`) and `publish_artifact` (`39b9ee7`) ship with a missing `flush`/`commit` before their response was serialized — both silently 500'd on every real call despite `test_publishing.py`'s approval-gate tests passing throughout |
 | 2026-08-08 | Corrected stale 220/32-file count to actual 223/33 files: added `test_bootstrap.py` for the new default admin seed (marketing@zyvor.dev/Admin@321) |
 | 2026-08-08 | Corrected stale 151/23-file count to actual 220/32 files: added 9 new test files closing the RBAC/audit-log/proposal-export test gaps and covering newly-built API-key auth, publish scheduler/retry, scheduled learning cron, Playwright crawler fallback, real OAuth publish adapters, and generic OIDC SSO |
 | 2026-08-08 | Corrected stale 145/18-file count to actual 151/23 files: added `test_admin.py` (enterprise admin router — plan usage, suppression list, purge confirmation) and one new case in `test_publishing.py` (`test_publish_email_blocked_when_recipient_suppressed`) for per-prospect suppression enforcement |
