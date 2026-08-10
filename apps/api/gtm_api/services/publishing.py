@@ -112,6 +112,7 @@ async def publish_artifact(
         idempotency_key=idempotency_key,
     )
     db.add(post)
+    await db.flush()
 
     if not scheduled_at:
         await dispatch_channel_post(db, post, artifact, tenant_id, user_id, recipient)
