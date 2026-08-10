@@ -169,6 +169,8 @@ async def approve_artifact(
     )
     db.add(approval)
     await audit_log(db, ctx.tenant_id, user.id, f"artifact_{req.status}", "artifact", str(artifact_id))
+    await db.commit()
+    await db.refresh(approval)
     return approval
 
 
