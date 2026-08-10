@@ -492,6 +492,37 @@ export const products = {
     });
   },
 
+  startQuery(id: string, params: { question: string; session_id?: string }): Promise<WorkflowRunAccepted> {
+    return request<WorkflowRunAccepted>(`/products/${id}/workflows/query`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  startBuildProfile(id: string): Promise<WorkflowRunAccepted> {
+    return request<WorkflowRunAccepted>(`/products/${id}/workflows/build_profile`, {
+      method: 'POST',
+      body: '{}',
+    });
+  },
+
+  startStrategy(id: string, params: { focus_areas?: string[] } = {}): Promise<WorkflowRunAccepted> {
+    return request<WorkflowRunAccepted>(`/products/${id}/workflows/strategy`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  startContent(
+    id: string,
+    params: { content_type: string; topic: string; tone?: string; target_persona?: string },
+  ): Promise<WorkflowRunAccepted> {
+    return request<WorkflowRunAccepted>(`/products/${id}/workflows/content`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
   insights(id: string): Promise<ProductInsights> {
     return request<ProductInsights>(`/products/${id}/insights`);
   },

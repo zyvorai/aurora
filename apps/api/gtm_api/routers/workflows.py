@@ -11,8 +11,11 @@ from gtm_api.database import get_db
 from gtm_api.models import User
 from gtm_api.schemas import (
     BriefResponse,
+    ContentRequest,
     GenerateProposalRequest,
     OutboundSprintRequest,
+    QueryRequest,
+    StrategyRequest,
     TechnicalEvalRequest,
     WorkflowRunAccepted,
     WorkflowRunResponse,
@@ -22,8 +25,12 @@ from gtm_api.services.brief import build_executive_brief, upsert_dashboard_snaps
 from gtm_api.services.workflows import (
     create_workflow_run,
     get_workflow_run,
+    run_build_profile_workflow,
+    run_content_workflow,
     run_generate_proposal_workflow,
     run_outbound_sprint_workflow,
+    run_query_workflow,
+    run_strategy_workflow,
     run_technical_eval_workflow,
 )
 from gtm_api.tenant import get_product_for_tenant, get_tenant_context
@@ -146,6 +153,148 @@ async def start_generate_proposal(
     await db.commit()
 
     background_tasks.add_task(run_generate_proposal_workflow, run.id)
+
+    poll_url = f"{settings.api_prefix}/workflows/runs/{run.id}"
+    return WorkflowRunAccepted(
+        workflow_run_id=run.id,
+        status="queued",
+        poll_url=poll_url,
+    )
+
+
+@router.post(
+    "/products/{product_id}/workflows/query",
+    response_model=WorkflowRunAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_query(
+    product_id: uuid.UUID,
+    req: QueryRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+
+    input_data = req.model_dump()
+    run = await create_workflow_run(
+        db,
+        ctx.tenant_id,
+        product_id,
+        "query",
+        input_data,
+        user.id,
+    )
+    await db.commit()
+
+    background_tasks.add_task(run_query_workflow, run.id)
+
+    poll_url = f"{settings.api_prefix}/workflows/runs/{run.id}"
+    return WorkflowRunAccepted(
+        workflow_run_id=run.id,
+        status="queued",
+        poll_url=poll_url,
+    )
+
+
+@router.post(
+    "/products/{product_id}/workflows/build_profile",
+    response_model=WorkflowRunAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_build_profile(
+    product_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(require_permission("write")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+
+    run = await create_workflow_run(
+        db,
+        ctx.tenant_id,
+        product_id,
+        "build_profile",
+        {},
+        user.id,
+    )
+    await db.commit()
+
+    background_tasks.add_task(run_build_profile_workflow, run.id)
+
+    poll_url = f"{settings.api_prefix}/workflows/runs/{run.id}"
+    return WorkflowRunAccepted(
+        workflow_run_id=run.id,
+        status="queued",
+        poll_url=poll_url,
+    )
+
+
+@router.post(
+    "/products/{product_id}/workflows/strategy",
+    response_model=WorkflowRunAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_strategy(
+    product_id: uuid.UUID,
+    req: StrategyRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(require_permission("write")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+
+    input_data = req.model_dump()
+    run = await create_workflow_run(
+        db,
+        ctx.tenant_id,
+        product_id,
+        "strategy",
+        input_data,
+        user.id,
+    )
+    await db.commit()
+
+    background_tasks.add_task(run_strategy_workflow, run.id)
+
+    poll_url = f"{settings.api_prefix}/workflows/runs/{run.id}"
+    return WorkflowRunAccepted(
+        workflow_run_id=run.id,
+        status="queued",
+        poll_url=poll_url,
+    )
+
+
+@router.post(
+    "/products/{product_id}/workflows/content",
+    response_model=WorkflowRunAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_content(
+    product_id: uuid.UUID,
+    req: ContentRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(require_permission("write")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+
+    input_data = req.model_dump()
+    run = await create_workflow_run(
+        db,
+        ctx.tenant_id,
+        product_id,
+        "content",
+        input_data,
+        user.id,
+    )
+    await db.commit()
+
+    background_tasks.add_task(run_content_workflow, run.id)
 
     poll_url = f"{settings.api_prefix}/workflows/runs/{run.id}"
     return WorkflowRunAccepted(

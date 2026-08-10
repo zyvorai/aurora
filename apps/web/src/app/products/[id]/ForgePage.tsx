@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { products, type Artifact, type WorkflowRunStatus } from '@/lib/api';
+import { products, type Artifact } from '@/lib/api';
 import { useIngestPolling } from '@/lib/useIngestPolling';
+import { useWorkflowPolling } from '@/lib/useWorkflowPolling';
 import { showToast } from '@/lib/toast';
 import { readStoredRole } from '@/lib/role-routing';
 import { uuid } from '@/lib/uuid';
@@ -71,7 +72,6 @@ export default function ProductForgePageInner() {
   const [architectQuestion, setArchitectQuestion] = useState('');
   const [proposalScope, setProposalScope] = useState('');
   const [refreshingKnowledge, setRefreshingKnowledge] = useState(false);
-  const [asyncProposalRun, setAsyncProposalRun] = useState<WorkflowRunStatus | null>(null);
   const [generatingProposalAsync, setGeneratingProposalAsync] = useState(false);
   const sessionId = useState(() => uuid())[0];
   const role = readStoredRole();
@@ -88,6 +88,43 @@ export default function ProductForgePageInner() {
     onError: (message) => {
       setResult({ error: message });
       showToast('error', message);
+    },
+  });
+
+  // Shared across query/build-profile/strategy/content -- only one of these
+  // can be in flight at a time (all gated by the same loading/loadingAction
+  // state below), so one polling instance is enough. Kept separate from the
+  // async-proposal instance below since that flow is deliberately
+  // non-blocking (doesn't set `loading`).
+  const { startPolling: startWorkflowPolling } = useWorkflowPolling({
+    onComplete: (run) => {
+      setResult(run.output_data);
+      setLoading(false);
+      setLoadingAction(null);
+      setTaskDetail(undefined);
+      products.artifacts(id).then(setArtifacts).catch(() => {});
+    },
+    onError: (message) => {
+      setResult({ error: message });
+      setLoading(false);
+      setLoadingAction(null);
+      setTaskDetail(undefined);
+      showToast('error', message);
+    },
+  });
+
+  // Separate instance for the "Generate in background" proposal button --
+  // deliberately non-blocking (doesn't touch loading/loadingAction) so the
+  // user can keep using other tabs while it runs.
+  const { run: asyncProposalRun, startPolling: startProposalPolling } = useWorkflowPolling({
+    onComplete: () => {
+      setGeneratingProposalAsync(false);
+      showToast('success', 'Proposal generated in background.');
+      products.artifacts(id).then(setArtifacts).catch(() => {});
+    },
+    onError: (message) => {
+      setGeneratingProposalAsync(false);
+      showToast('error', message || 'Background proposal generation failed');
     },
   });
 
@@ -121,6 +158,27 @@ export default function ProductForgePageInner() {
     } else {
       setTaskDetail(undefined);
     }
+
+    // These three run as async jobs (avoids the ~100s Cloudflare edge timeout
+    // on slow LLM calls) -- kick off and return; the shared useWorkflowPolling
+    // instance's onComplete/onError clears loading/result once the job finishes.
+    if (action === 'understand' || action === 'strategy' || action === 'content') {
+      try {
+        const accepted = action === 'understand'
+          ? await products.startBuildProfile(id)
+          : action === 'strategy'
+            ? await products.startStrategy(id)
+            : await products.startContent(id, params as { content_type: string; topic: string });
+        startWorkflowPolling(accepted.workflow_run_id);
+      } catch (err) {
+        setResult({ error: err instanceof Error ? err.message : 'Failed' });
+        setLoading(false);
+        setLoadingAction(null);
+        setTaskDetail(undefined);
+      }
+      return;
+    }
+
     try {
       let res: Record<string, unknown>;
       switch (action) {
@@ -130,9 +188,6 @@ export default function ProductForgePageInner() {
           res = { ...ingestRes };
           break;
         }
-        case 'understand': res = await products.understand(id); break;
-        case 'strategy': res = await products.strategy(id); break;
-        case 'content': res = await products.content(id, params as { content_type: string; topic: string }); break;
         case 'outreach': res = await products.outreach(id, params as { company_url: string; target_persona?: string; recipient_email?: string }); break;
         case 'architect': res = await products.architect(id, params?.question as string); break;
         case 'proposal': res = await products.proposal(id, params?.scope as string); break;
@@ -147,6 +202,7 @@ export default function ProductForgePageInner() {
       setLoadingAction(null);
       setTaskDetail(undefined);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function handleRefreshKnowledge() {
@@ -169,25 +225,9 @@ export default function ProductForgePageInner() {
   async function handleGenerateProposalAsync() {
     if (!proposalScope.trim()) return;
     setGeneratingProposalAsync(true);
-    setAsyncProposalRun(null);
     try {
       const accepted = await products.startGenerateProposal(id, { scope: proposalScope });
-      const poll = async () => {
-        const run = await products.pollWorkflow(accepted.workflow_run_id);
-        setAsyncProposalRun(run);
-        if (run.status === 'queued' || run.status === 'running') {
-          setTimeout(poll, 3000);
-          return;
-        }
-        setGeneratingProposalAsync(false);
-        if (run.status === 'completed') {
-          showToast('success', 'Proposal generated in background.');
-          products.artifacts(id).then(setArtifacts).catch(() => {});
-        } else {
-          showToast('error', run.error_message || 'Background proposal generation failed');
-        }
-      };
-      setTimeout(poll, 2000);
+      startProposalPolling(accepted.workflow_run_id);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Failed to start background proposal');
       setGeneratingProposalAsync(false);
@@ -202,10 +242,10 @@ export default function ProductForgePageInner() {
     setTaskDetail(query);
     setResult(null);
     try {
-      setResult(await products.query(id, query));
+      const accepted = await products.startQuery(id, { question: query });
+      startWorkflowPolling(accepted.workflow_run_id);
     } catch (err) {
       setResult({ error: err instanceof Error ? err.message : 'Failed' });
-    } finally {
       setLoading(false);
       setLoadingAction(null);
       setTaskDetail(undefined);

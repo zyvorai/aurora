@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { products, type Opportunity, type SuccessPlanResponse, type WorkflowRunStatus } from '@/lib/api';
+import { products, type Opportunity, type SuccessPlanResponse } from '@/lib/api';
 import { showToast } from '@/lib/toast';
+import { useWorkflowPolling } from '@/lib/useWorkflowPolling';
 import { workflowProgressPercent } from '@/lib/workflow-progress';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -20,10 +21,22 @@ interface OpportunityDetailModalProps {
 export default function OpportunityDetailModal({ productId, opportunityId, onClose, onChanged }: OpportunityDetailModalProps) {
   const [opp, setOpp] = useState<Opportunity | null>(null);
   const [loading, setLoading] = useState(true);
-  const [proposalRun, setProposalRun] = useState<WorkflowRunStatus | null>(null);
   const [generatingProposal, setGeneratingProposal] = useState(false);
   const [successPlan, setSuccessPlan] = useState<SuccessPlanResponse | null>(null);
   const [generatingPlan, setGeneratingPlan] = useState(false);
+
+  const { run: proposalRun, startPolling: startProposalPolling } = useWorkflowPolling({
+    onComplete: () => {
+      setGeneratingProposal(false);
+      showToast('success', 'Proposal generated.');
+      load();
+      onChanged?.();
+    },
+    onError: (message) => {
+      setGeneratingProposal(false);
+      showToast('error', message || 'Proposal generation failed');
+    },
+  });
 
   const load = () => {
     setLoading(true);
@@ -37,29 +50,12 @@ export default function OpportunityDetailModal({ productId, opportunityId, onClo
 
   async function generateProposal() {
     setGeneratingProposal(true);
-    setProposalRun(null);
     try {
       const accepted = await products.startGenerateProposal(productId, {
         scope: opp?.name ? `Proposal for ${opp.name}` : 'Enterprise deployment',
         opportunity_id: opportunityId,
       });
-      const poll = async () => {
-        const run = await products.pollWorkflow(accepted.workflow_run_id);
-        setProposalRun(run);
-        if (run.status === 'queued' || run.status === 'running') {
-          setTimeout(poll, 3000);
-          return;
-        }
-        setGeneratingProposal(false);
-        if (run.status === 'completed') {
-          showToast('success', 'Proposal generated.');
-          load();
-          onChanged?.();
-        } else {
-          showToast('error', run.error_message || 'Proposal generation failed');
-        }
-      };
-      setTimeout(poll, 2000);
+      startProposalPolling(accepted.workflow_run_id);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Failed to start proposal generation');
       setGeneratingProposal(false);

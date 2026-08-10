@@ -17,15 +17,21 @@ from gtm_api.models import (
     Product,
     WorkflowRun,
 )
+from gtm_api.agents.content_studio import run_content_generation
 from gtm_api.agents.market_research_agent import invoke_market_research
+from gtm_api.agents.marketing_strategy import invoke_marketing_strategy
 from gtm_api.agents.outreach import run_outreach
 from gtm_api.agents.proposal_generator import invoke_proposal_generator
 from gtm_api.agents.product_understanding import run_product_understanding
 from gtm_api.agents.solution_architect import invoke_solution_architect
+from gtm_api.services.analytics import emit_event
 from gtm_api.services.brief import build_executive_brief, upsert_dashboard_snapshot
+from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED, verify_grounding
 from gtm_api.services.crm import create_opportunity, opportunity_to_dict, update_opportunity_stage
 from gtm_api.services.lead_discovery import discover_leads
 from gtm_api.services.lead_qualification import qualify_leads
+from gtm_api.services.llm import get_chat_model
+from gtm_api.services.mcp import gather_decision_context
 from gtm_api.tenant import record_usage
 
 
@@ -520,10 +526,326 @@ async def run_generate_proposal_workflow(run_id: uuid.UUID) -> None:
             )
 
 
+async def run_query_workflow(run_id: uuid.UUID) -> None:
+    """Async Q&A — mirrors products.py::query_product's grounded-answer logic.
+
+    output_data shape: {answer: str, citations: [{chunk_id, document_title,
+    excerpt, url}], confidence: float, grounded: bool, sources_used: [str]}
+    """
+    async with async_session_factory() as db:
+        run = await db.get(WorkflowRun, run_id)
+        if not run:
+            return
+        tenant_id = run.tenant_id
+        product_id = run.product_id
+        input_data = dict(run.input_data or {})
+        steps: list[dict] = []
+        output: dict = {}
+
+        await _update_run(db, run_id, status="running", steps=steps, started=True)
+
+    question = input_data.get("question", "")
+
+    try:
+        steps.append(_step("context", "running"))
+        async with async_session_factory() as db:
+            await _update_run(db, run_id, steps=list(steps))
+            product = await db.get(Product, product_id)
+            if not product:
+                await _update_run(
+                    db, run_id, status="failed",
+                    error_message="Product not found",
+                    steps=[_step("context", "failed", "Product not found")],
+                    completed=True,
+                )
+                return
+            decision_ctx = await gather_decision_context(
+                question, tenant_id, product_id,
+                db=db, product=product, profile=product.profile,
+            )
+        context = decision_ctx.to_prompt_section()
+        results = decision_ctx.search_results
+        steps[-1] = _step("context", "completed")
+
+        steps.append(_step("llm", "running"))
+        async with async_session_factory() as db:
+            await _update_run(db, run_id, steps=list(steps))
+
+        llm = get_chat_model("sales_agent", temperature=0.1)
+        response = await llm.ainvoke([
+            {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
+            {
+                "role": "user",
+                "content": (
+                    f"Question: {question}\n\n"
+                    f"Multi-source context (use labeled sections; prefer rag for factual claims):\n{context}"
+                ),
+            },
+        ])
+        answer = response.content
+        steps[-1] = _step("llm", "completed")
+
+        steps.append(_step("grounding", "running"))
+        async with async_session_factory() as db:
+            await _update_run(db, run_id, steps=list(steps))
+            grounding = verify_grounding(answer, results)
+            await emit_event(db, tenant_id, "query", product_id, {"question": question})
+            if not grounding.grounded:
+                await emit_event(db, tenant_id, "ungrounded_blocked", product_id, {"query": question})
+            await db.commit()
+        steps[-1] = _step("grounding", "completed")
+
+        output = {
+            "answer": answer,
+            "citations": [c.model_dump() for c in grounding.citations],
+            "confidence": grounding.confidence,
+            "grounded": grounding.grounded,
+            "sources_used": decision_ctx.sources_used,
+        }
+
+        async with async_session_factory() as db:
+            await _update_run(
+                db, run_id, status="completed", steps=steps,
+                output_data=output, completed=True,
+            )
+
+    except Exception as exc:
+        async with async_session_factory() as db:
+            if steps and steps[-1]["status"] == "running":
+                steps[-1] = _step(steps[-1]["name"], "failed", str(exc))
+            await _update_run(
+                db, run_id, status="failed", steps=steps,
+                error_message=str(exc), completed=True,
+            )
+
+
+async def run_build_profile_workflow(run_id: uuid.UUID) -> None:
+    """Async product-profile build — standalone entry point for the same
+    run_product_understanding() step already used inline by the sprint/eval
+    runners.
+
+    output_data shape: {profile: dict, status: "ready"}
+    """
+    async with async_session_factory() as db:
+        run = await db.get(WorkflowRun, run_id)
+        if not run:
+            return
+        tenant_id = run.tenant_id
+        product_id = run.product_id
+        steps: list[dict] = []
+
+        await _update_run(db, run_id, status="running", steps=steps, started=True)
+
+    try:
+        steps.append(_step("profile", "running"))
+        async with async_session_factory() as db:
+            await _update_run(db, run_id, steps=list(steps))
+            product = await db.get(Product, product_id)
+            if not product:
+                await _update_run(
+                    db, run_id, status="failed",
+                    error_message="Product not found",
+                    steps=[_step("profile", "failed", "Product not found")],
+                    completed=True,
+                )
+                return
+            profile = await run_product_understanding(db, product, tenant_id)
+            await db.commit()
+        steps[-1] = _step("profile", "completed")
+
+        async with async_session_factory() as db:
+            await _update_run(
+                db, run_id, status="completed", steps=steps,
+                output_data={"profile": profile, "status": "ready"}, completed=True,
+            )
+
+    except Exception as exc:
+        async with async_session_factory() as db:
+            if steps and steps[-1]["status"] == "running":
+                steps[-1] = _step(steps[-1]["name"], "failed", str(exc))
+            await _update_run(
+                db, run_id, status="failed", steps=steps,
+                error_message=str(exc), completed=True,
+            )
+
+
+async def run_strategy_workflow(run_id: uuid.UUID) -> None:
+    """Async GTM strategy generation — mirrors marketing.py::generate_strategy.
+
+    output_data shape matches StrategyResponse field-for-field, plus artifact_id.
+    """
+    async with async_session_factory() as db:
+        run = await db.get(WorkflowRun, run_id)
+        if not run:
+            return
+        tenant_id = run.tenant_id
+        product_id = run.product_id
+        user_id = run.created_by
+        input_data = dict(run.input_data or {})
+        steps: list[dict] = []
+
+        await _update_run(db, run_id, status="running", steps=steps, started=True)
+
+    focus_areas = input_data.get("focus_areas") or []
+
+    try:
+        async with async_session_factory() as db:
+            product = await db.get(Product, product_id)
+            if not product:
+                await _update_run(
+                    db, run_id, status="failed",
+                    error_message="Product not found",
+                    steps=[_step("strategy", "failed", "Product not found")],
+                    completed=True,
+                )
+                return
+            if not product.profile:
+                await _update_run(
+                    db, run_id, status="failed",
+                    error_message="Product profile is empty. Run Crawl & Ingest, then Build Product Profile first.",
+                    steps=[_step("strategy", "failed", "Profile empty")],
+                    completed=True,
+                )
+                return
+            profile = dict(product.profile)
+            product_name = product.name
+            pid = product.id
+
+        steps.append(_step("strategy", "running"))
+        async with async_session_factory() as db:
+            await _update_run(db, run_id, steps=list(steps))
+
+        result = await invoke_marketing_strategy(pid, tenant_id, profile, focus_areas)
+        strategy = result["strategy"]
+        content = json.dumps(strategy, indent=2)
+
+        async with async_session_factory() as db:
+            artifact = Artifact(
+                product_id=pid,
+                tenant_id=tenant_id,
+                artifact_type=ArtifactType.STRATEGY,
+                title=f"GTM Strategy - {product_name}",
+                content=content,
+                content_hash=content_hash(content),
+                status=ApprovalStatus.DRAFT,
+                metadata_=strategy,
+                created_by=user_id,
+            )
+            db.add(artifact)
+            await record_usage(db, tenant_id, tokens=result.get("tokens_used", 0), agent_runs=1)
+            await db.commit()
+            await db.refresh(artifact)
+            artifact_id = artifact.id
+
+        steps[-1] = _step("strategy", "completed")
+
+        output = {
+            "artifact_id": str(artifact_id),
+            "gtm_strategy": strategy.get("gtm_strategy", ""),
+            "icp": strategy.get("icp", ""),
+            "personas": strategy.get("personas", []),
+            "positioning": strategy.get("positioning", ""),
+            "messaging_hierarchy": strategy.get("messaging_hierarchy", {}),
+            "value_propositions": strategy.get("value_propositions", []),
+            "objection_handling": strategy.get("objection_handling", []),
+            "competitive_comparison": strategy.get("competitive_comparison", []),
+            "seo_keywords": strategy.get("seo_keywords", []),
+            "content_calendar": strategy.get("content_calendar", []),
+            "citations": [],
+            "sources_used": result.get("sources_used", []),
+        }
+
+        async with async_session_factory() as db:
+            await _update_run(
+                db, run_id, status="completed", steps=steps,
+                output_data=output, completed=True,
+            )
+
+    except Exception as exc:
+        async with async_session_factory() as db:
+            if steps and steps[-1]["status"] == "running":
+                steps[-1] = _step(steps[-1]["name"], "failed", str(exc))
+            await _update_run(
+                db, run_id, status="failed", steps=steps,
+                error_message=str(exc), completed=True,
+            )
+
+
+async def run_content_workflow(run_id: uuid.UUID) -> None:
+    """Async content generation — mirrors marketing.py::generate_content.
+
+    output_data shape matches ContentResponse: {artifact_id, title, content,
+    citations, grounded, status}.
+    """
+    async with async_session_factory() as db:
+        run = await db.get(WorkflowRun, run_id)
+        if not run:
+            return
+        tenant_id = run.tenant_id
+        product_id = run.product_id
+        user_id = run.created_by
+        input_data = dict(run.input_data or {})
+        steps: list[dict] = []
+
+        await _update_run(db, run_id, status="running", steps=steps, started=True)
+
+    content_type = input_data.get("content_type", "")
+    topic = input_data.get("topic", "")
+    tone = input_data.get("tone", "professional")
+    target_persona = input_data.get("target_persona")
+
+    try:
+        steps.append(_step("content", "running"))
+        async with async_session_factory() as db:
+            await _update_run(db, run_id, steps=list(steps))
+            product = await db.get(Product, product_id)
+            if not product:
+                await _update_run(
+                    db, run_id, status="failed",
+                    error_message="Product not found",
+                    steps=[_step("content", "failed", "Product not found")],
+                    completed=True,
+                )
+                return
+            artifact = await run_content_generation(
+                db, product, tenant_id, user_id,
+                content_type, topic, tone, target_persona,
+            )
+            await db.commit()
+            output = {
+                "artifact_id": str(artifact.id),
+                "title": artifact.title,
+                "content": artifact.content,
+                "citations": list(artifact.citations or []),
+                "grounded": artifact.metadata_.get("grounded", False) if artifact.metadata_ else False,
+                "status": artifact.status.value,
+            }
+        steps[-1] = _step("content", "completed")
+
+        async with async_session_factory() as db:
+            await _update_run(
+                db, run_id, status="completed", steps=steps,
+                output_data=output, completed=True,
+            )
+
+    except Exception as exc:
+        async with async_session_factory() as db:
+            if steps and steps[-1]["status"] == "running":
+                steps[-1] = _step(steps[-1]["name"], "failed", str(exc))
+            await _update_run(
+                db, run_id, status="failed", steps=steps,
+                error_message=str(exc), completed=True,
+            )
+
+
 WORKFLOW_RUNNERS = {
     "outbound_sprint": run_outbound_sprint_workflow,
     "technical_eval": run_technical_eval_workflow,
     "generate_proposal": run_generate_proposal_workflow,
+    "query": run_query_workflow,
+    "build_profile": run_build_profile_workflow,
+    "strategy": run_strategy_workflow,
+    "content": run_content_workflow,
 }
 
 

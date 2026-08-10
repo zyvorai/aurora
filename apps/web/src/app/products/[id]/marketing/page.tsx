@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { products, type ExecutiveBrief, type WorkflowRunStatus } from '@/lib/api';
+import { products, type ExecutiveBrief } from '@/lib/api';
 import { showToast } from '@/lib/toast';
+import { useWorkflowPolling } from '@/lib/useWorkflowPolling';
 import { workflowProgressPercent } from '@/lib/workflow-progress';
 import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
@@ -18,8 +19,19 @@ import { SectionTitle, Text, TextMuted, TextSmall } from '@/components/ui/Typogr
 export default function MarketingPage() {
   const { id } = useParams<{ id: string }>();
   const [brief, setBrief] = useState<ExecutiveBrief | null>(null);
-  const [run, setRun] = useState<WorkflowRunStatus | null>(null);
   const [running, setRunning] = useState(false);
+
+  const { run, startPolling } = useWorkflowPolling({
+    onComplete: () => {
+      setRunning(false);
+      showToast('success', 'Outbound sprint complete.');
+      products.brief(id).then(setBrief).catch(() => {});
+    },
+    onError: (message) => {
+      setRunning(false);
+      showToast('error', message || 'Outbound sprint failed');
+    },
+  });
 
   useEffect(() => {
     products.brief(id).then(setBrief).catch(() => {});
@@ -27,26 +39,12 @@ export default function MarketingPage() {
 
   async function runOutboundSprint() {
     setRunning(true);
-    setRun(null);
     try {
       const accepted = await products.startOutboundSprint(id, {
         focus_industries: ['fintech', 'healthtech'],
         campaign_name: 'Outbound Sprint',
       });
-
-      const poll = async () => {
-        const status = await products.pollWorkflow(accepted.workflow_run_id);
-        setRun(status);
-        if (status.status === 'completed' || status.status === 'failed') {
-          setRunning(false);
-          if (status.status === 'failed') showToast('error', status.error_message || 'Outbound sprint failed');
-          else showToast('success', 'Outbound sprint complete.');
-          products.brief(id).then(setBrief).catch(() => {});
-          return;
-        }
-        setTimeout(poll, 3000);
-      };
-      setTimeout(poll, 2000);
+      startPolling(accepted.workflow_run_id);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Failed to start outbound sprint');
       setRunning(false);
