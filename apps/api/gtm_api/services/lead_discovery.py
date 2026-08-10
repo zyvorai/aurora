@@ -134,7 +134,13 @@ async def discover_leads(
                 "source": "rules",
             })
 
-    seen: set[str] = set()
+    # Dedup against accounts already discovered in prior runs for this product,
+    # not just within this call -- otherwise re-clicking "Discover leads" keeps
+    # re-inserting the same seed companies every time.
+    existing = await list_discovered_accounts(db, product.id, tenant_id, limit=1000)
+    existing_keys = {(a.domain or a.company_name).lower() for a in existing}
+
+    seen: set[str] = set(existing_keys)
     created: list[DiscoveredAccount] = []
     for item in candidates:
         if len(created) >= max_leads:

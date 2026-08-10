@@ -21,9 +21,20 @@ export function TableBody({ children }: { children: ReactNode }) {
   return <tbody>{children}</tbody>;
 }
 
-export function TableRow({ children, className }: { children: ReactNode; className?: string }) {
+export function TableRow({
+  children,
+  className,
+  onClick,
+}: {
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
-    <tr className={cn('border-t border-[var(--glass-border)] first:border-t-0', className)}>
+    <tr
+      className={cn('border-t border-[var(--glass-border)] first:border-t-0', className)}
+      onClick={onClick}
+    >
       {children}
     </tr>
   );

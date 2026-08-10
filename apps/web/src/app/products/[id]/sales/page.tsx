@@ -9,10 +9,11 @@ import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge, tierBadgeVariant } from '@/components/ui/Badge';
+import { Modal } from '@/components/ui/Modal';
 import {
   Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell,
 } from '@/components/ui/Table';
-import { Stat, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Eyebrow, Stat, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 export default function SalesPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,7 @@ export default function SalesPage() {
   const [leads, setLeads] = useState<PipelineLead[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [selectedLead, setSelectedLead] = useState<PipelineLead | null>(null);
 
   const loadLeads = useCallback(() => {
     products.pipelineLeads(id).then(setLeads).catch(() => setLeads([]));
@@ -135,7 +137,11 @@ export default function SalesPage() {
             </TableHead>
             <TableBody>
               {leads.map((lead) => (
-                <TableRow key={lead.account_id}>
+                <TableRow
+                  key={lead.account_id}
+                  onClick={() => setSelectedLead(lead)}
+                  className="cursor-pointer hover:bg-gtm-bg/60"
+                >
                   <TableCell className="font-medium">{lead.company_name}</TableCell>
                   <TableCell className="text-muted">{lead.industry ?? '—'}</TableCell>
                   <TableCell className="text-right">
@@ -158,6 +164,58 @@ export default function SalesPage() {
           </Card>
         )}
       </section>
+
+      <Modal
+        open={selectedLead !== null}
+        onClose={() => setSelectedLead(null)}
+        title={selectedLead?.company_name ?? ''}
+      >
+        {selectedLead && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Badge variant={tierBadgeVariant(selectedLead.tier)}>{selectedLead.tier}</Badge>
+              <TextSmall className="text-muted">
+                {selectedLead.score ? `Score ${Math.round(selectedLead.score)}` : 'Not yet scored'}
+              </TextSmall>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <Eyebrow>Industry</Eyebrow>
+                <Text>{selectedLead.industry ?? '—'}</Text>
+              </div>
+              <div>
+                <Eyebrow>Domain</Eyebrow>
+                <Text>{selectedLead.domain ?? '—'}</Text>
+              </div>
+            </div>
+            {selectedLead.explanation && (
+              <div>
+                <Eyebrow>Explanation</Eyebrow>
+                <Text className="leading-relaxed">{selectedLead.explanation}</Text>
+              </div>
+            )}
+            {selectedLead.factors && Object.keys(selectedLead.factors).length > 0 && (
+              <div>
+                <Eyebrow className="mb-2">Scoring factors</Eyebrow>
+                <ul className="space-y-1.5">
+                  {Object.entries(selectedLead.factors).map(([factor, weight]) => (
+                    <li key={factor} className="flex justify-between text-sm border-b border-gtm-border/50 pb-1.5">
+                      <span className="text-muted capitalize">{factor.replace(/_/g, ' ')}</span>
+                      <span className="font-medium tabular-nums">+{String(weight)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="flex gap-3 pt-2">
+              <Link href={`/products/${id}?tab=outreach`} className="flex-1">
+                <Button className="w-full">Draft outreach</Button>
+              </Link>
+              <Button variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
