@@ -1,6 +1,7 @@
 'use client';
 
-import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Eyebrow, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Markdown } from '@/components/ui/Markdown';
 
 interface Profile {
   summary?: string;
@@ -61,7 +62,7 @@ export default function ProductProfileView({ profile }: { profile: Profile | Rec
     <div className="space-y-6">
       {p.summary && (
         <Section title="Summary">
-          <Text className="leading-relaxed">{p.summary}</Text>
+          <Markdown>{p.summary}</Markdown>
         </Section>
       )}
       {p.industry && (
@@ -123,7 +124,7 @@ export default function ProductProfileView({ profile }: { profile: Profile | Rec
       )}
       {p.architecture && (
         <Section title="Architecture">
-          <TextMuted className="whitespace-pre-wrap">{p.architecture}</TextMuted>
+          <Markdown>{p.architecture}</Markdown>
         </Section>
       )}
     </div>

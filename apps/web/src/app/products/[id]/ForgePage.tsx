@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import ProductProfileView from '@/components/ProductProfileView';
 import ResultPanel from '@/components/ResultPanel';
+import { Markdown } from '@/components/ui/Markdown';
 import ChatWidget from '@/components/ChatWidget';
 import SourcesPanel from '@/components/sources/SourcesPanel';
 import ArtifactList from '@/components/artifacts/ArtifactList';
@@ -362,7 +363,7 @@ export default function ProductForgePageInner() {
                         'max-w-[80%] px-4 py-2 rounded-lg text-body',
                         m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-surface border border-border',
                       )}>
-                        {m.content}
+                        {m.role === 'user' ? m.content : <Markdown className="text-body">{m.content}</Markdown>}
                       </div>
                     </div>
                   ))}

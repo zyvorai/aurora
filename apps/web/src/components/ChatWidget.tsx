@@ -5,6 +5,7 @@ import { MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import SourcesUsedPanel from '@/components/SourcesUsedPanel';
+import { Markdown } from '@/components/ui/Markdown';
 import { cn } from '@/lib/cn';
 import { resolveApiBase } from '@/lib/api-base';
 import { uuid } from '@/lib/uuid';
@@ -95,7 +96,7 @@ export default function ChatWidget({ productId }: ChatWidgetProps) {
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-background border border-border',
                 )}>
-                  {m.content}
+                  {m.role === 'user' ? m.content : <Markdown className="text-sm">{m.content}</Markdown>}
                   {m.role === 'assistant' && m.sources_used && m.sources_used.length > 0 && (
                     <SourcesUsedPanel sources={m.sources_used} compact />
                   )}

@@ -3,6 +3,7 @@
 import ProductProfileView from './ProductProfileView';
 import SourcesUsedPanel from './SourcesUsedPanel';
 import { Eyebrow, Stat, SubsectionTitle, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Markdown } from '@/components/ui/Markdown';
 
 type Result = Record<string, unknown>;
 
@@ -195,12 +196,12 @@ function StrategyView({ data }: { data: Result }) {
 
       {Boolean(data.gtm_strategy) && (
         <Card title="Strategy overview">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.gtm_strategy)}</p>
+          <Markdown>{String(data.gtm_strategy)}</Markdown>
         </Card>
       )}
       {Boolean(data.icp) && (
         <Card title="Ideal customer profile">
-          <p className="text-sm leading-relaxed">{String(data.icp)}</p>
+          <Markdown>{String(data.icp)}</Markdown>
         </Card>
       )}
       {Boolean(data.positioning) && (
@@ -316,7 +317,7 @@ function QueryView({ data }: { data: Result }) {
           <Badge>{Math.round((data.confidence as number) * 100)}% confidence</Badge>
         )}
       </div>
-      <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.answer)}</p>
+      <Markdown>{String(data.answer)}</Markdown>
       <SourcesUsedPanel sources={sources} />
       <CitationsList citations={citations} />
     </Card>
@@ -330,9 +331,7 @@ function ContentView({ data }: { data: Result }) {
         <Badge variant={data.grounded ? 'success' : 'warning'}>{data.grounded ? 'Grounded' : 'Draft'}</Badge>
         <Badge>{String(data.status || 'draft')}</Badge>
       </div>
-      <article className="prose prose-invert prose-sm max-w-none">
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.content)}</p>
-      </article>
+      <Markdown>{String(data.content)}</Markdown>
       <CitationsList citations={(data.citations as []) || []} />
     </Card>
   );
@@ -344,7 +343,9 @@ function OutreachView({ data }: { data: Result }) {
     <div className="space-y-4">
       <Card title={`Outreach — ${String(data.company_name || 'Prospect')}`}>
         {Boolean(data.product_fit) && (
-          <p className="text-sm text-muted mb-4">{String(data.product_fit)}</p>
+          <div className="mb-4">
+            <Markdown>{String(data.product_fit)}</Markdown>
+          </div>
         )}
         {Array.isArray(data.pain_points) && (data.pain_points as string[]).length > 0 && (
           <div className="mb-4">
@@ -357,8 +358,8 @@ function OutreachView({ data }: { data: Result }) {
           </div>
         )}
         <h4 className="text-xs uppercase text-gtm-accent mb-2">Email draft</h4>
-        <div className="rounded-md bg-gtm-bg border border-gtm-border p-4 text-sm whitespace-pre-wrap leading-relaxed">
-          {String(data.email_draft)}
+        <div className="rounded-md bg-gtm-bg border border-gtm-border p-4">
+          <Markdown>{String(data.email_draft)}</Markdown>
         </div>
       </Card>
       {followUps.length > 0 && (
@@ -367,7 +368,9 @@ function OutreachView({ data }: { data: Result }) {
             {followUps.map((f, i) => (
               <div key={i} className="border border-gtm-border rounded-md p-3">
                 <p className="text-xs text-gtm-accent">Day {String(f.day ?? i + 1)} — {String(f.subject ?? '')}</p>
-                <p className="text-sm text-muted mt-2 whitespace-pre-wrap">{String(f.body ?? '')}</p>
+                <div className="mt-2">
+                  <Markdown className="text-sm">{String(f.body ?? '')}</Markdown>
+                </div>
               </div>
             ))}
           </div>
@@ -387,18 +390,18 @@ function ArchitectView({ data }: { data: Result }) {
             {data.grounded ? 'Grounded' : 'Review needed'}
           </Badge>
         </div>
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(data.answer)}</p>
+        <Markdown>{String(data.answer)}</Markdown>
         <SourcesUsedPanel sources={sources} />
         <CitationsList citations={(data.citations as []) || []} />
       </Card>
       {Boolean(data.deployment_plan) && (
         <Card title="Deployment plan">
-          <p className="text-sm whitespace-pre-wrap text-muted">{String(data.deployment_plan)}</p>
+          <Markdown>{String(data.deployment_plan)}</Markdown>
         </Card>
       )}
       {'security_notes' in data && Boolean(data.security_notes) && (
         <Card title="Security considerations">
-          <p className="text-sm whitespace-pre-wrap text-muted">{String(data.security_notes)}</p>
+          <Markdown>{String(data.security_notes)}</Markdown>
         </Card>
       )}
       {Boolean(data.architecture_diagram) && (
@@ -428,9 +431,7 @@ function ProposalView({ data }: { data: Result }) {
       {sections.map(({ key, title }) =>
         data[key] ? (
           <Card key={key} title={title}>
-            <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted">
-              {String(data[key])}
-            </p>
+            <Markdown>{String(data[key])}</Markdown>
           </Card>
         ) : null,
       )}
