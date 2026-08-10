@@ -17,7 +17,7 @@ export function resolveApiBase(): string {
     return 'http://127.0.0.1:8000/api/v1';
   }
 
-  return '/api';
+  return '/api/v1';
 }
 
 /** /health is mounted at the API root, not under /api/v1 -- derive it from the same base. */
