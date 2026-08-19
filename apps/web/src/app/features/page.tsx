@@ -3,7 +3,11 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BarChart3,
+  CheckCircle2,
+  Clock,
+  FileText,
   Globe,
+  MessageSquare,
   Network,
   Send,
   ShieldCheck,
@@ -14,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import {
   Eyebrow,
   DisplayTitle,
@@ -186,6 +191,108 @@ export default function FeaturesPage() {
               <TextMuted className="text-body-sm">{step.description}</TextMuted>
             </Card>
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div>
+            <Eyebrow className="mb-3">Grounded in your product</Eyebrow>
+            <SectionTitle as="h2" className="mb-4 text-2xl md:text-[1.75rem]">
+              Every answer cites real product knowledge
+            </SectionTitle>
+            <TextMuted className="mb-6 leading-relaxed">
+              Sales chat and Q&amp;A run against your knowledge graph, not a generic model's guess.
+              No hallucinated pitches — every claim traces back to a source.
+            </TextMuted>
+            <ul className="space-y-3">
+              {[
+                'Answers are cited against ingested docs and crawled pages',
+                'A citation gate blocks ungrounded claims before they reach a prospect',
+                'Same knowledge graph powers Sales, Solution Architect, and Marketing agents',
+              ].map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0 text-primary" aria-hidden />
+                  <Text className="text-body-sm">{point}</Text>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <Card elevated className="p-5">
+            <div className="flex items-center gap-2 mb-4 text-body-sm text-muted">
+              <MessageSquare className="h-4 w-4" aria-hidden />
+              Sales Chat
+            </div>
+            <div className="space-y-3">
+              <div className="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-surface px-4 py-2.5 text-body-sm">
+                What's included in the enterprise tier?
+              </div>
+              <div className="max-w-[90%] rounded-2xl rounded-tl-sm bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] px-4 py-3 space-y-2">
+                <Text className="text-body-sm">
+                  Enterprise includes SSO, multi-tenant workspaces, and priority support.
+                </Text>
+                <div className="flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-primary" aria-hidden />
+                  <span className="text-xs text-primary">pricing.md · docs/enterprise</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <Card elevated className="p-5 order-2 lg:order-1">
+            <div className="flex items-center gap-2 mb-4 text-body-sm text-muted">
+              <Workflow className="h-4 w-4" aria-hidden />
+              Background agents
+            </div>
+            <div className="space-y-4">
+              {[
+                { name: 'Outbound sprint — TechCorp', percent: 72, status: 'Running' as const },
+                { name: 'Technical eval — DataFlow', percent: 100, status: 'Done' as const },
+                { name: 'Proposal draft — Acme', percent: 35, status: 'Running' as const },
+              ].map((task) => (
+                <div key={task.name}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-body-sm">{task.name}</span>
+                    <Badge variant={task.status === 'Done' ? 'success' : 'default'}>
+                      {task.status === 'Done' ? (
+                        <CheckCircle2 className="h-3 w-3 mr-1" aria-hidden />
+                      ) : (
+                        <Clock className="h-3 w-3 mr-1" aria-hidden />
+                      )}
+                      {task.status}
+                    </Badge>
+                  </div>
+                  <ProgressBar percent={task.percent} showPercent={false} />
+                </div>
+              ))}
+            </div>
+          </Card>
+          <div className="order-1 lg:order-2">
+            <Eyebrow className="mb-3">Runs in the background</Eyebrow>
+            <SectionTitle as="h2" className="mb-4 text-2xl md:text-[1.75rem]">
+              Long-running work doesn't block your UI
+            </SectionTitle>
+            <TextMuted className="mb-6 leading-relaxed">
+              Outbound sprints, technical evaluations, and proposal drafts run as background agent
+              tasks — check in whenever you want, keep working in the meantime.
+            </TextMuted>
+            <ul className="space-y-3">
+              {[
+                'Agent Task Progress panel tracks every in-flight job',
+                'Executive briefs stay SQL-first and instant — LLM calls only run when triggered',
+                'A supervisor coordinates Marketing, Sales, and Solution agents behind the scenes',
+              ].map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0 text-primary" aria-hidden />
+                  <Text className="text-body-sm">{point}</Text>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
