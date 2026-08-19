@@ -46,7 +46,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const storedTheme = localStorage.getItem(STORAGE_KEY);
-    const initialTheme: Theme = storedTheme === 'light' ? 'light' : 'dark';
+    const systemPrefersLight = window.matchMedia?.('(prefers-color-scheme: light)').matches ?? false;
+    const initialTheme: Theme =
+      storedTheme === 'light' || (!storedTheme && systemPrefersLight) ? 'light' : 'dark';
     setThemeState(initialTheme);
     applyTheme(initialTheme);
 
@@ -103,7 +105,8 @@ export function useTheme(): ThemeContextValue {
 export const THEME_INIT_SCRIPT = `
 try {
   var t = localStorage.getItem('${STORAGE_KEY}');
-  if (t === 'light') document.documentElement.classList.add('light-theme');
+  var systemLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  if (t === 'light' || (!t && systemLight)) document.documentElement.classList.add('light-theme');
   var v = localStorage.getItem('${COLOR_VARIANT_KEY}');
   if (v === 'steel') document.documentElement.classList.add('steel-theme');
   if (v === 'aurora') document.documentElement.classList.add('aurora-theme');
