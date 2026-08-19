@@ -19,6 +19,7 @@ import {
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Reveal } from '@/components/ui/Reveal';
 import {
   Eyebrow,
   DisplayTitle,
@@ -27,6 +28,7 @@ import {
   Text,
   TextMuted,
   TextLead,
+  Stat,
 } from '@/components/ui/Typography';
 
 export const metadata: Metadata = {
@@ -45,6 +47,13 @@ const ctaSecondary =
   'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-foreground ' +
   'border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm ' +
   'hover:border-[var(--glass-border-strong)] hover:bg-[var(--glass-bg-elevated)] transition-colors';
+
+const STATS = [
+  { label: 'Specialized agents', value: '11' },
+  { label: 'Implementation phases', value: '12' },
+  { label: 'Documented test cases', value: '223' },
+  { label: 'Multi-tenant', value: 'Built in' },
+];
 
 const PIPELINE_STEPS = [
   {
@@ -175,25 +184,36 @@ export default function FeaturesPage() {
         <TextMuted className="mt-4 text-body-sm">No credit card required — onboard your first product in minutes</TextMuted>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="text-center mb-10">
-          <SectionTitle as="h2" className="mb-2">How it works</SectionTitle>
-          <TextMuted>Customer sources → discovery → knowledge graph → agents → publishing → analytics</TextMuted>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PIPELINE_STEPS.map((step, i) => (
-            <Card key={step.title} hover className="p-5 relative">
-              <div className="tahoe-icon-badge mb-4">
-                <step.icon className="h-5 w-5" />
-              </div>
-              <Badge className="mb-2">Step {i + 1}</Badge>
-              <SubsectionTitle className="mb-1.5">{step.title}</SubsectionTitle>
-              <TextMuted className="text-body-sm">{step.description}</TextMuted>
-            </Card>
+      <section className="border-y border-border bg-[var(--glass-bg)]">
+        <div className="mx-auto max-w-4xl px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          {STATS.map((s) => (
+            <Stat key={s.label} label={s.label} value={s.value} className="mx-auto" />
           ))}
         </div>
       </section>
 
+      <Reveal>
+        <section className="mx-auto max-w-6xl px-6 py-16">
+          <div className="text-center mb-10">
+            <SectionTitle as="h2" className="mb-2">How it works</SectionTitle>
+            <TextMuted>Customer sources → discovery → knowledge graph → agents → publishing → analytics</TextMuted>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PIPELINE_STEPS.map((step, i) => (
+              <Card key={step.title} hover className="p-5 relative">
+                <div className="tahoe-icon-badge mb-4">
+                  <step.icon className="h-5 w-5" />
+                </div>
+                <Badge className="mb-2">Step {i + 1}</Badge>
+                <SubsectionTitle className="mb-1.5">{step.title}</SubsectionTitle>
+                <TextMuted className="text-body-sm">{step.description}</TextMuted>
+              </Card>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+
+      <Reveal>
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div>
@@ -240,7 +260,9 @@ export default function FeaturesPage() {
           </Card>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="mx-auto max-w-6xl px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <Card elevated className="p-5 order-2 lg:order-1">
@@ -295,7 +317,9 @@ export default function FeaturesPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="text-center mb-10">
           <SectionTitle as="h2" className="mb-2">Built for real GTM work</SectionTitle>
@@ -313,7 +337,9 @@ export default function FeaturesPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="text-center mb-10">
           <SectionTitle as="h2" className="mb-2">Bring your own LLM</SectionTitle>
@@ -339,7 +365,9 @@ export default function FeaturesPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal>
       <section className="mx-auto max-w-4xl px-6 py-20 text-center">
         <SectionTitle as="h2" className="mb-3">Ready to turn your product into a salesperson?</SectionTitle>
         <TextMuted className="mb-8">Onboard your first product and generate a GTM strategy in minutes.</TextMuted>
@@ -348,13 +376,38 @@ export default function FeaturesPage() {
           <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
+      </Reveal>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-body-sm text-muted">© {new Date().getFullYear()} Emissary</span>
-          <Link href="/" className="text-body-sm text-muted hover:text-foreground transition-colors">
-            Back to sign in
-          </Link>
+      <footer className="bg-[var(--glass-bg-strong)] border-t border-border">
+        <div className="mx-auto max-w-6xl px-6 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
+          <div className="col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden />
+              </div>
+              <span className="font-bold text-foreground text-body-sm">Emissary</span>
+            </div>
+            <TextMuted className="text-body-sm">GTM Orchestration Platform</TextMuted>
+          </div>
+          <div>
+            <SubsectionTitle className="text-body-sm mb-3">Product</SubsectionTitle>
+            <ul className="space-y-2">
+              <li><Link href="/features" className="text-body-sm text-muted hover:text-foreground transition-colors">Features</Link></li>
+              <li><Link href="/" className="text-body-sm text-muted hover:text-foreground transition-colors">Get started</Link></li>
+            </ul>
+          </div>
+          <div>
+            <SubsectionTitle className="text-body-sm mb-3">Account</SubsectionTitle>
+            <ul className="space-y-2">
+              <li><Link href="/" className="text-body-sm text-muted hover:text-foreground transition-colors">Sign in</Link></li>
+              <li><Link href="/" className="text-body-sm text-muted hover:text-foreground transition-colors">Create workspace</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-border">
+          <div className="mx-auto max-w-6xl px-6 py-5">
+            <span className="text-body-sm text-muted">© {new Date().getFullYear()} Emissary</span>
+          </div>
         </div>
       </footer>
     </div>

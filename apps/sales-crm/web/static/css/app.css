@@ -121,8 +121,8 @@ a:hover { text-decoration: underline; }
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
   width: 160px;
   transition: width 0.2s, border-color 0.15s;
@@ -152,8 +152,8 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 8px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface2);
   color: var(--text);
@@ -173,12 +173,12 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
 .btn-danger { background: transparent; border-color: rgba(239,68,68,0.4); color: var(--danger); }
 .btn-danger:hover { background: var(--danger); color: #fff; }
 .btn-ghost { background: transparent; }
-.btn-sm { padding: 0.25rem 0.55rem; font-size: 0.78rem; }
+.btn-sm { padding: var(--space-1) var(--space-2); font-size: 0.78rem; }
 .btn-quick {
   background: var(--surface2);
   border-color: var(--border);
   font-size: 0.8rem;
-  padding: 0.4rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
 }
 .btn-quick:hover { border-color: var(--primary); color: var(--primary); }
 
@@ -272,7 +272,7 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
 /* Badges & tags */
 .badge {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 600;
@@ -364,8 +364,8 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.45rem 0.7rem;
-  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
 }
 .filters input[type="search"] { min-width: 180px; }
@@ -383,8 +383,8 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.5rem 0.7rem;
-  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
 }
 .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
@@ -408,8 +408,8 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
 }
 .activity-form textarea { width: 100%; }
@@ -533,6 +533,34 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
   gap: 0.75rem;
 }
 .closed-row .kanban-col { max-height: 260px; }
+
+/* Entrance motion — page-load stagger (short dashboard pages, everything's
+   already near the viewport, so this reads the same as a scroll-reveal
+   without needing IntersectionObserver machinery). */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stat-card, .card, .kanban-card, .hot-card {
+  animation: fadeInUp 0.35s ease-out both;
+}
+.stats-grid .stat-card:nth-child(1) { animation-delay: 0.02s; }
+.stats-grid .stat-card:nth-child(2) { animation-delay: 0.06s; }
+.stats-grid .stat-card:nth-child(3) { animation-delay: 0.10s; }
+.stats-grid .stat-card:nth-child(4) { animation-delay: 0.14s; }
+.stats-grid .stat-card:nth-child(5) { animation-delay: 0.18s; }
+.stats-grid .stat-card:nth-child(6) { animation-delay: 0.22s; }
+.hot-grid .hot-card:nth-child(1) { animation-delay: 0.04s; }
+.hot-grid .hot-card:nth-child(2) { animation-delay: 0.08s; }
+.hot-grid .hot-card:nth-child(3) { animation-delay: 0.12s; }
+.hot-grid .hot-card:nth-child(4) { animation-delay: 0.16s; }
+.kanban-body .kanban-card:nth-child(1) { animation-delay: 0.02s; }
+.kanban-body .kanban-card:nth-child(2) { animation-delay: 0.05s; }
+.kanban-body .kanban-card:nth-child(3) { animation-delay: 0.08s; }
+.kanban-body .kanban-card:nth-child(4) { animation-delay: 0.11s; }
+@media (prefers-reduced-motion: reduce) {
+  .stat-card, .card, .kanban-card, .hot-card { animation: none; }
+}
 
 /* Toast */
 .toast {
