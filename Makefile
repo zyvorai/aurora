@@ -1,4 +1,4 @@
-.PHONY: infra-up infra-down api web workers test init-db ollama-pull ollama-pull-lean install-api install-web install setup venv env check-infra stop stop-apps clean start
+.PHONY: infra-up infra-down api web workers crm test init-db ollama-pull ollama-pull-lean install-api install-web install setup venv env check-infra stop stop-apps clean start
 
 VENV := apps/api/.venv
 VENV_PY := $(VENV)/bin/python
@@ -65,6 +65,9 @@ web:
 
 workers: venv
 	cd apps/workers && ../api/.venv/bin/python -m gtm_workers.main
+
+crm:
+	cd apps/sales-crm && go run .
 
 test: venv
 	cd apps/api && .venv/bin/python -m pytest tests/ -v

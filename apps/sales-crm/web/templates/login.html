@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login · SalesPulse CRM</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <style>
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+    }
+    .login-card h1 { margin-bottom: 0.25rem; }
+    .login-card .subtitle { margin-bottom: 1.5rem; }
+    .login-error {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.35);
+      color: #fca5a5;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <a href="/" class="logo" style="display:inline-block;margin-bottom:1rem">Sales<span>Pulse</span></a>
+      <h1>Sign in</h1>
+      <p class="subtitle">Enter the team password to access the CRM.</p>
+      {{if .Error}}
+      <div class="login-error">Wrong password. Try again.</div>
+      {{end}}
+      <form method="post" action="/login" class="form">
+        <input type="hidden" name="next" value="{{.Next}}">
+        <div class="form-row">
+          <label>Password</label>
+          <input type="password" name="password" required autofocus placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Sign in</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

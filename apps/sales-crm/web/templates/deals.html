@@ -1,0 +1,81 @@
+{{template "header" .}}
+<div class="page-header">
+  <div>
+    <h1>Deals</h1>
+    <p class="subtitle">Filter, prioritize, close.</p>
+  </div>
+  <div class="actions">
+    <a href="/export/deals.csv?{{if .Filter.Stage}}stage={{.Filter.Stage}}&{{end}}{{if .Filter.Source}}source={{.Filter.Source}}&{{end}}{{if .Filter.Filter}}filter={{.Filter.Filter}}&{{end}}{{if .Filter.Q}}q={{.Filter.Q}}{{end}}" class="btn btn-ghost">↓ CSV</a>
+    <a href="/deals/new" class="btn btn-primary">+ New Deal</a>
+  </div>
+</div>
+
+<form class="filters" method="get" action="/deals">
+  <input type="search" name="q" placeholder="Search…" value="{{.Filter.Q}}">
+  <select name="stage">
+    <option value="">All stages</option>
+    {{range .Stages}}
+    <option value="{{.}}" {{if eq $.Filter.Stage .}}selected{{end}}>{{index $.Labels .}}</option>
+    {{end}}
+  </select>
+  <select name="source">
+    <option value="">All sources</option>
+    {{range .Sources}}
+    <option value="{{.}}" {{if eq $.Filter.Source .}}selected{{end}}>{{.}}</option>
+    {{end}}
+  </select>
+  <select name="filter">
+    <option value="">No special filter</option>
+    <option value="hot" {{if eq .Filter.Filter "hot"}}selected{{end}}>🔥 Hot</option>
+    <option value="overdue" {{if eq .Filter.Filter "overdue"}}selected{{end}}>⏰ Overdue</option>
+    <option value="stale" {{if eq .Filter.Filter "stale"}}selected{{end}}>🧊 Stale</option>
+    <option value="new_today" {{if eq .Filter.Filter "new_today"}}selected{{end}}>New today</option>
+    <option value="sla" {{if eq .Filter.Filter "sla"}}selected{{end}}>🚨 SLA breach</option>
+  </select>
+  <button type="submit" class="btn">Filter</button>
+</form>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Contact</th>
+      <th>Stage</th>
+      <th>Value</th>
+      <th>Score</th>
+      <th>Source</th>
+      <th>Next Action</th>
+      <th>Idle</th>
+      <th>Due</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Deals}}
+    <tr class="{{if .Stale}}stale{{end}} {{if call $.Overdue .}}overdue{{end}} {{if .Hot}}row-hot{{end}}">
+      <td>
+        <a href="/deals/{{.ID}}">{{.Title}}</a>
+        {{if .Hot}}<span class="tag tag-hot">HOT</span>{{end}}
+        {{if .Stale}}<span class="tag tag-stale">Stale</span>{{end}}
+      </td>
+      <td>{{.ContactName}}{{if .Company}} <span class="muted">· {{.Company}}</span>{{end}}</td>
+      <td><span class="badge stage-{{.Stage}}">{{.Stage}}</span></td>
+      <td>{{formatINR .Value}}</td>
+      <td>
+        <div class="score-inline">
+          <span>{{.Score}}</span>
+          <div class="score-bar sm"><div style="width:{{.Score}}%"></div></div>
+        </div>
+      </td>
+      <td>{{.Source}}</td>
+      <td>{{.NextAction}}</td>
+      <td>{{.DaysIdle}}d</td>
+      <td>{{formatDate .DueAt}}</td>
+      <td><a href="/deals/{{.ID}}/edit" class="btn btn-sm">Edit</a></td>
+    </tr>
+    {{else}}
+    <tr><td colspan="10" class="empty-state">No deals found</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{template "footer" .}}

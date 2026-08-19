@@ -1,0 +1,75 @@
+{{template "header" .}}
+<div class="page-header">
+  <div>
+    <h1>Pipeline</h1>
+    <p class="subtitle">Drag cards between columns to move stage. Sorted by score.</p>
+  </div>
+  <a href="/export/deals.csv" class="btn btn-ghost">↓ Export CSV</a>
+</div>
+
+<div class="kanban" id="kanban">
+  {{range $stage := .Stages}}
+  {{if and (ne $stage "won") (ne $stage "lost")}}
+  <div class="kanban-col" data-stage="{{$stage}}">
+    <div class="kanban-header">
+      <span>{{index $.Labels $stage}}</span>
+      <span class="count" data-count>{{len (index $.ByStage $stage)}}</span>
+    </div>
+    <div class="kanban-body" data-drop-zone="{{$stage}}">
+      {{range index $.ByStage $stage}}
+      <div class="kanban-card {{if .Stale}}stale{{end}} {{if call $.Overdue .}}overdue{{end}} {{if .Hot}}hot{{end}}"
+           draggable="true"
+           data-deal-id="{{.ID}}"
+           data-stage="{{.Stage}}">
+        <a href="/deals/{{.ID}}" class="card-link" onclick="event.stopPropagation()">
+          <div class="card-title">{{.Title}}{{if .Hot}} <span class="tag tag-hot">HOT</span>{{end}}</div>
+          <div class="card-meta">
+            <span>{{formatINR .Value}}</span>
+            <span class="score-pill score-{{if ge .Score 85}}high{{else if ge .Score 70}}mid{{else}}low{{end}}">{{.Score}}</span>
+          </div>
+          {{if .NextAction}}<div class="card-action">→ {{.NextAction}}</div>{{end}}
+          <div class="card-footer">
+            <span>{{.Source}}</span>
+            <span>{{.DaysIdle}}d idle</span>
+          </div>
+          <div class="score-bar"><div style="width:{{.Score}}%"></div></div>
+        </a>
+      </div>
+      {{else}}
+      <div class="empty drop-hint">Drop deals here</div>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+  {{end}}
+</div>
+
+<div class="closed-row">
+  <div class="kanban-col" data-stage="won">
+    <div class="kanban-header">Closed Won <span class="count">{{len (index .ByStage "won")}}</span></div>
+    <div class="kanban-body" data-drop-zone="won">
+      {{range index .ByStage "won"}}
+      <div class="kanban-card won" draggable="true" data-deal-id="{{.ID}}" data-stage="won">
+        <a href="/deals/{{.ID}}" class="card-link">
+          <div class="card-title">{{.Title}}</div>
+          <div class="card-meta">{{formatINR .Value}}</div>
+        </a>
+      </div>
+      {{end}}
+    </div>
+  </div>
+  <div class="kanban-col" data-stage="lost">
+    <div class="kanban-header">Closed Lost <span class="count">{{len (index .ByStage "lost")}}</span></div>
+    <div class="kanban-body" data-drop-zone="lost">
+      {{range index .ByStage "lost"}}
+      <div class="kanban-card lost" draggable="true" data-deal-id="{{.ID}}" data-stage="lost">
+        <a href="/deals/{{.ID}}" class="card-link">
+          <div class="card-title">{{.Title}}</div>
+          <div class="card-meta">{{.LostReason}}</div>
+        </a>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{template "footer" .}}

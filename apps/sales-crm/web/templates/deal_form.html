@@ -1,0 +1,64 @@
+{{template "header" .}}
+<h1>{{.Title}}</h1>
+
+<form method="post" action="{{if .IsNew}}/deals{{else}}/deals/{{.Deal.ID}}{{end}}" class="form">
+  <div class="form-row">
+    <label>Title *</label>
+    <input type="text" name="title" value="{{.Deal.Title}}" required>
+  </div>
+  <div class="form-row">
+    <label>Value (₹)</label>
+    <input type="number" name="value" step="0.01" value="{{.Deal.Value}}">
+  </div>
+  <div class="form-row">
+    <label>Stage</label>
+    <select name="stage">
+      {{range .Stages}}
+      <option value="{{.}}" {{if eq $.Deal.Stage .}}selected{{end}}>{{index $.Labels .}}</option>
+      {{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label>Contact</label>
+    <select name="contact_id">
+      <option value="">— none —</option>
+      {{range .Contacts}}
+      <option value="{{.ID}}">{{.Name}}{{if .Company}} ({{.Company}}){{end}}</option>
+      {{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label>Owner</label>
+    <input type="text" name="owner" value="{{.Deal.Owner}}">
+  </div>
+  <div class="form-row">
+    <label>Source</label>
+    <select name="source">
+      <option value="">—</option>
+      {{range .Sources}}
+      <option value="{{.}}" {{if eq $.Deal.Source .}}selected{{end}}>{{.}}</option>
+      {{end}}
+    </select>
+  </div>
+  <div class="form-row">
+    <label>Campaign</label>
+    <input type="text" name="campaign" value="{{.Deal.Campaign}}">
+  </div>
+  <div class="form-row">
+    <label>Next Action</label>
+    <input type="text" name="next_action" value="{{.Deal.NextAction}}">
+  </div>
+  <div class="form-row">
+    <label>Due Date</label>
+    <input type="date" name="due_at" value="{{if .Deal.DueAt}}{{.Deal.DueAt.Format "2006-01-02"}}{{end}}">
+  </div>
+  <div class="form-row">
+    <label>Notes</label>
+    <textarea name="notes" rows="3">{{.Deal.Notes}}</textarea>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="/deals" class="btn btn-ghost">Cancel</a>
+  </div>
+</form>
+{{template "footer" .}}

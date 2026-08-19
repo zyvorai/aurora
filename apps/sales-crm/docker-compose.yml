@@ -1,0 +1,26 @@
+services:
+  crm:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      CRM_DB: /data/crm.db
+      CRM_API_KEY: ${CRM_API_KEY:-dev-secret-change-me}
+      CRM_CORS_ORIGINS: ${CRM_CORS_ORIGINS:-*}
+      CRM_SEED: "true"
+      CRM_UI_PASSWORD: ${CRM_UI_PASSWORD:-}
+      CRM_UI_SECRET: ${CRM_UI_SECRET:-}
+      CRM_SLA_HOURS: ${CRM_SLA_HOURS:-2}
+      CRM_OWNERS: ${CRM_OWNERS:-Asha,Ravi,Priya}
+    volumes:
+      - crm-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  crm-data:

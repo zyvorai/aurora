@@ -1,0 +1,6 @@
+salespulse
+*.db
+*.db-*
+*.log
+/tmp/
+.DS_Store

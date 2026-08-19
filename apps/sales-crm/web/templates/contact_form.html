@@ -1,0 +1,26 @@
+{{template "header" .}}
+<h1>{{.Title}}</h1>
+
+<form method="post" action="{{if .IsNew}}/contacts{{else}}/contacts/{{.Contact.ID}}{{end}}" class="form">
+  <div class="form-row">
+    <label>Name *</label>
+    <input type="text" name="name" value="{{.Contact.Name}}" required>
+  </div>
+  <div class="form-row">
+    <label>Company</label>
+    <input type="text" name="company" value="{{.Contact.Company}}">
+  </div>
+  <div class="form-row">
+    <label>Email</label>
+    <input type="email" name="email" value="{{.Contact.Email}}">
+  </div>
+  <div class="form-row">
+    <label>Phone</label>
+    <input type="text" name="phone" value="{{.Contact.Phone}}">
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="/contacts" class="btn btn-ghost">Cancel</a>
+  </div>
+</form>
+{{template "footer" .}}

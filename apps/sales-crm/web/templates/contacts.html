@@ -1,0 +1,43 @@
+{{template "header" .}}
+<div class="page-header">
+  <h1>Contacts</h1>
+  <a href="/contacts/new" class="btn btn-primary">+ New Contact</a>
+</div>
+
+<form class="filters" method="get" action="/contacts">
+  <input type="search" name="q" placeholder="Search name, company, email…" value="{{.Q}}">
+  <button type="submit" class="btn">Search</button>
+</form>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Company</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Deals</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Contacts}}
+    <tr>
+      <td>{{.Name}}</td>
+      <td>{{.Company}}</td>
+      <td>{{.Email}}</td>
+      <td>{{.Phone}}</td>
+      <td>{{.DealCount}}</td>
+      <td>
+        <a href="/contacts/{{.ID}}/edit" class="btn btn-sm">Edit</a>
+        <form method="post" action="/contacts/{{.ID}}/delete" onsubmit="return confirm('Delete contact?')" style="display:inline">
+          <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="6" class="muted">No contacts</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{template "footer" .}}

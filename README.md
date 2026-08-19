@@ -64,6 +64,18 @@ missing, brings the stack up, polls `/health`):
 ./scripts/test-deploy-remote-e2e.sh <host> <user> --skip-deploy   # smoke test only
 ```
 
+### Sales CRM (`apps/sales-crm`)
+
+A standalone Go lead/deal-pipeline CRM microservice (Kanban pipeline, SLA timers,
+round-robin owners, `POST /api/leads` ingestion) — see **[apps/sales-crm/README.md](apps/sales-crm/README.md)**.
+It's independent of the platform's built-in opportunities pipeline
+(`apps/api/gtm_api/routers/crm.py`) and not wired to it — its own SQLite DB and env vars.
+
+```bash
+make crm                                       # dev: go run ., → http://localhost:8080
+cd apps/sales-crm && docker compose up -d --build   # or standalone container
+```
+
 **First login:** every deployment seeds a default admin account on startup if one doesn't
 already exist — `marketing@zyvor.dev` / `Admin@321` (change this password immediately in any
 real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC_API_URL` in

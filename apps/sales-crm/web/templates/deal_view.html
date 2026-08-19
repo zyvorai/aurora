@@ -1,0 +1,110 @@
+{{template "header" .}}
+<div class="page-header">
+  <div>
+    <h1>{{.Deal.Title}}</h1>
+    <div class="meta-row">
+      <span class="badge stage-{{.Deal.Stage}}">{{index .Labels .Deal.Stage}}</span>
+      <span class="score-pill score-{{if ge .Deal.Score 85}}high{{else if ge .Deal.Score 70}}mid{{else}}low{{end}}">Score {{.Deal.Score}}</span>
+      {{if .Deal.Hot}}<span class="tag tag-hot">HOT</span>{{end}}
+      {{if .Deal.Stale}}<span class="tag tag-stale">Stale</span>{{end}}
+      {{if .Overdue}}<span class="tag tag-overdue">Overdue</span>{{end}}
+      <span class="muted">{{.Deal.DaysIdle}} days idle</span>
+    </div>
+  </div>
+  <div class="actions">
+    <a href="/deals/{{.Deal.ID}}/edit" class="btn">Edit</a>
+    <form method="post" action="/deals/{{.Deal.ID}}/delete" onsubmit="return confirm('Delete this deal?')" style="display:inline">
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="score-bar lg"><div style="width:{{.Deal.Score}}%"></div></div>
+
+<div class="quick-actions">
+  <form method="post" action="/deals/{{.Deal.ID}}/activities" class="quick-form">
+    <input type="hidden" name="type" value="call">
+    <input type="hidden" name="created_by" value="Sales">
+    <input type="hidden" name="content" value="Called — logged from quick action">
+    <button type="submit" class="btn btn-quick">📞 Logged call</button>
+  </form>
+  <form method="post" action="/deals/{{.Deal.ID}}/activities" class="quick-form">
+    <input type="hidden" name="type" value="email">
+    <input type="hidden" name="created_by" value="Sales">
+    <input type="hidden" name="content" value="Email sent — logged from quick action">
+    <button type="submit" class="btn btn-quick">✉️ Sent email</button>
+  </form>
+  <form method="post" action="/deals/{{.Deal.ID}}/activities" class="quick-form">
+    <input type="hidden" name="type" value="whatsapp">
+    <input type="hidden" name="created_by" value="Sales">
+    <input type="hidden" name="content" value="WhatsApp message — logged from quick action">
+    <button type="submit" class="btn btn-quick">💬 WhatsApp</button>
+  </form>
+  <form method="post" action="/deals/{{.Deal.ID}}/activities" class="quick-form">
+    <input type="hidden" name="type" value="note">
+    <input type="hidden" name="created_by" value="Sales">
+    <input type="hidden" name="content" value="No answer / will retry">
+    <button type="submit" class="btn btn-quick">🔕 No answer</button>
+  </form>
+</div>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Details</h2>
+    <dl class="dl">
+      <dt>Value</dt><dd>{{formatINR .Deal.Value}}</dd>
+      <dt>Contact</dt><dd>{{.Deal.ContactName}}{{if .Deal.Company}} · {{.Deal.Company}}{{end}}</dd>
+      <dt>Owner</dt><dd>{{.Deal.Owner}}</dd>
+      <dt>Source</dt><dd>{{.Deal.Source}}{{if .Deal.Campaign}} / {{.Deal.Campaign}}{{end}}</dd>
+      <dt>Next Action</dt><dd>{{.Deal.NextAction}}</dd>
+      <dt>Due</dt><dd>{{formatDate .Deal.DueAt}}</dd>
+      {{if .Deal.LostReason}}<dt>Lost Reason</dt><dd>{{.Deal.LostReason}}</dd>{{end}}
+      <dt>Notes</dt><dd>{{.Deal.Notes}}</dd>
+      <dt>Created</dt><dd>{{formatDateTime .Deal.CreatedAt}}</dd>
+      <dt>Updated</dt><dd>{{formatDateTime .Deal.UpdatedAt}}</dd>
+    </dl>
+
+    <h3>Move Stage</h3>
+    <form method="post" action="/deals/{{.Deal.ID}}/stage" class="stage-form">
+      <select name="stage" required>
+        {{range .Stages}}
+        <option value="{{.}}" {{if eq $.Deal.Stage .}}selected{{end}}>{{index $.Labels .}}</option>
+        {{end}}
+      </select>
+      <select name="lost_reason">
+        <option value="">Lost reason (if Lost)</option>
+        {{range .LostReasons}}
+        <option value="{{.}}">{{.}}</option>
+        {{end}}
+      </select>
+      <button type="submit" class="btn btn-primary">Update Stage</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Activity Timeline</h2>
+    <form method="post" action="/deals/{{.Deal.ID}}/activities" class="activity-form">
+      <select name="type">
+        {{range .ActTypes}}
+        <option value="{{.}}">{{.}}</option>
+        {{end}}
+      </select>
+      <input type="text" name="created_by" placeholder="Your name" value="Sales">
+      <textarea name="content" rows="2" placeholder="What happened?" required></textarea>
+      <button type="submit" class="btn btn-primary">Log Activity</button>
+    </form>
+
+    <ul class="timeline">
+      {{range .Activities}}
+      <li>
+        <div class="tl-type">{{.Type}}</div>
+        <div class="tl-body">{{.Content}}</div>
+        <div class="tl-meta">{{.CreatedBy}} · {{formatDateTime .CreatedAt}}</div>
+      </li>
+      {{else}}
+      <li class="muted">No activities yet — use quick actions above</li>
+      {{end}}
+    </ul>
+  </section>
+</div>
+{{template "footer" .}}

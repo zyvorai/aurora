@@ -1,0 +1,31 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} · SalesPulse CRM</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" class="logo">Sales<span>Pulse</span></a>
+    <nav>
+      <a href="/" {{if eq .Title "Dashboard"}}class="active"{{end}}>Dashboard</a>
+      <a href="/pipeline" {{if eq .Title "Pipeline"}}class="active"{{end}}>Pipeline</a>
+      <a href="/deals" {{if eq .Title "Deals"}}class="active"{{end}}>Deals</a>
+      <a href="/contacts" {{if eq .Title "Contacts"}}class="active"{{end}}>Contacts</a>
+      <a href="/reports" {{if eq .Title "Reports"}}class="active"{{end}}>Reports</a>
+    </nav>
+    <div class="actions">
+      <a href="/deals/new" class="btn btn-primary">+ Deal</a>
+      <a href="/contacts/new" class="btn btn-ghost">+ Contact</a>
+    </div>
+  </header>
+  <main class="container">
+    {{template "content" .}}
+  </main>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}

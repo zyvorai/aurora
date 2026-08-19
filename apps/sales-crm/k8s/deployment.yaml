@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sales
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: salespulse-crm-secret
+  namespace: sales
+type: Opaque
+stringData:
+  api-key: "CHANGE-ME-TO-A-STRONG-SECRET"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: salespulse-crm-data
+  namespace: sales
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: salespulse-crm
+  namespace: sales
+  labels:
+    app: salespulse-crm
+spec:
+  replicas: 1   # SQLite → keep at 1
+  selector:
+    matchLabels:
+      app: salespulse-crm
+  template:
+    metadata:
+      labels:
+        app: salespulse-crm
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: crm
+          image: salespulse-crm:latest   # build & push your own
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+            - name: CRM_DB
+              value: /data/crm.db
+            - name: CRM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: salespulse-crm-secret
+                  key: api-key
+            - name: CRM_CORS_ORIGINS
+              value: "https://yourdomain.com"
+            - name: CRM_SEED
+              value: "false"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: salespulse-crm-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: salespulse-crm
+  namespace: sales
+spec:
+  selector:
+    app: salespulse-crm
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http
+  type: ClusterIP

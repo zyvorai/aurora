@@ -1,0 +1,151 @@
+{{template "header" .}}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="subtitle">Attack the pipeline. Hot leads first.</p>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card accent">
+    <div class="stat-label">Pipeline Value</div>
+    <div class="stat-value">{{formatINR .Stats.PipelineValue}}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Won This Month</div>
+    <div class="stat-value positive">{{formatINR .Stats.WonThisMonth}}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Win Rate</div>
+    <div class="stat-value">{{printf "%.0f" .Stats.WinRate}}%</div>
+  </div>
+  <div class="stat-card alert">
+    <div class="stat-label">Overdue</div>
+    <div class="stat-value">{{.Stats.OverdueCount}}</div>
+    <a href="/deals?filter=overdue" class="stat-link">View →</a>
+  </div>
+  <div class="stat-card warn">
+    <div class="stat-label">Stale</div>
+    <div class="stat-value">{{.Stats.StaleCount}}</div>
+    <a href="/deals?filter=stale" class="stat-link">View →</a>
+  </div>
+  <div class="stat-card hot">
+    <div class="stat-label">Hot Leads</div>
+    <div class="stat-value">{{len .Hot}}</div>
+    <a href="/deals?filter=hot" class="stat-link">View →</a>
+  </div>
+  <div class="stat-card alert">
+    <div class="stat-label">SLA Breach ({{.Stats.SLAHours}}h)</div>
+    <div class="stat-value">{{.Stats.SLABreachCount}}</div>
+    <a href="/deals?filter=sla" class="stat-link">View →</a>
+  </div>
+</div>
+
+{{if .Hot}}
+<section class="card section-hot">
+  <h2>🔥 Hot Leads <a href="/deals?filter=hot" class="link">See all</a></h2>
+  <div class="hot-grid">
+    {{range .Hot}}
+    <a href="/deals/{{.ID}}" class="hot-card">
+      <div class="hot-top">
+        <strong>{{.Title}}</strong>
+        <span class="score-pill score-{{if ge .Score 85}}high{{else if ge .Score 70}}mid{{else}}low{{end}}">{{.Score}}</span>
+      </div>
+      <div class="hot-meta">{{formatINR .Value}} · {{.Source}} · {{.DaysIdle}}d idle</div>
+      {{if .NextAction}}<div class="hot-action">→ {{.NextAction}}</div>{{end}}
+      <div class="score-bar"><div style="width:{{.Score}}%"></div></div>
+    </a>
+    {{end}}
+  </div>
+</section>
+{{end}}
+
+{{if .SLA}}
+<section class="card" style="margin-bottom:1.5rem;border-color:rgba(239,68,68,0.35)">
+  <h2>🚨 SLA breached — contact now <a href="/deals?filter=sla" class="link">See all</a></h2>
+  <ul class="deal-list">
+    {{range .SLA}}
+    <li class="deal-item overdue">
+      <a href="/deals/{{.ID}}">
+        <strong>{{.Title}}</strong>
+        <span class="meta">Owner: {{.Owner}} · {{formatINR .Value}} · {{.DaysIdle}}d idle · score {{.Score}}</span>
+      </a>
+    </li>
+    {{end}}
+  </ul>
+</section>
+{{end}}
+
+<div class="two-col">
+  <section class="card">
+    <h2>⏰ Overdue <a href="/deals?filter=overdue" class="link">View all</a></h2>
+    {{if .Overdue}}
+    <ul class="deal-list">
+      {{range .Overdue}}
+      <li class="deal-item overdue">
+        <a href="/deals/{{.ID}}">
+          <strong>{{.Title}}</strong>
+          <span class="meta">{{formatINR .Value}} · due {{formatDate .DueAt}} · score {{.Score}}</span>
+        </a>
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="empty-state">No overdue actions. Nice work 🎉</p>
+    {{end}}
+  </section>
+
+  <section class="card">
+    <h2>🧊 Stale <a href="/deals?filter=stale" class="link">View all</a></h2>
+    {{if .Stale}}
+    <ul class="deal-list">
+      {{range .Stale}}
+      <li class="deal-item stale">
+        <a href="/deals/{{.ID}}">
+          <strong>{{.Title}}</strong>
+          <span class="meta">{{.DaysIdle}} days idle · {{.Source}} · score {{.Score}}</span>
+        </a>
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="empty-state">No stale leads</p>
+    {{end}}
+  </section>
+</div>
+
+<section class="card">
+  <h2>Recent activity</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Stage</th>
+        <th>Value</th>
+        <th>Score</th>
+        <th>Source</th>
+        <th>Idle</th>
+        <th>Due</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Recent}}
+      <tr class="{{if .Hot}}row-hot{{end}} {{if .Stale}}stale{{end}}">
+        <td><a href="/deals/{{.ID}}">{{.Title}}</a>{{if .Hot}} <span class="tag tag-hot">HOT</span>{{end}}</td>
+        <td><span class="badge stage-{{.Stage}}">{{.Stage}}</span></td>
+        <td>{{formatINR .Value}}</td>
+        <td>
+          <div class="score-inline">
+            <span>{{.Score}}</span>
+            <div class="score-bar sm"><div style="width:{{.Score}}%"></div></div>
+          </div>
+        </td>
+        <td>{{.Source}}</td>
+        <td>{{.DaysIdle}}d</td>
+        <td>{{formatDate .DueAt}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</section>
+{{template "footer" .}}

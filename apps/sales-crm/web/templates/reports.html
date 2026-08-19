@@ -1,0 +1,56 @@
+{{template "header" .}}
+<h1>Reports</h1>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Open Pipeline</div>
+    <div class="stat-value">{{formatINR .Stats.PipelineValue}}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Open Deals</div>
+    <div class="stat-value">{{.Stats.OpenDeals}}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Win Rate</div>
+    <div class="stat-value">{{printf "%.0f" .Stats.WinRate}}%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Won / Lost</div>
+    <div class="stat-value">{{.Stats.WonCount}} / {{.Stats.LostCount}}</div>
+  </div>
+</div>
+
+<section>
+  <h2>By Stage</h2>
+  <table class="table">
+    <thead><tr><th>Stage</th><th>Count</th><th>Value</th></tr></thead>
+    <tbody>
+      {{range $stage, $s := .Stats.ByStage}}
+      <tr>
+        <td><span class="badge stage-{{$stage}}">{{index $.Labels $stage}}</span></td>
+        <td>{{$s.Count}}</td>
+        <td>{{formatINR $s.Value}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>By Source</h2>
+  <table class="table">
+    <thead><tr><th>Source</th><th>Deals</th><th>Value</th><th>Won</th><th>Won Value</th></tr></thead>
+    <tbody>
+      {{range $src, $s := .Stats.BySource}}
+      <tr>
+        <td>{{$src}}</td>
+        <td>{{$s.Count}}</td>
+        <td>{{formatINR $s.Value}}</td>
+        <td>{{$s.WonCount}}</td>
+        <td>{{formatINR $s.WonValue}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</section>
+{{template "footer" .}}
