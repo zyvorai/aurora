@@ -5,6 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{.Title}} · SalesPulse CRM</title>
+  <script>(function(){try{if(localStorage.getItem('crm-theme')!=='dark')document.documentElement.classList.add('light-theme')}catch(e){}})()</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
   <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body>
@@ -21,6 +25,7 @@
       <input type="search" name="q" placeholder="Search deals…" aria-label="Search">
     </form>
     <div class="actions">
+      <button type="button" id="theme-toggle" class="btn btn-ghost btn-sm" title="Toggle light/dark theme" aria-label="Toggle theme">☀️</button>
       <a href="/deals/new" class="btn btn-primary">+ Deal</a>
       <a href="/contacts/new" class="btn btn-ghost">+ Contact</a>
       <a href="/logout" class="btn btn-ghost" title="Sign out">⎋</a>

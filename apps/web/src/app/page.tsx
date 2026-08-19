@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
@@ -104,12 +105,21 @@ export default function HomePage() {
       ]}
       features={FEATURES}
       heroFooter={
-        <div className="flex items-center gap-2 text-blue-100/40 text-sm">
-          <span>Auto-discovery</span>
-          <span className="text-blue-200/30">·</span>
-          <span>Grounded answers</span>
-          <span className="text-blue-200/30">·</span>
-          <span>Emissary</span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-blue-100/40 text-sm">
+            <span>Auto-discovery</span>
+            <span className="text-blue-200/30">·</span>
+            <span>Grounded answers</span>
+            <span className="text-blue-200/30">·</span>
+            <span>Emissary</span>
+          </div>
+          <Link
+            href="/features"
+            className="flex items-center gap-1 text-sm text-blue-200/70 hover:text-blue-100 transition-colors shrink-0"
+          >
+            See how it works
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       }
       mobileSubtitle="GTM Orchestration Platform"

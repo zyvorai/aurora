@@ -54,14 +54,18 @@ function initKanban() {
       dragCard.dataset.stage = newStage;
       updateCounts();
 
-      // Use form POST so it works without API key
-      const form = new FormData();
+      // Use urlencoded form POST so it works without API key — the server
+      // handler calls r.ParseForm(), which only parses
+      // application/x-www-form-urlencoded bodies (not multipart, which is
+      // what fetch sends for a FormData body).
+      const form = new URLSearchParams();
       form.append('stage', newStage);
       if (newStage === 'lost') form.append('lost_reason', 'Other');
 
       try {
         const res = await fetch('/deals/' + dealId + '/stage', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: form,
           redirect: 'manual'
         });
@@ -88,6 +92,24 @@ function updateCounts() {
   });
 }
 
+function initThemeToggle() {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+
+  const apply = light => {
+    document.documentElement.classList.toggle('light-theme', light);
+    btn.textContent = light ? '☀️' : '🌙';
+  };
+  apply(document.documentElement.classList.contains('light-theme'));
+
+  btn.addEventListener('click', () => {
+    const light = !document.documentElement.classList.contains('light-theme');
+    apply(light);
+    try { localStorage.setItem('crm-theme', light ? 'light' : 'dark'); } catch (e) {}
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initKanban();
+  initThemeToggle();
 });
