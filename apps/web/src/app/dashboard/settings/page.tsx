@@ -25,20 +25,9 @@ interface CurrentUser {
   tenant_id: string;
 }
 
-const COLOR_VARIANTS: { value: 'default' | 'steel' | 'aurora'; label: string; hint: string }[] = [
-  { value: 'default', label: 'Default', hint: 'Tahoe sky/blue' },
-  { value: 'steel', label: 'Steel', hint: 'Cool gray-blue' },
-  { value: 'aurora', label: 'Aurora', hint: 'Cyan/violet, animated' },
-];
-
-const DESIGN_STYLES: { value: 'modern' | 'classic'; label: string; hint: string }[] = [
-  { value: 'modern', label: 'Modern', hint: 'Frosted glass (Tahoe)' },
-  { value: 'classic', label: 'Classic', hint: 'Solid zinc, no blur' },
-];
-
 export default function SettingsPage() {
   const { signOut } = useAuth();
-  const { theme, toggleTheme, colorVariant, setColorVariant, designStyle, setDesignStyle } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [plan, setPlan] = useState<AdminPlanInfo | null>(null);
   const [suppressions, setSuppressions] = useState<SuppressionEntry[]>([]);
@@ -115,61 +104,6 @@ export default function SettingsPage() {
               {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
               {theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
             </Button>
-          </CardBody>
-        </Card>
-        <Card elevated className="mt-4">
-          <CardBody className="space-y-4">
-            <div>
-              <Text>Accent</Text>
-              <TextSmall className="text-muted">
-                Dark-mode color variant, ported from hyper2kvm&apos;s steel and aurora themes.
-              </TextSmall>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {COLOR_VARIANTS.map((variant) => (
-                <button
-                  key={variant.value}
-                  type="button"
-                  onClick={() => setColorVariant(variant.value)}
-                  className={`px-4 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring border ${
-                    colorVariant === variant.value
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)] border-[var(--glass-border)]'
-                  }`}
-                  title={variant.hint}
-                >
-                  {variant.label}
-                </button>
-              ))}
-            </div>
-          </CardBody>
-        </Card>
-        <Card elevated className="mt-4">
-          <CardBody className="space-y-4">
-            <div>
-              <Text>Surface style</Text>
-              <TextSmall className="text-muted">
-                Classic swaps frosted glass for solid zinc panels, ported from hyper2kvm&apos;s
-                classic-zinc theme.
-              </TextSmall>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {DESIGN_STYLES.map((style) => (
-                <button
-                  key={style.value}
-                  type="button"
-                  onClick={() => setDesignStyle(style.value)}
-                  className={`px-4 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring border ${
-                    designStyle === style.value
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)] border-[var(--glass-border)]'
-                  }`}
-                  title={style.hint}
-                >
-                  {style.label}
-                </button>
-              ))}
-            </div>
           </CardBody>
         </Card>
       </section>
