@@ -133,6 +133,20 @@ class Settings(BaseSettings):
     sso_client_secret: str = ""
     sso_redirect_uri: str = ""
 
+    # Consumer social login (Google/GitHub) -- distinct from the enterprise SSO block
+    # above: auto-provisions a new tenant on first sign-in instead of requiring a
+    # pre-existing account. Each degrades to a clean 501 (same convention as SSO/SMTP)
+    # until an operator supplies real OAuth app credentials.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    # Base URL of the API itself, used to build each provider's redirect_uri
+    # (must exactly match what's registered in that provider's OAuth app config).
+    api_base_url: str = "http://localhost:8000"
+    # Where to send the browser after a successful social login completes server-side.
+    frontend_url: str = "http://localhost:3000"
+
     # Auth
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
     algorithm: str = "HS256"
@@ -314,6 +328,14 @@ class Settings(BaseSettings):
     @property
     def reddit_configured(self) -> bool:
         return bool(self.reddit_access_token and self.reddit_subreddit)
+
+    @property
+    def google_oauth_configured(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def github_oauth_configured(self) -> bool:
+        return bool(self.github_client_id and self.github_client_secret)
 
     @property
     def external_crm_sync_enabled(self) -> bool:

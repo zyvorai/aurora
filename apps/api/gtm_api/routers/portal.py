@@ -159,7 +159,7 @@ async def customer_login(req: PortalLoginRequest, db: AsyncSession = Depends(get
         )
     )
     account = result.scalar_one_or_none()
-    if not account or not verify_password(req.password, account.hashed_password):
+    if not account or not account.hashed_password or not verify_password(req.password, account.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if account.status != PortalAccountStatus.APPROVED or not account.is_active:
         raise HTTPException(
@@ -510,7 +510,7 @@ async def reseller_login(req: PortalLoginRequest, db: AsyncSession = Depends(get
         )
     )
     account = result.scalar_one_or_none()
-    if not account or not verify_password(req.password, account.hashed_password):
+    if not account or not account.hashed_password or not verify_password(req.password, account.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if account.status != PortalAccountStatus.APPROVED or not account.is_active:
         raise HTTPException(
@@ -756,7 +756,7 @@ async def salesperson_login(req: PortalLoginRequest, db: AsyncSession = Depends(
         )
     )
     account = result.scalar_one_or_none()
-    if not account or not verify_password(req.password, account.hashed_password):
+    if not account or not account.hashed_password or not verify_password(req.password, account.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if account.status != PortalAccountStatus.APPROVED or not account.is_active:
         raise HTTPException(

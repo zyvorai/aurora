@@ -17,6 +17,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -128,15 +129,30 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Nullable: social-login-only accounts (see oauth_provider below) have no password to
+    # check -- auth.verify_password's callers already guard on this being falsy first.
+    hashed_password: Mapped[Optional[str]] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(255), default="")
     role: Mapped[str] = mapped_column(String(50), default="editor")  # admin, editor, viewer, approver
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    # Consumer social login (Google/GitHub) identity linkage -- both null for
+    # password-only accounts. Distinct from the tenant-wide enterprise SSO in
+    # services/sso.py, which authenticates existing users by email only and never
+    # sets these columns.
+    oauth_provider: Mapped[Optional[str]] = mapped_column(String(50))  # "google" | "github"
+    oauth_subject: Mapped[Optional[str]] = mapped_column(String(255))  # provider's stable user id
+
     tenant: Mapped["Tenant"] = relationship(back_populates="users")
 
-    __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
+        Index(
+            "uq_user_oauth_identity", "oauth_provider", "oauth_subject",
+            unique=True, postgresql_where=text("oauth_provider IS NOT NULL"),
+        ),
+    )
 
 
 class Product(Base):

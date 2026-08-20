@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError
 
 from gtm_api.config import get_settings
 from gtm_api.database import DB_SETUP_HINT, check_database
-from gtm_api.routers import auth, products, marketing, agents, workflows, pipeline, crm, success, mcp, admin, portal
+from gtm_api.routers import auth, social_auth, products, marketing, agents, workflows, pipeline, crm, success, mcp, admin, portal
 from gtm_api.services.embeddings import LLMServiceError
 from gtm_api.services.llm import check_llm_health
 
@@ -115,6 +115,7 @@ async def openai_api_error_handler(_request: Request, exc: OpenAIAPIError):
 
 
 app.include_router(auth.router, prefix=settings.api_prefix)
+app.include_router(social_auth.router, prefix=settings.api_prefix)
 app.include_router(products.router, prefix=settings.api_prefix)
 app.include_router(marketing.router, prefix=settings.api_prefix)
 app.include_router(agents.router, prefix=settings.api_prefix)
