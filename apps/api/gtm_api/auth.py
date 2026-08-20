@@ -218,6 +218,12 @@ async def get_current_user(
         payload = jwt.decode(
             credentials.credentials, settings.secret_key, algorithms=[settings.algorithm]
         )
+        # Reject non-employee-session tokens (portal tokens, OAuth exchange codes) --
+        # both carry a "type" claim that a normal create_access_token() JWT never has.
+        # Without this, a leaked/short-lived oauth_exchange code would work as a full
+        # Bearer credential for its lifetime, contradicting its own docstring.
+        if payload.get("type") is not None:
+            raise credentials_exception
         user_id = payload.get("sub")
         if user_id is None:
             raise credentials_exception
