@@ -108,14 +108,14 @@ export default function HomePage() {
             enterprise platform that runs on your hardware, your cloud, or both.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={`${ZYVOR}/assessment`}
+            <Link
+              href="/login"
               className="inline-flex items-center gap-2 px-6 py-3.5 text-white font-mono text-sm font-medium"
               style={{ background: rust }}
             >
-              Assess environment
+              Get started with Emissary
               <ArrowRight className="w-4 h-4" />
-            </a>
+            </Link>
             <a
               href={`${ZYVOR}/contact`}
               className="inline-flex items-center gap-2 px-6 py-3.5 border font-mono text-sm font-medium hover:opacity-70 transition-opacity"
@@ -155,7 +155,7 @@ export default function HomePage() {
         </p>
         <div className="grid sm:grid-cols-3 gap-px" style={{ background: 'rgba(26,31,31,0.15)' }}>
           {PATHS.map((p) => (
-            <a key={p.index} href={`${ZYVOR}/assessment`} style={{ background: cream }} className="p-6 block hover:opacity-90 transition-opacity">
+            <Link key={p.index} href="/login" style={{ background: cream }} className="p-6 block hover:opacity-90 transition-opacity">
               <div className="flex items-center justify-between mb-8">
                 <span className="font-mono text-sm" style={{ color: rust }}>{p.index}</span>
                 <p.icon className="w-5 h-5" style={{ color: teal }} aria-hidden />
@@ -165,7 +165,7 @@ export default function HomePage() {
               <span className="font-mono text-xs inline-flex items-center gap-1.5" style={{ color: ink }}>
                 {p.tag} <ArrowRight className="w-3 h-3" />
               </span>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -217,14 +217,14 @@ export default function HomePage() {
           <br />
           <span style={{ color: rust }}>with evidence.</span>
         </h2>
-        <a
-          href={`${ZYVOR}/assessment`}
+        <Link
+          href="/login"
           className="inline-flex items-center gap-2 px-6 py-3.5 text-white font-mono text-sm font-medium"
           style={{ background: rust }}
         >
-          Get a free assessment
+          Get started free
           <ArrowRight className="w-4 h-4" />
-        </a>
+        </Link>
       </section>
 
       <footer className="text-white" style={{ background: teal }}>
@@ -245,15 +245,15 @@ export default function HomePage() {
         <div className="h-16 sm:h-0" aria-hidden />
       </footer>
 
-      <a
-        href={`${ZYVOR}/assessment`}
+      <Link
+        href="/login"
         className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 px-4 py-3 text-white font-mono text-sm font-medium shadow-lg"
         style={{ background: rust }}
       >
-        <span className="opacity-70">NEED A ROUTE?</span>
-        Assess environment
+        <span className="opacity-70">READY?</span>
+        Get started
         <ArrowRight className="w-3.5 h-3.5" />
-      </a>
+      </Link>
     </div>
   );
 }
