@@ -145,6 +145,13 @@ export const auth = {
   me(): Promise<{ id: string; email: string; full_name: string; role: string; tenant_id: string }> {
     return request('/auth/me');
   },
+
+  exchangeOAuthCode(code: string): Promise<TokenResponse> {
+    return request<TokenResponse>('/auth/oauth/exchange', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  },
 };
 
 export const products = {

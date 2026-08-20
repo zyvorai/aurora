@@ -18,16 +18,24 @@ function CallbackInner() {
       return;
     }
 
-    const token = params.get('token');
-    const tenantId = params.get('tenant_id');
-    const role = params.get('role');
-    if (!token || !tenantId || !role) {
+    const code = params.get('code');
+    if (!code) {
       setError('Sign-in did not return a valid session. Please try again.');
       return;
     }
 
-    storeAuthSession(token, tenantId, role);
-    resolvePostLoginRoute(role).then((destination) => router.replace(destination));
+    import('@/lib/api').then(({ auth }) =>
+      auth
+        .exchangeOAuthCode(code)
+        .then((result) => {
+          storeAuthSession(result.access_token, result.tenant_id, result.role);
+          return resolvePostLoginRoute(result.role);
+        })
+        .then((destination) => router.replace(destination))
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
+        }),
+    );
   }, [params, router]);
 
   return (

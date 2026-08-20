@@ -17,15 +17,18 @@ import secrets
 import uuid
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Cookie, Depends
+from fastapi import APIRouter, Cookie, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gtm_api.auth import create_access_token, slugify
+from gtm_api.auth import create_access_token, create_oauth_exchange_code, resolve_oauth_exchange_code, slugify
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
 from gtm_api.models import PlanTier, Tenant, User
+from gtm_api.schemas import TokenResponse
 from gtm_api.services.social_auth import (
     GITHUB_AUTHORIZE_ENDPOINT,
     GOOGLE_AUTHORIZE_ENDPOINT,
@@ -60,11 +63,37 @@ def _error_redirect(message: str) -> RedirectResponse:
     return RedirectResponse(f"{settings.frontend_url.rstrip('/')}/login/callback?{urlencode({'error': message})}")
 
 
-def _success_redirect(token: str, tenant_id: uuid.UUID, role: str) -> RedirectResponse:
-    params = {"token": token, "tenant_id": str(tenant_id), "role": role}
-    resp = RedirectResponse(f"{settings.frontend_url.rstrip('/')}/login/callback?{urlencode(params)}")
+def _success_redirect(user_id: uuid.UUID, tenant_id: uuid.UUID, role: str) -> RedirectResponse:
+    # A short-lived, single-purpose exchange code travels in the URL instead of the real
+    # session token -- bounds exposure if it ends up in proxy/CDN access logs, and can't
+    # be used as a Bearer token directly even if intercepted. See create_oauth_exchange_code.
+    code = create_oauth_exchange_code(user_id, tenant_id, role)
+    resp = RedirectResponse(f"{settings.frontend_url.rstrip('/')}/login/callback?{urlencode({'code': code})}")
     resp.delete_cookie(_STATE_COOKIE)
     return resp
+
+
+class OAuthExchangeRequest(BaseModel):
+    code: str
+
+
+@router.post("/exchange", response_model=TokenResponse)
+async def oauth_exchange(req: OAuthExchangeRequest, db: AsyncSession = Depends(get_db)):
+    """Trades a one-time exchange code (from the /login/callback redirect) for a real
+    session token. Kept separate from create_access_token's normal token so the code
+    itself is useless as a Bearer credential even if it leaks."""
+    resolved = resolve_oauth_exchange_code(req.code)
+    if resolved is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired sign-in code.")
+    user_id, tenant_id, role = resolved
+
+    result = await db.execute(select(User).where(User.id == user_id, User.is_active.is_(True)))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account no longer available.")
+
+    token = create_access_token(user.id, user.tenant_id, user.role)
+    return TokenResponse(access_token=token, tenant_id=user.tenant_id, user_id=user.id, role=user.role)
 
 
 def _tenant_name_for_email(email: str, full_name: str) -> str:
@@ -162,7 +191,7 @@ async def google_callback(
 ):
     if not settings.google_oauth_configured:
         return _error_redirect("Google sign-in is not configured yet.")
-    if not oauth_state or oauth_state != state:
+    if not oauth_state or not secrets.compare_digest(oauth_state, state):
         return _error_redirect("Sign-in session expired or invalid. Please try again.")
 
     try:
@@ -172,12 +201,15 @@ async def google_callback(
     except SocialAuthError as exc:
         return _error_redirect(str(exc))
 
-    user, error = await _resolve_or_provision_user(db, "google", profile)
-    if error:
-        return _error_redirect(error)
-    await db.commit()
-    token = create_access_token(user.id, user.tenant_id, user.role)
-    return _success_redirect(token, user.tenant_id, user.role)
+    try:
+        user, error = await _resolve_or_provision_user(db, "google", profile)
+        if error:
+            return _error_redirect(error)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        return _error_redirect("Sign-in conflict, please try again.")
+    return _success_redirect(user.id, user.tenant_id, user.role)
 
 
 @router.get("/github/start")
@@ -205,7 +237,7 @@ async def github_callback(
 ):
     if not settings.github_oauth_configured:
         return _error_redirect("GitHub sign-in is not configured yet.")
-    if not oauth_state or oauth_state != state:
+    if not oauth_state or not secrets.compare_digest(oauth_state, state):
         return _error_redirect("Sign-in session expired or invalid. Please try again.")
 
     try:
@@ -215,9 +247,12 @@ async def github_callback(
     except SocialAuthError as exc:
         return _error_redirect(str(exc))
 
-    user, error = await _resolve_or_provision_user(db, "github", profile)
-    if error:
-        return _error_redirect(error)
-    await db.commit()
-    token = create_access_token(user.id, user.tenant_id, user.role)
-    return _success_redirect(token, user.tenant_id, user.role)
+    try:
+        user, error = await _resolve_or_provision_user(db, "github", profile)
+        if error:
+            return _error_redirect(error)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        return _error_redirect("Sign-in conflict, please try again.")
+    return _success_redirect(user.id, user.tenant_id, user.role)

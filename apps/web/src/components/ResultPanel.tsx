@@ -19,9 +19,9 @@ function Card({ title, children, className = '' }: { title?: string; children: R
 function ErrorBanner({ message }: { message: string }) {
   return (
     <Card title="Something went wrong">
-      <div className="flex gap-3 items-start rounded-md bg-red-500/10 border border-red-500/30 p-4">
-        <span className="text-red-400 text-lg leading-none">!</span>
-        <p className="text-sm text-red-200/90 leading-relaxed">{message}</p>
+      <div className="flex gap-3 items-start rounded-md bg-danger/10 border border-danger/30 p-4">
+        <span className="text-danger text-lg leading-none">!</span>
+        <p className="text-sm text-danger leading-relaxed">{message}</p>
       </div>
     </Card>
   );
@@ -29,8 +29,8 @@ function ErrorBanner({ message }: { message: string }) {
 
 function Badge({ children, variant = 'default' }: { children: React.ReactNode; variant?: 'success' | 'warning' | 'default' }) {
   const styles = {
-    success: 'bg-green-500/10 text-green-400 border-green-500/30',
-    warning: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+    success: 'bg-success/10 text-success border-success/30',
+    warning: 'bg-warning/10 text-warning border-warning/30',
     default: 'bg-gtm-accent/10 text-gtm-accent border-gtm-accent/30',
   };
   return (
@@ -162,8 +162,8 @@ function AnalyticsView({ data }: { data: Result }) {
           {knowledgeGaps.length ? (
             <ul className="space-y-2 text-sm">
               {knowledgeGaps.map((g, i) => (
-                <li key={i} className="flex gap-2 text-amber-200/80">
-                  <span className="text-amber-400">?</span>
+                <li key={i} className="flex gap-2 text-warning">
+                  <span className="text-warning">?</span>
                   {g.query}
                 </li>
               ))}
@@ -443,8 +443,8 @@ function JobStatusView({ data }: { data: Result }) {
   const ok = data.status === 'completed' || data.status === 'ready';
   return (
     <Card title={ok ? 'Completed' : 'Status'}>
-      <div className={`flex gap-3 items-center rounded-md p-4 border ${ok ? 'bg-green-500/10 border-green-500/30' : 'bg-gtm-bg border-gtm-border'}`}>
-        <span className={`text-2xl ${ok ? 'text-green-400' : 'text-gtm-accent'}`}>{ok ? '✓' : '…'}</span>
+      <div className={`flex gap-3 items-center rounded-md p-4 border ${ok ? 'bg-success/10 border-success/30' : 'bg-gtm-bg border-gtm-border'}`}>
+        <span className={`text-2xl ${ok ? 'text-success' : 'text-gtm-accent'}`}>{ok ? '✓' : '…'}</span>
         <div>
           <p className="font-medium">{String(data.message || data.status || 'Done')}</p>
           {Boolean(data.job_id) && <p className="text-xs text-muted mt-1">Job {String(data.job_id)}</p>}

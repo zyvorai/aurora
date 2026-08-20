@@ -70,6 +70,38 @@ def create_access_token(user_id: uuid.UUID, tenant_id: uuid.UUID, role: str) -> 
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
+def create_oauth_exchange_code(user_id: uuid.UUID, tenant_id: uuid.UUID, role: str) -> str:
+    """A 60s-lived, single-purpose token for the social-login redirect URL -- distinct
+    from create_access_token's normal session JWT so it can't be used as a Bearer token
+    even if it leaks (proxy/CDN access logs, browser history), and its short expiry
+    bounds the exposure window if it does. Exchanged for a real session token by
+    POST /auth/oauth/exchange immediately after the frontend receives the redirect."""
+    expire = datetime.now(timezone.utc) + timedelta(seconds=60)
+    payload = {
+        "sub": str(user_id),
+        "tenant_id": str(tenant_id),
+        "role": role,
+        "type": "oauth_exchange",
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def resolve_oauth_exchange_code(code: str) -> tuple[uuid.UUID, uuid.UUID, str] | None:
+    """Returns (user_id, tenant_id, role) if `code` is a valid, unexpired exchange code
+    from create_oauth_exchange_code, else None."""
+    try:
+        payload = jwt.decode(code, settings.secret_key, algorithms=[settings.algorithm])
+    except JWTError:
+        return None
+    if payload.get("type") != "oauth_exchange":
+        return None
+    try:
+        return uuid.UUID(payload["sub"]), uuid.UUID(payload["tenant_id"]), payload["role"]
+    except (KeyError, ValueError):
+        return None
+
+
 @dataclasses.dataclass
 class PortalIdentity:
     """External (non-employee) identity resolved from a portal token. Deliberately not

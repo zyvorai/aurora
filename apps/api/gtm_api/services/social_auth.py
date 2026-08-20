@@ -100,18 +100,16 @@ async def github_exchange_and_fetch_profile(
             raise SocialAuthError(f"GitHub user fetch failed: {user_resp.text[:300]}")
         user = user_resp.json()
 
-        email = user.get("email")
-        email_verified = bool(email)  # GitHub's /user email (if public) has no separate verified flag
-        if not email:
-            # Private email -- the primary, verified address lives in /user/emails instead
-            # (requires the user:email scope, which the authorize request below requests).
-            emails_resp = await client.get(GITHUB_USER_EMAILS_ENDPOINT, headers=auth_header)
-            if emails_resp.status_code < 400:
-                for entry in emails_resp.json():
-                    if entry.get("primary") and entry.get("verified"):
-                        email = entry.get("email")
-                        email_verified = True
-                        break
+        # /user.email (even when public) carries no separate verified flag -- always
+        # cross-check against /user/emails, which does, rather than trusting presence
+        # alone (requires the user:email scope, which the authorize request requests).
+        email = None
+        emails_resp = await client.get(GITHUB_USER_EMAILS_ENDPOINT, headers=auth_header)
+        if emails_resp.status_code < 400:
+            for entry in emails_resp.json():
+                if entry.get("primary") and entry.get("verified"):
+                    email = entry.get("email")
+                    break
 
     if not email:
         raise SocialAuthError(
@@ -121,6 +119,6 @@ async def github_exchange_and_fetch_profile(
     return {
         "subject": str(user.get("id")),
         "email": email,
-        "email_verified": email_verified,
+        "email_verified": True,
         "full_name": user.get("name") or user.get("login") or "",
     }
