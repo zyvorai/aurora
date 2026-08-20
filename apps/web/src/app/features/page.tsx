@@ -151,10 +151,10 @@ export default function FeaturesPage() {
             <span className="font-bold tracking-tight text-foreground">Emissary</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-body-sm font-medium text-muted hover:text-foreground transition-colors">
+            <Link href="/login" className="text-body-sm font-medium text-muted hover:text-foreground transition-colors">
               Sign in
             </Link>
-            <Link href="/" className={ctaPrimary + ' !px-4 !py-2 !text-body-sm'}>
+            <Link href="/login" className={ctaPrimary + ' !px-4 !py-2 !text-body-sm'}>
               Get started
             </Link>
           </div>
@@ -173,11 +173,11 @@ export default function FeaturesPage() {
           marketing, sales, and solution agents — enterprise-grade orchestration built for lean hardware.
         </TextLead>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/" className={ctaPrimary}>
+          <Link href="/login" className={ctaPrimary}>
             Get started free
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link href="/" className={ctaSecondary}>
+          <Link href="/login" className={ctaSecondary}>
             Sign in
           </Link>
         </div>
@@ -371,7 +371,7 @@ export default function FeaturesPage() {
       <section className="mx-auto max-w-4xl px-6 py-20 text-center">
         <SectionTitle as="h2" className="mb-3">Ready to turn your product into a salesperson?</SectionTitle>
         <TextMuted className="mb-8">Onboard your first product and generate a GTM strategy in minutes.</TextMuted>
-        <Link href="/" className={ctaPrimary}>
+        <Link href="/login" className={ctaPrimary}>
           Get started free
           <ArrowRight className="h-4 w-4" />
         </Link>
@@ -393,14 +393,14 @@ export default function FeaturesPage() {
             <SubsectionTitle className="text-body-sm mb-3">Product</SubsectionTitle>
             <ul className="space-y-2">
               <li><Link href="/features" className="text-body-sm text-muted hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link href="/" className="text-body-sm text-muted hover:text-foreground transition-colors">Get started</Link></li>
+              <li><Link href="/login" className="text-body-sm text-muted hover:text-foreground transition-colors">Get started</Link></li>
             </ul>
           </div>
           <div>
             <SubsectionTitle className="text-body-sm mb-3">Account</SubsectionTitle>
             <ul className="space-y-2">
-              <li><Link href="/" className="text-body-sm text-muted hover:text-foreground transition-colors">Sign in</Link></li>
-              <li><Link href="/" className="text-body-sm text-muted hover:text-foreground transition-colors">Create workspace</Link></li>
+              <li><Link href="/login" className="text-body-sm text-muted hover:text-foreground transition-colors">Sign in</Link></li>
+              <li><Link href="/login" className="text-body-sm text-muted hover:text-foreground transition-colors">Create workspace</Link></li>
             </ul>
           </div>
         </div>

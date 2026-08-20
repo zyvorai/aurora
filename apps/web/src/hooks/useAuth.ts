@@ -10,7 +10,7 @@ interface UseAuthOptions {
 }
 
 export function useAuth(options: UseAuthOptions = {}) {
-  const { redirectTo = '/', requireAuth = true } = options;
+  const { redirectTo = '/login', requireAuth = true } = options;
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export function useAuth(options: UseAuthOptions = {}) {
 
   function signOut() {
     clearAuthSession();
-    router.push('/');
+    router.push('/login');
   }
 
   return { ready, token, role, signOut };
