@@ -259,108 +259,29 @@ code, pre {
   border: 1px solid var(--border);
 }
 
-/* ---- login page (exact 1:1 port of hyper2kvm's PremiumLoginShell, macOS variant --
-   values below are hyper2kvm's actual .login-page-macos overrides, not its base
-   premium-login defaults, since that's what its real running login screen uses) ---- */
-
-@keyframes login-gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
+/* ---- login page: Zyvor Labs editorial skin -- fixed cream/ink/rust/teal palette
+   independent of the app's dark/light token system, same "distinct marketing skin"
+   pattern as app/page.tsx and app/features/page.tsx. Left hero panel stays dark
+   (ink/teal) for contrast; right form panel is flat cream/white. ---- */
 
 .login-hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(145deg, #0f172a 0%, #1e293b 35%, #312e81 55%, #0f172a 100%);
-  background-size: 200% 200%;
-  animation: login-gradient-shift 24s ease infinite;
-}
-
-.login-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 90% 80% at 40% 30%, black 10%, transparent 70%);
-  pointer-events: none;
+  background: linear-gradient(160deg, #1B3A47 0%, #1A1F1F 100%);
 }
 
 .login-hero-mesh {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image: radial-gradient(rgba(242, 239, 230, 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
   mask-image: radial-gradient(ellipse 90% 80% at 40% 30%, black 10%, transparent 70%);
-  opacity: 0.35;
   pointer-events: none;
-}
-
-.login-spotlight {
-  position: absolute;
-  top: -20%;
-  left: 10%;
-  width: 70%;
-  height: 60%;
-  background: radial-gradient(ellipse at 30% 20%, rgba(147, 197, 253, 0.18) 0%, transparent 60%);
-  opacity: 0.45;
-  animation: login-spotlight-pulse 6s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes login-spotlight-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.65; }
-}
-
-@keyframes login-float {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-18px) scale(1.02); }
-}
-
-.login-orb {
-  position: absolute;
-  border-radius: 9999px;
-  opacity: 0.55;
-  filter: blur(1px);
-  animation: login-float var(--login-duration, 10s) ease-in-out infinite;
-  animation-delay: var(--login-delay, 0s);
-  pointer-events: none;
-}
-
-.login-orb-blue { background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%); }
-.login-orb-violet { background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%); }
-.login-orb-cyan { background: radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, transparent 70%); }
-.login-orb-indigo { background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%); }
-
-.login-particles {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  display: none; /* macOS variant hides particles -- mounted for structural parity only */
-}
-
-.login-particle {
-  position: absolute;
-  border-radius: 9999px;
-  background: rgba(147, 197, 253, 0.8);
-  box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
-  animation: login-particle-float 4s ease-in-out infinite;
-}
-
-@keyframes login-particle-float {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(-12px); opacity: 0.9; }
 }
 
 .login-logo-ring {
-  border-radius: 18px;
-  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.35), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 @keyframes login-fade-in-up {
@@ -375,10 +296,7 @@ code, pre {
 .login-fade-in-d4 { animation-delay: 0.4s; opacity: 0; }
 
 .login-text-gradient {
-  background: linear-gradient(90deg, rgb(125, 211, 252), rgb(96, 165, 250), rgb(129, 140, 248));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #D9694F;
 }
 
 .login-stat-pill {
@@ -389,106 +307,65 @@ code, pre {
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: rgba(226, 232, 240, 0.85);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(242, 239, 230, 0.85);
+  background: rgba(242, 239, 230, 0.06);
+  border: 1px solid rgba(242, 239, 230, 0.14);
+}
+
+.login-feature-icon {
+  background: rgba(193, 80, 60, 0.16);
+  border: 1px solid rgba(193, 80, 60, 0.3);
+  color: #D9694F;
 }
 
 .login-feature-card {
-  transition: border-color 0.25s cubic-bezier(0.23, 1, 0.32, 1), transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: border-color 0.25s cubic-bezier(0.23, 1, 0.32, 1), transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .login-feature-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(193, 80, 60, 0.35);
 }
 
 .login-feature-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
-
-.login-beam {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  z-index: 5;
-  background: linear-gradient(180deg, transparent, rgba(96, 165, 250, 0.9) 30%, rgba(167, 139, 250, 0.9) 70%, transparent);
-  box-shadow: 0 0 24px rgba(59, 130, 246, 0.6), 0 0 48px rgba(139, 92, 246, 0.3);
-  opacity: 0.35;
-  animation: login-beam-pulse 3s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.login-beam-w55 { left: 55%; }
-
-@keyframes login-beam-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  scrollbar-color: rgba(242, 239, 230, 0.15) transparent;
 }
 
 .login-panel-grid {
   position: absolute;
   inset: 0;
-  opacity: 0.03;
+  opacity: 0.025;
   pointer-events: none;
-  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.9) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgba(26, 31, 31, 0.9) 1px, transparent 0);
   background-size: 32px 32px;
 }
 
-.login-panel-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(92vw, 440px);
-  height: 360px;
-  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 68%);
-  pointer-events: none;
-}
-
 .login-glass {
-  background: rgba(28, 31, 40, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #FFFFFF;
+  border: 1px solid rgba(26, 31, 31, 0.12);
   border-radius: 16px;
-  backdrop-filter: blur(28px) saturate(1.35);
-  -webkit-backdrop-filter: blur(28px) saturate(1.35);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  box-shadow: 0 1px 2px rgba(26, 31, 31, 0.06);
   position: relative;
-}
-
-.login-glass-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.04));
-  opacity: 0.9;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
 }
 
 .login-input {
   width: 100%;
   padding: 0.65rem 0.9rem 0.65rem 2.5rem;
-  border-radius: 0.75rem;
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.92);
+  border-radius: 0.6rem;
+  background: #FAF8F2;
+  border: 1px solid rgba(26, 31, 31, 0.14);
+  color: #1A1F1F;
   font-size: 0.875rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.login-input::placeholder { color: rgba(148, 163, 184, 0.55); }
+.login-input::placeholder { color: rgba(26, 31, 31, 0.4); }
 
 .login-input:focus {
   outline: none;
-  border-color: rgba(96, 165, 250, 0.65);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  border-color: #C1503C;
+  box-shadow: 0 0 0 3px rgba(193, 80, 60, 0.15);
 }
 
 .login-field-icon {
@@ -498,12 +375,12 @@ code, pre {
   transform: translateY(-50%);
   width: 1rem;
   height: 1rem;
-  color: rgba(148, 163, 184, 0.6);
+  color: rgba(26, 31, 31, 0.4);
   pointer-events: none;
   transition: color 0.2s ease;
 }
 
-.group:focus-within .login-field-icon { color: #60a5fa; }
+.group:focus-within .login-field-icon { color: #C1503C; }
 
 .login-btn-primary {
   position: relative;
@@ -513,29 +390,24 @@ code, pre {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border-radius: 0.75rem;
+  border-radius: 0.6rem;
   font-size: 0.875rem;
   font-weight: 600;
   color: white;
   overflow: hidden;
-  background: linear-gradient(180deg, rgb(56, 189, 248) 0%, rgb(37, 99, 235) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 8px 20px -6px rgba(37, 99, 235, 0.45);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #C1503C;
+  border: 1px solid #C1503C;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .login-btn-primary:hover:not(:disabled) {
+  background: #A43F2E;
   transform: translateY(-1px);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 12px 28px -6px rgba(37, 99, 235, 0.55);
 }
 
 .login-btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.login-btn-primary::after {
-  display: none; /* macOS variant disables the shimmer sweep */
 }
 
 @keyframes login-shake {
@@ -552,8 +424,7 @@ code, pre {
 
 @media (prefers-reduced-motion: reduce) {
   .glass-hover-lift:hover { transform: none; }
-  .tahoe-empty-orb, .login-orb, .login-particle, .login-spotlight, .login-beam { animation: none; }
-  .login-hero { animation: none !important; }
+  .tahoe-empty-orb { animation: none; }
   .login-shake { animation: none; }
   .animate-fade-up, .animate-slide-in, .animate-glass-in,
   .login-fade-in, .login-fade-in-d1, .login-fade-in-d2, .login-fade-in-d3, .login-fade-in-d4 {

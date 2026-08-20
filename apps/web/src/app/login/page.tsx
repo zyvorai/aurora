@@ -13,6 +13,7 @@ import {
   Database,
   Eye,
   EyeOff,
+  Github,
   Globe,
   KeyRound,
   ListChecks,
@@ -27,7 +28,6 @@ import {
   Workflow,
   Zap,
 } from 'lucide-react';
-import { Github } from 'lucide-react';
 import { LoginShell, LoginError, LoginField } from '@/components/login/LoginShell';
 import { cn } from '@/lib/cn';
 import { resolveApiBase } from '@/lib/api-base';
@@ -46,86 +46,62 @@ function GoogleMark() {
 
 const FEATURES = [
   {
-    icon: <Globe className="w-5 h-5 text-blue-100" />,
-    gradient: 'from-blue-500/95 to-indigo-700/95',
-    glow: 'shadow-blue-500/25',
+    icon: <Globe className="w-4 h-4" />,
     title: 'Auto-Discovery',
     description: 'Point at a URL — agents crawl and build a product profile automatically',
   },
   {
-    icon: <Workflow className="w-5 h-5 text-sky-100" />,
-    gradient: 'from-sky-500/95 to-indigo-800/95',
-    glow: 'shadow-sky-500/25',
+    icon: <Workflow className="w-4 h-4" />,
     title: 'Background Agents',
     description: 'Outbound sprints, technical evals, and proposals run without blocking the UI',
   },
   {
-    icon: <ShieldCheck className="w-5 h-5 text-violet-100" />,
-    gradient: 'from-violet-500/95 to-purple-800/95',
-    glow: 'shadow-violet-500/25',
+    icon: <ShieldCheck className="w-4 h-4" />,
     title: 'Grounded Answers',
     description: 'Every claim cited against real product knowledge — no hallucinated pitches',
   },
   {
-    icon: <Zap className="w-5 h-5 text-cyan-100" />,
-    gradient: 'from-cyan-500/95 to-blue-800/95',
-    glow: 'shadow-cyan-500/25',
+    icon: <Zap className="w-4 h-4" />,
     title: 'Lean & Fast',
     description: 'Executive brief loads instantly — SQL-first, LLM only when you trigger it',
   },
   {
-    icon: <Send className="w-5 h-5 text-emerald-100" />,
-    gradient: 'from-emerald-500/95 to-teal-800/95',
-    glow: 'shadow-emerald-500/25',
+    icon: <Send className="w-4 h-4" />,
     title: 'Omnichannel Publishing',
     description: 'Push content to LinkedIn, X, Medium, Dev.to, Reddit, and email — suppression-aware',
   },
   {
-    icon: <Users className="w-5 h-5 text-amber-100" />,
-    gradient: 'from-amber-500/95 to-orange-800/95',
-    glow: 'shadow-amber-500/25',
+    icon: <Users className="w-4 h-4" />,
     title: 'Multi-Tenant Workspaces',
     description: 'Role-based landings route marketing, sales, and reseller users to the view they need',
   },
   {
-    icon: <Boxes className="w-5 h-5 text-rose-100" />,
-    gradient: 'from-rose-500/95 to-pink-800/95',
-    glow: 'shadow-rose-500/25',
+    icon: <Boxes className="w-4 h-4" />,
     title: '16 Specialized Agents',
     description: 'Product, market research, outreach, proposals, support, and more — each its own compute tier',
   },
   {
-    icon: <ListChecks className="w-5 h-5 text-teal-100" />,
-    gradient: 'from-teal-500/95 to-cyan-800/95',
-    glow: 'shadow-teal-500/25',
+    icon: <ListChecks className="w-4 h-4" />,
     title: 'Immutable Audit Trail',
     description: 'Every write, approve, and publish action logged — filterable, exportable, compliance-ready',
   },
   {
-    icon: <Cpu className="w-5 h-5 text-indigo-100" />,
-    gradient: 'from-indigo-500/95 to-blue-900/95',
-    glow: 'shadow-indigo-500/25',
+    icon: <Cpu className="w-4 h-4" />,
     title: 'Bring Your Own LLM',
     description: 'Free local Ollama for dev, OpenAI for production — switch with a single env var',
   },
   {
-    icon: <KeyRound className="w-5 h-5 text-fuchsia-100" />,
-    gradient: 'from-fuchsia-500/95 to-purple-900/95',
-    glow: 'shadow-fuchsia-500/25',
+    icon: <KeyRound className="w-4 h-4" />,
     title: 'SSO Ready',
     description: 'Generic OIDC — Auth0, Keycloak, or any compliant identity provider',
   },
   {
-    icon: <Compass className="w-5 h-5 text-lime-100" />,
-    gradient: 'from-lime-500/95 to-green-800/95',
-    glow: 'shadow-lime-500/25',
+    icon: <Compass className="w-4 h-4" />,
     title: 'Role-Based Landing',
     description: 'Admins, editors, approvers, and viewers each land on the workspace built for their job',
   },
   {
-    icon: <Database className="w-5 h-5 text-sky-100" />,
-    gradient: 'from-sky-500/95 to-indigo-900/95',
-    glow: 'shadow-sky-500/25',
+    icon: <Database className="w-4 h-4" />,
     title: 'Full Data Control',
     description: 'Export or purge tenant knowledge on demand — every action logged to the audit trail',
   },
@@ -161,7 +137,7 @@ export default function LoginPage() {
   return (
     <LoginShell
       logo={
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-600/30 border border-white/20">
+        <div className="w-14 h-14 rounded-xl bg-[#C1503C] flex items-center justify-center border border-white/15">
           <Sparkles className="w-7 h-7 text-white" aria-hidden />
         </div>
       }
@@ -183,16 +159,16 @@ export default function LoginPage() {
       features={FEATURES}
       heroFooter={
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-blue-100/40 text-sm">
+          <div className="flex items-center gap-2 text-[#F2EFE6]/40 text-sm">
             <span>Auto-discovery</span>
-            <span className="text-blue-200/30">·</span>
+            <span className="text-[#F2EFE6]/25">·</span>
             <span>Grounded answers</span>
-            <span className="text-blue-200/30">·</span>
+            <span className="text-[#F2EFE6]/25">·</span>
             <span>Emissary</span>
           </div>
           <Link
             href="/features"
-            className="flex items-center gap-1 text-sm text-blue-200/70 hover:text-blue-100 transition-colors shrink-0"
+            className="flex items-center gap-1 text-sm text-[#F2EFE6]/70 hover:text-white transition-colors shrink-0"
           >
             See how it works
             <ArrowRight className="w-3.5 h-3.5" />
@@ -204,8 +180,8 @@ export default function LoginPage() {
       panelSubtitle={mode === 'register' ? 'Create your workspace in minutes' : 'Sign in to your workspace'}
       footer={
         mode === 'register' ? (
-          <p className="text-xs text-center text-white/45 flex items-center justify-center gap-1.5">
-            <CheckCircle className="w-3.5 h-3.5 text-blue-400/80 shrink-0" aria-hidden />
+          <p className="text-xs text-center text-[#1A1F1F]/50 flex items-center justify-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 text-[#C1503C] shrink-0" aria-hidden />
             No credit card required — onboard your first product in minutes
           </p>
         ) : null
@@ -219,7 +195,7 @@ export default function LoginPage() {
             onClick={() => setMode(m)}
             className={cn(
               'flex-1 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring',
-              mode === m ? 'bg-primary text-primary-foreground' : 'text-white/60 hover:text-white',
+              mode === m ? 'bg-primary text-primary-foreground' : 'text-[#1A1F1F]/50 hover:text-[#1A1F1F]',
             )}
           >
             {m === 'register' ? 'Get Started' : 'Sign In'}
@@ -232,24 +208,24 @@ export default function LoginPage() {
       <div className="grid grid-cols-2 gap-3 mb-5">
         <a
           href={`${resolveApiBase()}/auth/oauth/google/start`}
-          className="login-input flex items-center justify-center gap-2 !pl-0 hover:border-white/25 transition-colors"
+          className="login-input flex items-center justify-center gap-2 !pl-0 hover:border-[#1A1F1F]/25 transition-colors"
         >
           <GoogleMark />
           <span>Google</span>
         </a>
         <a
           href={`${resolveApiBase()}/auth/oauth/github/start`}
-          className="login-input flex items-center justify-center gap-2 !pl-0 hover:border-white/25 transition-colors"
+          className="login-input flex items-center justify-center gap-2 !pl-0 hover:border-[#1A1F1F]/25 transition-colors"
         >
           <Github className="w-4 h-4" aria-hidden />
           <span>GitHub</span>
         </a>
       </div>
 
-      <div className="flex items-center gap-3 mb-5 text-xs text-white/35">
-        <div className="h-px flex-1 bg-white/[0.08]" />
+      <div className="flex items-center gap-3 mb-5 text-xs text-[#1A1F1F]/35">
+        <div className="h-px flex-1 bg-[#1A1F1F]/[0.08]" />
         <span>or continue with email</span>
-        <div className="h-px flex-1 bg-white/[0.08]" />
+        <div className="h-px flex-1 bg-[#1A1F1F]/[0.08]" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -308,7 +284,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/45 hover:text-white/75 transition-colors"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#1A1F1F]/40 hover:text-[#1A1F1F]/70 transition-colors"
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -331,8 +307,8 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <div className="mt-6 pt-5 border-t border-white/[0.08] flex items-center justify-center gap-2 text-xs text-white/45">
-        <ShieldCheck className="h-3.5 w-3.5 text-blue-400/80" />
+      <div className="mt-6 pt-5 border-t border-[#1A1F1F]/[0.08] flex items-center justify-center gap-2 text-xs text-[#1A1F1F]/45">
+        <ShieldCheck className="h-3.5 w-3.5 text-[#C1503C]" />
         <span>Secured with JWT session authentication</span>
       </div>
     </LoginShell>

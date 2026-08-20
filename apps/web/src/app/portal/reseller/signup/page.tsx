@@ -50,7 +50,7 @@ function SignupForm() {
 
   if (submitted) {
     return (
-      <Card strong className="login-glass login-glass-border">
+      <Card strong className="login-glass">
         <CardBody className="p-8 text-center">
           <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-4" aria-hidden />
           <h1 className="text-xl font-semibold mb-2">Request received</h1>
@@ -67,7 +67,7 @@ function SignupForm() {
   }
 
   return (
-    <Card strong className="login-glass login-glass-border">
+    <Card strong className="login-glass">
       <CardBody className="p-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="tahoe-icon-badge !w-10 !h-10 !rounded-lg">
