@@ -38,14 +38,12 @@ export const metadata: Metadata = {
 };
 
 const ctaPrimary =
-  'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white ' +
-  'border border-white/20 bg-gradient-to-b from-[rgb(56,189,248)] to-[rgb(37,99,235)] ' +
-  'shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_20px_-6px_rgba(37,99,235,0.45)] ' +
-  'hover:brightness-[1.06] hover:-translate-y-px transition-[filter,transform]';
+  'inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 font-semibold text-white ' +
+  'bg-primary border border-primary hover:bg-[var(--primary-hover)] transition-colors';
 
 const ctaSecondary =
-  'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-foreground ' +
-  'border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm ' +
+  'inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 font-semibold text-foreground ' +
+  'border border-[var(--glass-border)] bg-[var(--glass-bg)] ' +
   'hover:border-[var(--glass-border-strong)] hover:bg-[var(--glass-bg-elevated)] transition-colors';
 
 const STATS = [
@@ -78,47 +76,34 @@ const PIPELINE_STEPS = [
   },
 ];
 
-const TONE_STYLES = {
-  sky: { background: 'linear-gradient(145deg, rgba(56,189,248,0.22), rgba(14,165,233,0.10))', color: 'rgb(125,211,252)' },
-  violet: { background: 'linear-gradient(145deg, rgba(167,139,250,0.22), rgba(139,92,246,0.10))', color: 'rgb(196,181,253)' },
-  emerald: { background: 'linear-gradient(145deg, rgba(52,211,153,0.22), rgba(16,185,129,0.10))', color: 'rgb(110,231,183)' },
-  amber: { background: 'linear-gradient(145deg, rgba(251,191,36,0.22), rgba(245,158,11,0.10))', color: 'rgb(252,211,77)' },
-} as const;
-
 const CORE_FEATURES = [
   {
     icon: Globe,
-    tone: 'sky' as const,
     title: 'Auto-Discovery',
     description: 'Point at a URL — agents crawl and build a product profile automatically.',
   },
   {
     icon: Workflow,
-    tone: 'violet' as const,
     title: 'Background Agents',
     description: 'Outbound sprints, technical evals, and proposals run without blocking the UI.',
   },
   {
     icon: ShieldCheck,
-    tone: 'emerald' as const,
     title: 'Grounded Answers',
     description: 'Every claim is cited against real product knowledge — no hallucinated pitches.',
   },
   {
     icon: Zap,
-    tone: 'amber' as const,
     title: 'Lean & Fast',
     description: 'Executive briefs load instantly — SQL-first, LLM only when you trigger it.',
   },
   {
     icon: Send,
-    tone: 'sky' as const,
     title: 'Omnichannel Publishing',
     description: 'Push generated content to LinkedIn, X, Medium, Dev.to, Reddit, and email — suppression-aware.',
   },
   {
     icon: Users,
-    tone: 'violet' as const,
     title: 'Multi-Tenant Workspaces',
     description: 'Role-based landings route marketing, sales, and reseller users to the view they need.',
   },
@@ -142,10 +127,10 @@ const LLM_PROVIDERS = [
 export default function FeaturesPage() {
   return (
     <div className="min-h-screen">
-      <nav className="sticky top-0 z-40 border-b border-border bg-[var(--glass-bg)] backdrop-blur-md">
+      <nav className="sticky top-0 z-40 border-b border-border bg-[var(--glass-bg)]">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-600/30 border border-white/20">
+            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" aria-hidden />
             </div>
             <span className="font-bold tracking-tight text-foreground">Emissary</span>
@@ -328,7 +313,7 @@ export default function FeaturesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {CORE_FEATURES.map((f) => (
             <Card key={f.title} hover className="p-5">
-              <div className="tahoe-icon-badge mb-4" style={TONE_STYLES[f.tone]}>
+              <div className="tahoe-icon-badge mb-4">
                 <f.icon className="h-5 w-5" />
               </div>
               <SubsectionTitle className="mb-1.5">{f.title}</SubsectionTitle>
@@ -382,7 +367,7 @@ export default function FeaturesPage() {
         <div className="mx-auto max-w-6xl px-6 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
           <div className="col-span-2 sm:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
                 <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden />
               </div>
               <span className="font-bold text-foreground text-body-sm">Emissary</span>
