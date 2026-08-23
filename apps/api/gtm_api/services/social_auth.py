@@ -19,7 +19,7 @@ GITHUB_AUTHORIZE_ENDPOINT = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_ENDPOINT = "https://github.com/login/oauth/access_token"
 GITHUB_USER_ENDPOINT = "https://api.github.com/user"
 GITHUB_USER_EMAILS_ENDPOINT = "https://api.github.com/user/emails"
-_GITHUB_USER_AGENT = "Emissary-App"
+_GITHUB_USER_AGENT = "Aurora-App"
 
 
 class SocialAuthError(Exception):

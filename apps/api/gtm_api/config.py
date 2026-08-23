@@ -1,4 +1,4 @@
-"""Emissary API configuration."""
+"""Aurora API configuration."""
 
 import os
 from functools import lru_cache
@@ -69,7 +69,7 @@ AGENT_ENV_KEYS: dict[str, tuple[str, str]] = {
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    app_name: str = "Emissary"
+    app_name: str = "Aurora"
     debug: bool = False
     api_prefix: str = "/api/v1"
 
@@ -124,7 +124,7 @@ class Settings(BaseSettings):
     devto_api_key: str = ""
     reddit_access_token: str = ""
     reddit_subreddit: str = ""
-    reddit_user_agent: str = "EmissaryBot/1.0"
+    reddit_user_agent: str = "AuroraBot/1.0"
 
     # SSO (generic OIDC -- works with Auth0, Keycloak, or any OIDC-compliant IdP)
     sso_enabled: bool = False

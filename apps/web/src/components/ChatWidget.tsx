@@ -81,7 +81,7 @@ export default function ChatWidget({ productId }: ChatWidgetProps) {
         <div className="glass-strong fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[500px] rounded-[var(--radius-liquid-lg)] flex flex-col z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-[var(--glass-border)]">
             <p className="font-semibold text-sm">Product Assistant</p>
-            <p className="text-xs text-muted">Powered by Emissary</p>
+            <p className="text-xs text-muted">Powered by Aurora</p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">

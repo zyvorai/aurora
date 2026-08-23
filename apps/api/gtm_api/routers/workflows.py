@@ -18,11 +18,13 @@ from gtm_api.schemas import (
     QueryRequest,
     StrategyRequest,
     TechnicalEvalRequest,
+    WorkerStatusResponse,
     WorkflowRunAccepted,
     WorkflowRunResponse,
     WorkflowStepStatus,
 )
 from gtm_api.services.brief import build_executive_brief, upsert_dashboard_snapshot
+from gtm_api.services.job_queue import get_worker_status
 from gtm_api.services.workflows import (
     create_workflow_run,
     get_workflow_run,
@@ -331,6 +333,15 @@ async def poll_workflow_run(
         completed_at=run.completed_at,
         created_at=run.created_at,
     )
+
+
+@router.get("/workers/status", response_model=WorkerStatusResponse)
+async def worker_status(user: User = Depends(get_current_user)):
+    """Live ARQ worker/queue counts for the console rail footer -- tenant-agnostic
+    (the worker pool is shared across the whole deployment), any authenticated user
+    can see it. `max_jobs=10` mirrors apps/workers/gtm_workers/main.py's
+    WorkerSettings.max_jobs -- keep the two in sync if that ever changes."""
+    return WorkerStatusResponse(**await get_worker_status(max_jobs=10))
 
 
 @router.get("/products/{product_id}/workflow-runs", response_model=list[WorkflowRunResponse])

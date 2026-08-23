@@ -59,9 +59,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-8 min-w-0">
             <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group">
               <div className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] bg-accent-blue text-white font-black text-xs shadow-md transition-transform group-hover:scale-105">
-                E
+                A
               </div>
-              <span className="font-black tracking-tight text-sm hidden sm:inline">EMISSARY</span>
+              <span className="font-black tracking-tight text-sm hidden sm:inline">AURORA</span>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               <Link

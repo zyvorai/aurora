@@ -143,7 +143,7 @@ Startup lifespan calls `check_llm_health()` and stores result on `app.state.llm_
 ```json
 {
   "status": "healthy",
-  "service": "Emissary",
+  "service": "Aurora",
   "llm_provider": "ollama",
   "llm_ready": true,
   "chat_models": {

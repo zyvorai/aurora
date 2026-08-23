@@ -560,6 +560,8 @@ class BriefKpis(BaseModel):
     conversations: int
     artifacts: int
     agent_runs: int
+    accounts_found: int
+    qualified: int
 
 
 class BriefResponse(BaseModel):
@@ -739,6 +741,14 @@ class WorkflowRunResponse(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     created_at: datetime
+
+
+class WorkerStatusResponse(BaseModel):
+    healthy: bool
+    ongoing: int
+    queued: int
+    idle: int
+    max_jobs: int
 
 
 # Success & insights (Wave 4)

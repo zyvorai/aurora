@@ -1,5 +1,5 @@
 # Optional overlay: TLS termination via nginx for a real domain deployment.
-# Requires infra/nginx/certs/emissary.zyvor.dev.{crt,key} to exist first --
+# Requires infra/nginx/certs/aurora.zyvor.dev.{crt,key} to exist first --
 # see infra/nginx/certs/README.md. Until then, leave this overlay off and
 # access the stack via its existing host-published ports (8000/3000).
 #
@@ -21,6 +21,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./infra/nginx/emissary.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infra/nginx/aurora.conf:/etc/nginx/conf.d/default.conf:ro
       - ./infra/nginx/certs:/etc/nginx/certs:ro
     restart: unless-stopped

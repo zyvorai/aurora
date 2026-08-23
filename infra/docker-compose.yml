@@ -123,7 +123,7 @@ services:
       - "8180:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
-      - ./infra/keycloak/emissary-realm.json:/opt/keycloak/data/import/emissary-realm.json:ro
+      - ./infra/keycloak/aurora-realm.json:/opt/keycloak/data/import/aurora-realm.json:ro
     depends_on:
       keycloak-db:
         condition: service_healthy

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end remote deploy + smoke test for Emissary (api/web via Docker Compose).
+# End-to-end remote deploy + smoke test for Aurora (api/web via Docker Compose).
 #
 # Usage:
 #   ./scripts/test-deploy-remote-e2e.sh HOST USER [--skip-deploy]
@@ -46,7 +46,7 @@ info "Web root: HTTP ${WEB_STATUS}"
 
 info "Checking container status over SSH..."
 ssh -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new "${DEPLOY_USER}@${HOST}" \
-    'cd "$HOME/.deployments/emissary" && sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml ps' \
+    'cd "$HOME/.deployments/aurora" && sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml ps' \
     || fail "Could not query container status over SSH"
 
 info "All checks passed."

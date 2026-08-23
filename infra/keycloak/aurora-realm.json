@@ -1,13 +1,13 @@
 {
-  "realm": "emissary",
+  "realm": "aurora",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "clients": [
     {
-      "clientId": "emissary",
-      "name": "Emissary",
+      "clientId": "aurora",
+      "name": "Aurora",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,

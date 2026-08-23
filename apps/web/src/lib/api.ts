@@ -170,6 +170,10 @@ export const products = {
     });
   },
 
+  delete(id: string): Promise<void> {
+    return request(`/products/${id}`, { method: 'DELETE' });
+  },
+
   ingest(
     id: string,
     options?: { source_ids?: string[]; force?: boolean; async_mode?: boolean },
@@ -771,6 +775,20 @@ export const agents = {
   },
 };
 
+export interface WorkerStatus {
+  healthy: boolean;
+  ongoing: number;
+  queued: number;
+  idle: number;
+  max_jobs: number;
+}
+
+export const workers = {
+  status(): Promise<WorkerStatus> {
+    return request('/workers/status');
+  },
+};
+
 export const artifacts = {
   approve(artifactId: string, data: { status: 'approved' | 'rejected'; comment?: string }): Promise<ApprovalResponse> {
     return request(`/artifacts/${artifactId}/approve`, {
@@ -821,6 +839,8 @@ export interface ExecutiveBrief {
     conversations: number;
     artifacts: number;
     agent_runs: number;
+    accounts_found: number;
+    qualified: number;
   };
   funnel: Record<string, number>;
   metrics: Record<string, number>;

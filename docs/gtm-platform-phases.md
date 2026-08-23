@@ -1,4 +1,4 @@
-# Emissary — 12-Phase Implementation Guide
+# Aurora — 12-Phase Implementation Guide
 
 Multi-tenant SaaS platform where software companies onboard with a website or documentation URL. The platform builds a grounded knowledge base and runs AI marketing, sales, and solution agents.
 
@@ -77,7 +77,7 @@ flowchart TB
   the httpx+BeautifulSoup fetch yields a thin/SPA-shell page (below
   `CRAWLER_THIN_PAGE_CHAR_THRESHOLD`), re-fetches via headless Chromium and re-extracts.
   Opt-in and gated: `CRAWLER_USE_PLAYWRIGHT=true` plus `pip install
-  'emissary-api[playwright]' && playwright install chromium` on the host — off by default
+  'aurora-api[playwright]' && playwright install chromium` on the host — off by default
   since it's a heavy dependency; degrades to the plain httpx result on any failure
   (not installed, timeout, navigation error), never raises.
 
@@ -773,9 +773,9 @@ not just curling the API directly. `deploy-remote.sh` now refuses to build with 
 still unset (override with `ALLOW_LOCALHOST_API_URL=true` if you really mean it).
 
 **TLS / real domain**: an optional nginx overlay (`infra/nginx/docker-compose.nginx.yml`)
-terminates HTTPS for `emissary.zyvor.dev`, path-routing `/api/*`, `/health`, `/docs`,
+terminates HTTPS for `aurora.zyvor.dev`, path-routing `/api/*`, `/health`, `/docs`,
 `/openapi.json` to the api container and everything else to web. `deploy-remote.sh`
-auto-enables it once `infra/nginx/certs/emissary.zyvor.dev.{crt,key}` exist on the remote
+auto-enables it once `infra/nginx/certs/aurora.zyvor.dev.{crt,key}` exist on the remote
 host — see [infra/nginx/certs/README.md](../infra/nginx/certs/README.md) for the CA
 request + DNS steps (manual, external to this repo). The existing `zyvor.dev.crt` in the
 sibling `hypersdk-web` repo is **not** a wildcard — its SAN list only covers `zyvor.dev`

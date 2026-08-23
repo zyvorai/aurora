@@ -15,7 +15,7 @@ import { TextMuted, TextSmall } from '@/components/ui/Typography';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { FolderOpen } from 'lucide-react';
-import AddSourceWizard from '@/components/sources/AddSourceWizard';
+import AddSourceWizard, { SOURCE_OPTIONS, type SourceKind } from '@/components/sources/AddSourceWizard';
 
 function statusVariant(status: string): 'success' | 'warning' | 'default' {
   if (status === 'completed') return 'success';
@@ -33,14 +33,30 @@ function locationLabel(source: ProductSource): string {
 interface SourcesPanelProps {
   productId: string;
   onIngestComplete?: () => void;
+  /** Lets a parent (e.g. Full Forge's "Import from GitHub" next-action) open the
+   * wizard pre-set to a kind without owning the wizard's own open/closed state --
+   * bump this to a new kind value to trigger it, cleared back to undefined after. */
+  externalOpenKind?: SourceKind;
+  onExternalOpenHandled?: () => void;
 }
 
-export default function SourcesPanel({ productId, onIngestComplete }: SourcesPanelProps) {
+export default function SourcesPanel({
+  productId,
+  onIngestComplete,
+  externalOpenKind,
+  onExternalOpenHandled,
+}: SourcesPanelProps) {
   const [sources, setSources] = useState<ProductSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardKind, setWizardKind] = useState<SourceKind | undefined>(undefined);
+
+  function openWizard(kind?: SourceKind) {
+    setWizardKind(kind);
+    setWizardOpen(true);
+  }
   const [message, setMessage] = useState<string | null>(null);
 
   const role = readStoredRole();
@@ -57,6 +73,13 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!externalOpenKind) return;
+    openWizard(externalOpenKind);
+    onExternalOpenHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalOpenKind]);
 
   const { polling, startPolling } = useIngestPolling({
     productId,
@@ -129,7 +152,7 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
         action={
           canWrite ? (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setWizardOpen(true)} disabled={busy}>
+              <Button size="sm" onClick={() => openWizard()} disabled={busy}>
                 + Add source
               </Button>
               <Button
@@ -144,6 +167,23 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
           ) : undefined
         }
       />
+
+      {canWrite && (
+        <div className="flex flex-wrap gap-1.5">
+          {SOURCE_OPTIONS.map((opt) => (
+            <button
+              key={opt.kind}
+              type="button"
+              disabled={busy}
+              onClick={() => openWizard(opt.kind)}
+              title={opt.description}
+              className="font-mono text-xs text-muted border border-dashed border-border rounded-[6px] px-2 py-1 hover:border-primary hover:text-primary hover:border-solid transition-colors disabled:opacity-50"
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {message && <TextMuted>{message}</TextMuted>}
 
@@ -161,7 +201,7 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
           icon={FolderOpen}
           title="No sources yet"
           description="Add a website URL, file, video, or other source to start building this product's knowledge base."
-          actions={canWrite ? [{ label: '+ Add source', onClick: () => setWizardOpen(true) }] : undefined}
+          actions={canWrite ? [{ label: '+ Add source', onClick: () => openWizard() }] : undefined}
         />
       ) : (
         <Table>
@@ -236,6 +276,7 @@ export default function SourcesPanel({ productId, onIngestComplete }: SourcesPan
       {wizardOpen && (
         <AddSourceWizard
           productId={productId}
+          initialKind={wizardKind}
           onClose={() => setWizardOpen(false)}
           onCreated={() => {
             setWizardOpen(false);

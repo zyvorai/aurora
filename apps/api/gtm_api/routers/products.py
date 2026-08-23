@@ -110,6 +110,22 @@ async def get_product(
     return await get_product_for_tenant(db, product_id, ctx.tenant_id)
 
 
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_product(
+    product_id: uuid.UUID,
+    user: User = Depends(require_permission("write")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft delete -- flips `is_active` off rather than removing the row, since 18
+    other tables FK into products with no cascade configured and a hard delete
+    would just fail. `list_products` already filters on `is_active`, so this is
+    the only change needed to make a product disappear from the app."""
+    ctx = await get_tenant_context(user, db)
+    product = await get_product_for_tenant(db, product_id, ctx.tenant_id)
+    product.is_active = False
+    await audit_log(db, ctx.tenant_id, user.id, "delete", "product", str(product_id))
+
+
 @router.post("/{product_id}/sources", response_model=SourceResponse)
 async def add_source(
     product_id: uuid.UUID,

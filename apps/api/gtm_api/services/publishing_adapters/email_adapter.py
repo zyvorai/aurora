@@ -70,7 +70,7 @@ def _send_sync(artifact: Artifact, recipient: Optional[str] = None) -> ProviderR
     )
 
     message = EmailMessage()
-    message["Subject"] = artifact.title or "Emissary Update"
+    message["Subject"] = artifact.title or "Aurora Update"
     message["From"] = settings.smtp_from
     message["To"] = resolved_recipient
     message["Message-Id"] = make_msgid()

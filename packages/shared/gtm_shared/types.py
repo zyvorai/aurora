@@ -1,4 +1,4 @@
-"""Shared types and schemas for Emissary."""
+"""Shared types and schemas for Aurora."""
 
 from dataclasses import dataclass
 from enum import Enum

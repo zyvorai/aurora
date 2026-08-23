@@ -1,4 +1,4 @@
-# Emissary
+# Aurora
 
 Turn your technical product into an AI-powered salesperson.
 
@@ -82,7 +82,7 @@ real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC
 `.env` must be an address a **visitor's browser** can reach (not `localhost`) —
 `deploy-remote.sh` refuses to build with that left unset.
 
-**TLS / real domain:** optional nginx overlay terminates HTTPS for `emissary.zyvor.dev` —
+**TLS / real domain:** optional nginx overlay terminates HTTPS for `aurora.zyvor.dev` —
 see [infra/nginx/certs/README.md](infra/nginx/certs/README.md) for the CA + DNS steps.
 `deploy-remote.sh` auto-enables it once a cert is present on the remote host.
 

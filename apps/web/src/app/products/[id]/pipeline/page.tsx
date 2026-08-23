@@ -122,6 +122,13 @@ export default function PipelinePage() {
     return acc;
   }, {});
 
+  const openOldestDays = opportunities
+    .filter((o) => o.stage !== 'closed_won' && o.stage !== 'closed_lost' && o.created_at)
+    .reduce<number | null>((oldest, o) => {
+      const days = Math.floor((Date.now() - new Date(o.created_at as string).getTime()) / 86_400_000);
+      return oldest === null || days > oldest ? days : oldest;
+    }, null);
+
   return (
     <div className="space-y-8 animate-fade-up">
       <PageHero
@@ -143,11 +150,12 @@ export default function PipelinePage() {
       />
 
       {summary && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { label: 'Open deals', value: summary.total },
             { label: 'Weighted pipeline', value: `$${summary.weighted_pipeline.toLocaleString()}` },
             { label: 'At proposal', value: summary.by_stage.proposal ?? 0 },
+            { label: 'Oldest', value: openOldestDays === null ? '—' : `${openOldestDays}d` },
           ].map((s) => (
             <Card key={s.label} elevated>
               <CardBody className="py-4">

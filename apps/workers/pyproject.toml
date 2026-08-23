@@ -1,10 +1,10 @@
 [project]
-name = "emissary-workers"
+name = "aurora-workers"
 version = "0.1.0"
-description = "Emissary Workers"
+description = "Aurora Workers"
 requires-python = ">=3.11"
 dependencies = [
-    "emissary-api",
+    "aurora-api",
     "arq>=0.26.0",
     "redis>=5.2.0",
     "beautifulsoup4>=4.12.0",

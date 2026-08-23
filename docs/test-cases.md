@@ -1,4 +1,4 @@
-# Emissary — Test Case Document
+# Aurora — Test Case Document
 
 Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 

@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/Typography';
 
 export const metadata: Metadata = {
-  title: 'Emissary — Features',
+  title: 'Aurora — Features',
   description:
     'Turn your technical product into an AI-powered salesperson: auto-discovery, a grounded knowledge graph, and background marketing/sales/solution agents.',
 };
@@ -135,7 +135,7 @@ export default function FeaturesPage() {
             <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-primary flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden />
             </div>
-            <span className="font-bold tracking-tight text-sm text-foreground">Emissary</span>
+            <span className="font-bold tracking-tight text-sm text-foreground">Aurora</span>
           </Link>
           <div className="flex items-center gap-1">
             <Link
@@ -159,7 +159,7 @@ export default function FeaturesPage() {
           <span className="text-gradient-apple">an AI-powered GTM engine</span>
         </DisplayTitle>
         <TextLead className="mx-auto max-w-2xl mb-8">
-          Emissary onboards from a website or docs, builds a grounded knowledge graph, then runs AI
+          Aurora onboards from a website or docs, builds a grounded knowledge graph, then runs AI
           marketing, sales, and solution agents — enterprise-grade orchestration built for lean hardware.
         </TextLead>
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -381,7 +381,7 @@ export default function FeaturesPage() {
               <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
                 <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden />
               </div>
-              <span className="font-bold text-foreground text-body-sm">Emissary</span>
+              <span className="font-bold text-foreground text-body-sm">Aurora</span>
             </div>
             <TextMuted className="text-body-sm">GTM Orchestration Platform</TextMuted>
           </div>
@@ -402,7 +402,7 @@ export default function FeaturesPage() {
         </div>
         <div className="border-t border-border">
           <div className="mx-auto max-w-6xl px-6 py-5">
-            <span className="text-body-sm text-muted">© {new Date().getFullYear()} Emissary</span>
+            <span className="text-body-sm text-muted">© {new Date().getFullYear()} Aurora</span>
           </div>
         </div>
       </footer>

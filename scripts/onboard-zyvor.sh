@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ============================================================================
-# onboard-zyvor.sh — Onboard HyperSDK Platform (zyvor.dev) into Emissary and
+# onboard-zyvor.sh — Onboard HyperSDK Platform (zyvor.dev) into Aurora and
 # generate a lead-generation-focused GTM strategy + starter content.
 #
-# Emissary is Zyvor's own AI-powered GTM platform: point it at a product's
+# Aurora is Zyvor's own AI-powered GTM platform: point it at a product's
 # website, it builds a RAG knowledge graph, then runs Marketing/Sales/
 # Solution AI agents grounded in that content. This script onboards
 # zyvor.dev itself as the first real product, using the conversion-focused
@@ -16,7 +16,7 @@
 #
 # Usage:
 #   ./scripts/onboard-zyvor.sh                       # against local dev (localhost:8000)
-#   API_BASE=https://emissary.zyvor.dev/api/v1 ./scripts/onboard-zyvor.sh   # against a live deployment
+#   API_BASE=https://aurora.zyvor.dev/api/v1 ./scripts/onboard-zyvor.sh   # against a live deployment
 #
 # What this does:
 #   1. Logs in as the seeded default admin (marketing@zyvor.dev), or registers
@@ -32,7 +32,7 @@
 #      on the VMware-exit and Ask Zeus/AI-ops narratives.
 #
 # Nothing here calls the outreach/publish endpoints — those need explicit
-# recipient targeting and Emissary's own human-approval gate before
+# recipient targeting and Aurora's own human-approval gate before
 # anything goes out, by design. This script only generates drafts.
 # ============================================================================
 
@@ -113,7 +113,7 @@ INGEST_RESP=$(curl -sf -X POST "${API_BASE}/products/${PRODUCT_ID}/ingest" "${AU
   -H "Content-Type: application/json" \
   -d '{"force": true, "async_mode": true}')
 info "Ingestion queued: $(echo "$INGEST_RESP" | jq -c '.')"
-info "Ingestion runs in the background — check the Emissary UI's product page for progress before generating strategy/content below."
+info "Ingestion runs in the background — check the Aurora UI's product page for progress before generating strategy/content below."
 read -rp "[onboard-zyvor] Press Enter once ingestion shows complete in the UI (or wait ~a few minutes for a small site)... "
 
 # ── 5. Generate a lead-gen-focused GTM strategy ─────────────────────────
@@ -137,4 +137,4 @@ curl -sf -X POST "${API_BASE}/products/${PRODUCT_ID}/content" "${AUTH[@]}" \
   -d '{"content_type":"blog","topic":"What an approval-gated AI ops engineer actually does (Ask Zeus, inside Forge)","tone":"professional","target_persona":"Platform Engineer"}' \
   | jq -r '.'
 
-info "Done. Generated artifacts need human approval before publishing — review them in the Emissary UI (Artifacts / Approve) before anything goes out."
+info "Done. Generated artifacts need human approval before publishing — review them in the Aurora UI (Artifacts / Approve) before anything goes out."

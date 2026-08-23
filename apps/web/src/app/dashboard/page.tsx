@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Loader2, Rocket } from 'lucide-react';
+import { Loader2, Rocket, Trash2 } from 'lucide-react';
 import { products, type Product } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,8 +30,23 @@ export default function DashboardPage() {
   const [form, setForm] = useState({ name: '', website_url: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
   const [createError, setCreateError] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const actions = dashboardActionsForRole(role);
+  const canDelete = role === 'admin' || role === 'editor';
+
+  async function handleDelete(product: Product) {
+    if (!confirm(`Remove "${product.name}"? This can be restored by an admin later, but it disappears from the dashboard immediately.`)) return;
+    setDeletingId(product.id);
+    try {
+      await products.delete(product.id);
+      setProductList((prev) => prev.filter((p) => p.id !== product.id));
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to remove product');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   useEffect(() => {
     products.list()
@@ -131,9 +146,23 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </div>
-                    <Badge variant={p.profile_status === 'ready' ? 'success' : 'warning'}>
-                      {p.profile_status}
-                    </Badge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={p.profile_status === 'ready' ? 'success' : 'warning'}>
+                        {p.profile_status}
+                      </Badge>
+                      {canDelete && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(p)}
+                          disabled={deletingId === p.id}
+                          aria-label={`Remove ${p.name}`}
+                          title="Remove product"
+                          className="text-muted hover:text-danger transition-colors disabled:opacity-50"
+                        >
+                          {deletingId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </CardBody>
                 <CardFooter className="flex gap-2">

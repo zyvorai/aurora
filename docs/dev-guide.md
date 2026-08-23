@@ -1,4 +1,4 @@
-# Emissary — Local Development Guide
+# Aurora — Local Development Guide
 
 How to install, start, stop, and troubleshoot the platform on your machine.
 
@@ -323,7 +323,7 @@ Example response:
 ```json
 {
   "status": "healthy",
-  "service": "Emissary",
+  "service": "Aurora",
   "db_ready": true,
   "db_message": null,
   "llm_provider": "ollama",

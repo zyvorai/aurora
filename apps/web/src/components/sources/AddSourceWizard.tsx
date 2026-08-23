@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { TextMuted } from '@/components/ui/Typography';
 
-type SourceKind =
+export type SourceKind =
   | 'website'
   | 'file'
   | 'spreadsheet'
@@ -17,7 +17,7 @@ type SourceKind =
   | 'openapi'
   | 'database';
 
-const SOURCE_OPTIONS: { kind: SourceKind; label: string; description: string }[] = [
+export const SOURCE_OPTIONS: { kind: SourceKind; label: string; description: string }[] = [
   { kind: 'website', label: 'Website / URL', description: 'Docs, blog, or any crawlable site' },
   { kind: 'file', label: 'Document', description: 'PDF, DOCX, PPT, TXT, Markdown' },
   { kind: 'spreadsheet', label: 'Spreadsheet', description: 'CSV or Excel (.xlsx)' },
@@ -32,11 +32,14 @@ interface Props {
   productId: string;
   onClose: () => void;
   onCreated: () => void;
+  /** Skip the kind picker and open straight to step 2 pre-set to this kind --
+   * e.g. a one-click "Import from GitHub" entry point elsewhere in the UI. */
+  initialKind?: SourceKind;
 }
 
-export default function AddSourceWizard({ productId, onClose, onCreated }: Props) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [kind, setKind] = useState<SourceKind | null>(null);
+export default function AddSourceWizard({ productId, onClose, onCreated, initialKind }: Props) {
+  const [step, setStep] = useState<1 | 2>(initialKind ? 2 : 1);
+  const [kind, setKind] = useState<SourceKind | null>(initialKind ?? null);
   const [url, setUrl] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [file, setFile] = useState<File | null>(null);

@@ -119,6 +119,8 @@ async def build_executive_brief(
     strategy_ready = (strategy_count.scalar() or 0) > 0
     sources_total = source_rows.scalar() or 0
     sources_done = completed_sources.scalar() or 0
+    discovered_n = discovered_count.scalar() or 0
+    qualified_n = qualified_count.scalar() or 0
 
     gtm_readiness = {
         "ingest_started": sources_total > 0,
@@ -126,8 +128,8 @@ async def build_executive_brief(
         "profile_built": profile_built,
         "strategy_ready": strategy_ready,
         "outreach_ready": (outreach_count.scalar() or 0) > 0,
-        "discover_ready": (discovered_count.scalar() or 0) > 0,
-        "qualify_ready": (qualified_count.scalar() or 0) > 0,
+        "discover_ready": discovered_n > 0,
+        "qualify_ready": qualified_n > 0,
         "proposal_ready": (proposal_count.scalar() or 0) > 0,
         "publish_ready": (published_count.scalar() or 0) > 0,
     }
@@ -137,6 +139,8 @@ async def build_executive_brief(
         "conversations": analytics["funnel"].get("conversations", 0),
         "artifacts": analytics["funnel"].get("artifacts_created", 0),
         "agent_runs": analytics["funnel"].get("agent_runs", 0),
+        "accounts_found": discovered_n,
+        "qualified": qualified_n,
     }
 
     risks: list[str] = []

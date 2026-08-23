@@ -85,9 +85,9 @@ export default function SalesPage() {
       {brief && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Pipeline leads', value: brief.kpis.leads },
+            { label: 'Accounts found', value: brief.kpis.accounts_found },
+            { label: 'Qualified', value: brief.kpis.qualified },
             { label: 'Conversations', value: brief.kpis.conversations },
-            { label: 'Artifacts', value: brief.kpis.artifacts },
             { label: 'Agent runs', value: brief.kpis.agent_runs },
           ].map((kpi) => (
             <Card key={kpi.label} elevated>

@@ -9,6 +9,7 @@ interface NextActionContent {
   title: string;
   body: string;
   actLabel: string;
+  altLabel?: string;
 }
 
 const CONTENT: Record<ChainStageId, NextActionContent> = {
@@ -16,16 +17,19 @@ const CONTENT: Record<ChainStageId, NextActionContent> = {
     title: 'Add your first source',
     body: 'Paste a website URL, a docs site, or a repo. Ingest unlocks the other eight stages once it finishes.',
     actLabel: 'Add source',
+    altLabel: 'Import from GitHub',
   },
   ingest: {
     title: 'Ingest your sources',
     body: 'Crawls and indexes what you added. Product profile starts on its own once ingest finishes — nothing else to click.',
     actLabel: 'Crawl & Ingest',
+    altLabel: 'Add another source',
   },
   profile: {
     title: 'Build the product profile',
     body: 'Extracts capabilities, ICP, and value props from what was ingested — everything downstream is grounded in this.',
     actLabel: 'Build profile',
+    altLabel: 'Refresh knowledge',
   },
   strategy: {
     title: 'Generate a GTM strategy',
@@ -62,10 +66,12 @@ const CONTENT: Record<ChainStageId, NextActionContent> = {
 export function NextAction({
   stage,
   onAct,
+  onAlt,
   loading,
 }: {
   stage: ChainStage | null;
   onAct: () => void;
+  onAlt?: () => void;
   loading?: boolean;
 }) {
   if (!stage) {
@@ -92,9 +98,16 @@ export function NextAction({
           <h2 className="text-lg font-semibold text-foreground">{content.title}</h2>
           <p className="mt-1 text-body-sm text-muted max-w-[64ch]">{content.body}</p>
         </div>
-        <Button onClick={onAct} disabled={loading}>
-          {isRunning ? 'Watch run log' : content.actLabel}
-        </Button>
+        <div className="flex gap-2 shrink-0">
+          {!isRunning && content.altLabel && onAlt && (
+            <Button variant="secondary" onClick={onAlt} disabled={loading}>
+              {content.altLabel}
+            </Button>
+          )}
+          <Button onClick={onAct} disabled={loading}>
+            {isRunning ? 'Watch run log' : content.actLabel}
+          </Button>
+        </div>
       </CardBody>
     </Card>
   );

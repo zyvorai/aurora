@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# deploy-remote.sh — Deploy Emissary (api/web/workers + backing infra) to a
+# deploy-remote.sh — Deploy Aurora (api/web/workers + backing infra) to a
 # remote Docker host over SSH.
 #
 # Unlike the sibling ../forge-adapters project, this app's production target
@@ -17,7 +17,7 @@
 #
 # Environment variables:
 #   DEPLOY_HOST / DEPLOY_USER / DEPLOY_PASS   same as positional args
-#   DEPLOY_DIR=.deployments/emissary          remote path (relative to $HOME) the repo syncs to
+#   DEPLOY_DIR=.deployments/aurora          remote path (relative to $HOME) the repo syncs to
 #   HEALTH_TIMEOUT=120                        seconds to wait for /health before failing
 #
 # Remote prerequisites: Docker Engine, rsync, and an SSH user with passwordless
@@ -55,12 +55,12 @@ DEPLOY_USER="${POSITIONAL[1]:-${DEPLOY_USER:-root}}"
 PASS="${POSITIONAL[2]:-${DEPLOY_PASS:-}}"
 [ -z "$HOST" ] && error "Usage: $0 <host> [user] [password] [--skip-build|--uninstall]"
 
-REMOTE_DIR="${DEPLOY_DIR:-.deployments/emissary}"
+REMOTE_DIR="${DEPLOY_DIR:-.deployments/aurora}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-120}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-[ -f "$REPO_DIR/docker-compose.prod.yml" ] || error "Not in the Emissary repo root: $REPO_DIR"
+[ -f "$REPO_DIR/docker-compose.prod.yml" ] || error "Not in the Aurora repo root: $REPO_DIR"
 
 # ── SSH/rsync wrappers ──
 _ssh() {
@@ -95,14 +95,14 @@ DC="sudo docker compose --project-directory . -f infra/docker-compose.yml -f doc
 # Auto-enable the nginx/TLS overlay once a real cert has been placed on the
 # remote host (see infra/nginx/certs/README.md) -- nothing to configure here,
 # it just starts showing up once you've done the manual CA + DNS steps.
-if _ssh "test -f \"\$HOME/${REMOTE_DIR}/infra/nginx/certs/emissary.zyvor.dev.crt\" && test -f \"\$HOME/${REMOTE_DIR}/infra/nginx/certs/emissary.zyvor.dev.key\"" 2>/dev/null; then
-    info "Found emissary.zyvor.dev cert on remote — enabling nginx/TLS overlay."
+if _ssh "test -f \"\$HOME/${REMOTE_DIR}/infra/nginx/certs/aurora.zyvor.dev.crt\" && test -f \"\$HOME/${REMOTE_DIR}/infra/nginx/certs/aurora.zyvor.dev.key\"" 2>/dev/null; then
+    info "Found aurora.zyvor.dev cert on remote — enabling nginx/TLS overlay."
     DC="${DC} -f infra/nginx/docker-compose.nginx.yml"
 fi
 
 # ── Uninstall mode ──
 if $UNINSTALL; then
-    info "Stopping and removing the Emissary stack on ${HOST}..."
+    info "Stopping and removing the Aurora stack on ${HOST}..."
     _ssh "cd \"\$HOME/${REMOTE_DIR}\" && ${DC} down" \
         || warn "Compose down failed or stack was already down"
     info "Uninstall step complete (repo left on disk at ~/${REMOTE_DIR}; remove manually if desired)."

@@ -1,4 +1,4 @@
-# Multi-Agent Composition Plan — Emissary
+# Multi-Agent Composition Plan — Aurora
 
 Plan to evolve from **7 monolithic LangGraph agents + routing stub** into **11 specialized, composable agents** orchestrated by a real supervisor.
 

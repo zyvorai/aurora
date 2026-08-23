@@ -22,6 +22,7 @@ import ResultPanel from '@/components/ResultPanel';
 import { Markdown } from '@/components/ui/Markdown';
 import ChatWidget from '@/components/ChatWidget';
 import SourcesPanel from '@/components/sources/SourcesPanel';
+import type { SourceKind } from '@/components/sources/AddSourceWizard';
 import ArtifactList from '@/components/artifacts/ArtifactList';
 import AgentTaskProgress from '@/components/AgentTaskProgress';
 import { taskButtonLabel, type AgentTaskId } from '@/lib/agent-tasks';
@@ -106,6 +107,7 @@ export default function ProductForgePageInner() {
   const [refreshingKnowledge, setRefreshingKnowledge] = useState(false);
   const [generatingProposalAsync, setGeneratingProposalAsync] = useState(false);
   const [customStages, setCustomStages] = useState<WorkflowStage[]>([]);
+  const [sourceOpenKind, setSourceOpenKind] = useState<SourceKind | undefined>(undefined);
   const sessionId = useState(() => uuid())[0];
   const role = readStoredRole();
   const canApprove = role === 'admin' || role === 'approver';
@@ -362,6 +364,10 @@ export default function ProductForgePageInner() {
       <div className="space-y-6">
           {tab === 'overview' && (
             <div className="space-y-6">
+              <TextMuted className="max-w-[64ch]">
+                Everything below runs off one knowledge base — the chain shows where {product.name} stands
+                and what it&apos;s waiting on. Nothing here needs a decision from you until it&apos;s ready.
+              </TextMuted>
               <StageChain stages={chainStages} activeId={runningStageId ?? undefined} onSelect={(stageId) => router.push(chainStageHref(id, stageId))} />
               <NextAction
                 stage={nextStage}
@@ -389,9 +395,25 @@ export default function ProductForgePageInner() {
                   }
                   router.push(chainStageHref(id, nextStage.id));
                 }}
+                onAlt={
+                  nextStage?.id === 'sources'
+                    ? () => {
+                        setSourceOpenKind('github');
+                        document.getElementById('sources-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    : nextStage?.id === 'ingest'
+                      ? () => document.getElementById('sources-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      : nextStage?.id === 'profile'
+                        ? handleRefreshKnowledge
+                        : undefined
+                }
               />
               <div id="sources-panel">
-                <SourcesPanel productId={id} />
+                <SourcesPanel
+                  productId={id}
+                  externalOpenKind={sourceOpenKind}
+                  onExternalOpenHandled={() => setSourceOpenKind(undefined)}
+                />
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button disabled={loading || ingestPolling} onClick={() => runAction('ingest')}>

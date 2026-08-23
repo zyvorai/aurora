@@ -1,4 +1,4 @@
-# TLS certificate for emissary.zyvor.dev
+# TLS certificate for aurora.zyvor.dev
 
 This directory is gitignored — never commit real key material here.
 
@@ -7,24 +7,24 @@ This directory is gitignored — never commit real key material here.
 A certificate whose Subject Alternative Name (SAN) list includes:
 
 ```
-emissary.zyvor.dev
+aurora.zyvor.dev
 ```
 
 (The existing `zyvor.dev.crt` in `../../hypersdk-web/bigrock-ssl/` only covers
 `zyvor.dev` and `www.zyvor.dev` — it will NOT validate for this subdomain.
-Either request a SAN cert for `emissary.zyvor.dev` specifically, or a true
+Either request a SAN cert for `aurora.zyvor.dev` specifically, or a true
 `*.zyvor.dev` wildcard if you want to reuse it across future subdomains too.)
 
 Generate a CSR for the request, e.g.:
 
 ```bash
 openssl req -new -newkey rsa:2048 -nodes \
-  -keyout emissary.zyvor.dev.key \
-  -out emissary.zyvor.dev.csr \
-  -subj "/CN=emissary.zyvor.dev"
+  -keyout aurora.zyvor.dev.key \
+  -out aurora.zyvor.dev.csr \
+  -subj "/CN=aurora.zyvor.dev"
 ```
 
-Submit `emissary.zyvor.dev.csr` to the CA. Keep `emissary.zyvor.dev.key`
+Submit `aurora.zyvor.dev.csr` to the CA. Keep `aurora.zyvor.dev.key`
 private — it stays on this server, never in git, never sent anywhere.
 
 ## Where the resulting files go
@@ -33,14 +33,14 @@ Once the CA issues the certificate:
 
 | File | Purpose |
 |------|---------|
-| `emissary.zyvor.dev.crt` | The issued certificate (+ intermediate chain, fullchain style) |
-| `emissary.zyvor.dev.key` | The private key generated above (do not regenerate — must match the CSR that was submitted) |
+| `aurora.zyvor.dev.crt` | The issued certificate (+ intermediate chain, fullchain style) |
+| `aurora.zyvor.dev.key` | The private key generated above (do not regenerate — must match the CSR that was submitted) |
 
 Place both files in this directory on the **remote host**
-(`~/.deployments/emissary/infra/nginx/certs/`), then restart nginx:
+(`~/.deployments/aurora/infra/nginx/certs/`), then restart nginx:
 
 ```bash
-ssh sus@175.110.122.71 'cd ~/.deployments/emissary && sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml -f infra/nginx/docker-compose.nginx.yml restart nginx'
+ssh sus@175.110.122.71 'cd ~/.deployments/aurora && sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml -f infra/nginx/docker-compose.nginx.yml restart nginx'
 ```
 
 ## DNS
@@ -48,7 +48,7 @@ ssh sus@175.110.122.71 'cd ~/.deployments/emissary && sudo docker compose --proj
 Add an A record at your DNS provider before any of this is reachable:
 
 ```
-emissary.zyvor.dev.  A  175.110.122.71
+aurora.zyvor.dev.  A  175.110.122.71
 ```
 
 ## After the cert is live
@@ -58,5 +58,5 @@ the browser bundle calls the same-origin API through nginx instead of a
 separate host:port:
 
 ```
-NEXT_PUBLIC_API_URL=https://emissary.zyvor.dev/api/v1
+NEXT_PUBLIC_API_URL=https://aurora.zyvor.dev/api/v1
 ```

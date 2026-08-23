@@ -1,7 +1,7 @@
 [project]
-name = "emissary-api"
+name = "aurora-api"
 version = "0.1.0"
-description = "Emissary API"
+description = "Aurora API"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",
