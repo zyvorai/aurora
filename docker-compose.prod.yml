@@ -42,7 +42,11 @@ services:
       ollama:
         condition: service_started
     ports:
-      - "8000:8000"
+      # Bound to localhost only -- the public entry point is the hypersdk-web
+      # reverse proxy (same host, host networking), which reaches this over
+      # 127.0.0.1. A public 0.0.0.0 binding here let anyone skip HTTPS/the
+      # proxy entirely and hit the API over plain HTTP directly.
+      - "127.0.0.1:8000:8000"
     restart: unless-stopped
 
   workers:
@@ -83,5 +87,6 @@ services:
       api:
         condition: service_started
     ports:
-      - "3000:3000"
+      # Same reasoning as the api service above -- localhost-only.
+      - "127.0.0.1:3000:3000"
     restart: unless-stopped
