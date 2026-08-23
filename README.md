@@ -82,9 +82,12 @@ real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC
 `.env` must be an address a **visitor's browser** can reach (not `localhost`) —
 `deploy-remote.sh` refuses to build with that left unset.
 
-**TLS / real domain:** optional nginx overlay terminates HTTPS for `aurora.zyvor.dev` —
-see [infra/nginx/certs/README.md](infra/nginx/certs/README.md) for the CA + DNS steps.
-`deploy-remote.sh` auto-enables it once a cert is present on the remote host.
+**TLS / real domain:** in production, `aurora.zyvor.dev` (and the still-live `emissary.zyvor.dev`)
+is fronted by the sibling `hypersdk-web` repo's `website-server` — a Go reverse proxy that already
+terminates TLS for `*.zyvor.dev` and forwards host-matched requests here (see `isAuroraHost` /
+`AURORA_UPSTREAM` in `cmd/website-server/main.go` over there). This repo's own optional nginx/TLS
+overlay ([infra/nginx/certs/README.md](infra/nginx/certs/README.md)) is a standalone fallback for
+deployments that aren't fronted by that proxy — not needed for the current setup.
 
 ## LLM Providers
 

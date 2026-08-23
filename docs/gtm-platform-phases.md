@@ -772,14 +772,19 @@ found by actually testing the deployed web app in a browser against the remote h
 not just curling the API directly. `deploy-remote.sh` now refuses to build with this
 still unset (override with `ALLOW_LOCALHOST_API_URL=true` if you really mean it).
 
-**TLS / real domain**: an optional nginx overlay (`infra/nginx/docker-compose.nginx.yml`)
-terminates HTTPS for `aurora.zyvor.dev`, path-routing `/api/*`, `/health`, `/docs`,
-`/openapi.json` to the api container and everything else to web. `deploy-remote.sh`
-auto-enables it once `infra/nginx/certs/aurora.zyvor.dev.{crt,key}` exist on the remote
-host — see [infra/nginx/certs/README.md](../infra/nginx/certs/README.md) for the CA
-request + DNS steps (manual, external to this repo). The existing `zyvor.dev.crt` in the
-sibling `hypersdk-web` repo is **not** a wildcard — its SAN list only covers `zyvor.dev`
-and `www.zyvor.dev`, confirmed via `openssl x509 -noout -ext subjectAltName`, so it does
-not validate for a subdomain.
+**TLS / real domain**: in production this app doesn't terminate its own TLS — the sibling
+`hypersdk-web` repo's `website-server` (a Go reverse proxy already fronting `*.zyvor.dev`
+with its own `zyvor.dev` certificate) matches `aurora.zyvor.dev` and the still-live
+`emissary.zyvor.dev` (`isAuroraHost` in `cmd/website-server/main.go` over there) and
+forwards `/api/*` + `/health` to this repo's api container, everything else to web —
+confirmed live via `curl --resolve aurora.zyvor.dev:443:<host> https://aurora.zyvor.dev/`.
+
+This repo also ships its own optional nginx overlay (`infra/nginx/docker-compose.nginx.yml`)
+that can terminate HTTPS for a domain directly, for deployments not sitting behind that
+proxy — `deploy-remote.sh` auto-enables it once matching cert/key files exist under
+`infra/nginx/certs/` on the remote host; see
+[infra/nginx/certs/README.md](../infra/nginx/certs/README.md) for the CA request + DNS
+steps (manual, external to this repo). Not needed for the current `hypersdk-web`-fronted
+setup.
 
 Full local dev guide (setup, scripts, Makefile, troubleshooting): [dev-guide.md](./dev-guide.md)

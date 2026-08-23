@@ -1,5 +1,12 @@
 # TLS certificate for aurora.zyvor.dev
 
+**Not needed for the current deployment.** `aurora.zyvor.dev` is already live, fronted by
+the sibling `hypersdk-web` repo's `website-server` reverse proxy (its own `zyvor.dev` TLS
+cert, no separate cert for this subdomain required — see `isAuroraHost` in
+`cmd/website-server/main.go` over there). This directory + the steps below are only for
+standing up this repo's *own* nginx/TLS overlay, for a deployment not sitting behind that
+proxy.
+
 This directory is gitignored — never commit real key material here.
 
 ## What to request from the CA (BigRock / SSL2BUY)
