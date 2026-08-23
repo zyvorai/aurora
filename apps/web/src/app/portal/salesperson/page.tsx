@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Briefcase, LogOut, Pencil, Sparkles, TrendingUp } from 'lucide-react';
+import { Briefcase, LogOut, Pencil, TrendingUp } from 'lucide-react';
 import { PageHero } from '@/components/layout/PageHero';
+import { SkeletonLine } from '@/components/ui/Skeleton';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -78,17 +79,21 @@ export default function SalesPersonHomePage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-muted">Loading…</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <SkeletonLine className="w-40 h-4" />
+      </div>
+    );
   }
 
   if (!account) return null;
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-[var(--blur-liquid)] px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 backdrop-blur-xl backdrop-saturate-[1.8] bg-[var(--nav-bg)] border-b border-[var(--nav-border)] px-6 h-11 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="tahoe-icon-badge !w-8 !h-8 !rounded-md">
-            <Sparkles className="w-4 h-4" aria-hidden />
+          <div className="tahoe-icon-badge tahoe-icon-badge-teal !w-8 !h-8 !rounded-md">
+            <TrendingUp className="w-4 h-4" aria-hidden />
           </div>
           <span className="font-semibold">Sales Rep Portal</span>
         </div>
@@ -97,9 +102,10 @@ export default function SalesPersonHomePage() {
         </Button>
       </header>
 
-      <main className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
         <PageHero
           icon={Briefcase}
+          accent="teal"
           eyebrow="Account"
           title={account.contact_name || account.email}
           description={account.territory ? `Territory: ${account.territory}` : 'My assigned pipeline'}
@@ -132,7 +138,7 @@ export default function SalesPersonHomePage() {
             <section>
               <h2 className="text-lg font-semibold mb-3">Assigned leads</h2>
               {pipeline.leads.length === 0 ? (
-                <EmptyState icon={TrendingUp} title="No leads assigned yet" description="Leads assigned to you will appear here." />
+                <EmptyState icon={TrendingUp} tone="teal" title="No leads assigned yet" description="Leads assigned to you will appear here." />
               ) : (
                 <Card>
                   <Table>
@@ -162,7 +168,7 @@ export default function SalesPersonHomePage() {
             <section>
               <h2 className="text-lg font-semibold mb-3">Assigned opportunities</h2>
               {pipeline.opportunities.length === 0 ? (
-                <EmptyState icon={Briefcase} title="No opportunities assigned yet" description="Opportunities assigned to you will appear here." />
+                <EmptyState icon={Briefcase} tone="teal" title="No opportunities assigned yet" description="Opportunities assigned to you will appear here." />
               ) : (
                 <Card>
                   <Table>

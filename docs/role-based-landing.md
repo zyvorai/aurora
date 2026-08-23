@@ -47,6 +47,15 @@ All persona views remain reachable from the product sidebar (Brief, Sales, Pipel
    - **Exactly one product** → role default for that product (e.g. admin → Full Forge).
    - **Zero or multiple products** → `/dashboard`.
 
+**Sign-up (`apps/web/src/app/login/page.tsx`) is URL-first and skips this redirect logic
+on the happy path**: step 1 collects the product's URL, step 2 the account. On submit,
+after `auth.register` the client immediately calls `products.create` with the step-1 URL,
+`products.addSource`, and `products.ingest`, then routes straight to that new product's
+Full Forge (`/products/{id}`) — real ingest already running. `resolvePostLoginRoute()` is
+only used as a fallback if product creation fails (lands on `/dashboard` instead). Plain
+sign-in (the masthead toggle, or SSO) still goes through `resolvePostLoginRoute()`
+exactly as before.
+
 ### Dashboard
 
 - Hero subtitle describes the user’s default workspace (e.g. “Your default workspace is Sales Workspace…”).
@@ -55,8 +64,11 @@ All persona views remain reachable from the product sidebar (Brief, Sales, Pipel
 
 ### Product shell
 
-- Header badge shows the default workspace label (e.g. “Executive Brief”, “Full Forge”).
-- Breadcrumb product name links to the role default route, not always Brief.
+- `/products/[id]/*` routes render inside `ProductConsoleShell` (left rail + top tab
+  bar), not the site-wide `AppShell` navbar used elsewhere. The top tab bar is the same
+  role-driven workspace list as before (Forge/Pipeline/Sales/Marketing/Partners/Brief).
+- Full Forge's header badge is chain-derived (e.g. "needs sources", "ingesting",
+  "ready" — `chainStatusLabel()` in `apps/web/src/lib/chain.ts`), not a static label.
 
 ---
 

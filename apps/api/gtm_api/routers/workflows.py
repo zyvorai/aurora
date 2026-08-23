@@ -3,12 +3,13 @@
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import get_current_user, require_permission
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
-from gtm_api.models import User
+from gtm_api.models import User, WorkflowRun
 from gtm_api.schemas import (
     BriefResponse,
     ContentRequest,
@@ -330,3 +331,40 @@ async def poll_workflow_run(
         completed_at=run.completed_at,
         created_at=run.created_at,
     )
+
+
+@router.get("/products/{product_id}/workflow-runs", response_model=list[WorkflowRunResponse])
+async def list_workflow_runs(
+    product_id: uuid.UUID,
+    limit: int = 20,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Recent/active runs for a product's run-log dock -- newest first."""
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+
+    result = await db.execute(
+        select(WorkflowRun)
+        .where(WorkflowRun.product_id == product_id, WorkflowRun.tenant_id == ctx.tenant_id)
+        .order_by(WorkflowRun.created_at.desc())
+        .limit(min(limit, 100))
+    )
+    runs = result.scalars().all()
+    return [
+        WorkflowRunResponse(
+            id=run.id,
+            workflow_name=run.workflow_name,
+            status=run.status,
+            steps=[
+                WorkflowStepStatus(**step) if isinstance(step, dict) else step
+                for step in (run.steps or [])
+            ],
+            output_data=run.output_data or {},
+            error_message=run.error_message,
+            started_at=run.started_at,
+            completed_at=run.completed_at,
+            created_at=run.created_at,
+        )
+        for run in runs
+    ]

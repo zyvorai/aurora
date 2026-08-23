@@ -23,9 +23,9 @@ from gtm_api.tenant import audit_log
 
 
 ENTERPRISE_FEATURES = {
-    "starter": {"products": 1, "sso": False, "audit": True, "private_deploy": False},
-    "growth": {"products": 10, "sso": False, "audit": True, "private_deploy": False},
-    "enterprise": {"products": 1000, "sso": True, "audit": True, "private_deploy": True},
+    "starter": {"products": 1, "sso": False, "audit": True, "private_deploy": False, "custom_workflow_stages": False},
+    "growth": {"products": 10, "sso": False, "audit": True, "private_deploy": False, "custom_workflow_stages": False},
+    "enterprise": {"products": 1000, "sso": True, "audit": True, "private_deploy": True, "custom_workflow_stages": True},
 }
 
 

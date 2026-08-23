@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { dismissToast, subscribeToasts, type ToastMessage, type ToastVariant } from '@/lib/toast';
@@ -19,14 +19,17 @@ const VARIANT_CLASSES: Record<ToastVariant, string> = {
   info: 'border-primary/30 bg-primary/10 text-primary',
 };
 
-function ToastItem({ toast }: { toast: ToastMessage }) {
+const EXIT_MS = 150;
+
+function ToastItem({ toast, closing }: { toast: ToastMessage; closing: boolean }) {
   const Icon = ICONS[toast.variant];
   return (
     <div
       role="alert"
       className={cn(
-        'animate-slide-in flex items-start gap-2 rounded-[var(--radius-liquid)] border px-4 py-3 shadow-lg',
+        'flex items-start gap-2 rounded-[var(--radius-liquid)] border px-4 py-3 shadow-lg',
         'bg-[var(--glass-bg-elevated)] backdrop-blur-[var(--blur-liquid-sm)] text-body-sm',
+        closing ? 'animate-slide-out' : 'animate-slide-in',
         VARIANT_CLASSES[toast.variant],
       )}
     >
@@ -45,16 +48,58 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
 }
 
 export default function ToastContainer() {
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  // Kept as a superset of the lib's live toast list -- a toast that's been dismissed
+  // (manually or via the lib's auto-dismiss timer) stays here, marked "closing", for
+  // EXIT_MS so it can play .animate-slide-out instead of vanishing the instant the
+  // lib's array (and thus the subscription callback) drops it.
+  const [displayed, setDisplayed] = useState<ToastMessage[]>([]);
+  const [closingIds, setClosingIds] = useState<Set<string>>(new Set());
+  // Mirrors closingIds for the subscription callback below, which is registered once
+  // (effect deps []) and would otherwise read a stale closure of the state value.
+  const closingIdsRef = useRef<Set<string>>(new Set());
+  const prevIds = useRef<Set<string>>(new Set());
 
-  useEffect(() => subscribeToasts(setToasts), []);
+  function updateClosingIds(next: Set<string>) {
+    closingIdsRef.current = next;
+    setClosingIds(next);
+  }
 
-  if (toasts.length === 0) return null;
+  useEffect(
+    () =>
+      subscribeToasts((live) => {
+        const liveIds = new Set(live.map((t) => t.id));
+        const removed = [...prevIds.current].filter((id) => !liveIds.has(id));
+        prevIds.current = liveIds;
+
+        setDisplayed((prev) => {
+          const prevById = new Map(prev.map((t) => [t.id, t]));
+          const stillClosing = prev.filter(
+            (t) => closingIdsRef.current.has(t.id) && !removed.includes(t.id),
+          );
+          return [...live.map((t) => prevById.get(t.id) ?? t), ...stillClosing];
+        });
+
+        if (removed.length > 0) {
+          updateClosingIds(new Set([...closingIdsRef.current, ...removed]));
+          removed.forEach((id) => {
+            setTimeout(() => {
+              setDisplayed((prev) => prev.filter((t) => t.id !== id));
+              const next = new Set(closingIdsRef.current);
+              next.delete(id);
+              updateClosingIds(next);
+            }, EXIT_MS);
+          });
+        }
+      }),
+    [],
+  );
+
+  if (displayed.length === 0) return null;
 
   return (
     <div className="fixed top-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-2">
-      {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} />
+      {displayed.map((toast) => (
+        <ToastItem key={toast.id} toast={toast} closing={closingIds.has(toast.id)} />
       ))}
     </div>
   );

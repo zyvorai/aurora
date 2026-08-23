@@ -1,14 +1,20 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useDelayedUnmount } from '@/hooks/useDelayedUnmount';
+import { TONE_CLASSES } from '@/lib/tone';
+import type { Tone } from '@/components/layout/PageHero';
 
 export interface CommandPaletteItem {
   id: string;
   label: string;
   group?: string;
   keywords?: string;
+  icon?: LucideIcon;
+  /** Colors the item's icon tile, macOS-Spotlight-style -- omit for a neutral tile. */
+  tone?: Tone;
   onSelect: () => void;
 }
 
@@ -29,6 +35,7 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const rendered = useDelayedUnmount(open, 150);
 
   const filtered = useMemo(() => items.filter((item) => matches(item, query)), [items, query]);
 
@@ -85,20 +92,26 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, filtered, activeIndex, onClose]);
 
-  if (!open) return null;
+  if (!rendered) return null;
 
   let flatIndex = -1;
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-[15vh] bg-black/60 backdrop-blur-sm"
+      className={cn(
+        'fixed inset-0 z-[100] flex items-start justify-center p-4 pt-[15vh] bg-black/60 backdrop-blur-sm',
+        open ? 'animate-fade-in' : 'animate-fade-out',
+      )}
       role="dialog"
       aria-modal="true"
       aria-label={title}
       onClick={onClose}
     >
       <div
-        className="animate-glass-in glass-strong w-full max-w-lg overflow-hidden rounded-[var(--radius-liquid-lg)]"
+        className={cn(
+          'glass-strong w-full max-w-lg overflow-hidden rounded-[var(--radius-liquid-lg)]',
+          open ? 'animate-glass-in' : 'animate-glass-out',
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-[var(--glass-border)] px-4 py-3">
@@ -126,6 +139,8 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
               {groupItems.map((item) => {
                 flatIndex += 1;
                 const isActive = flatIndex === activeIndex;
+                const Icon = item.icon;
+                const tone = item.tone ? TONE_CLASSES[item.tone] : null;
                 return (
                   <button
                     key={item.id}
@@ -136,10 +151,21 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
                       item.onSelect();
                     }}
                     className={cn(
-                      'block w-full px-4 py-2 text-left text-body-sm',
+                      'w-full flex items-center gap-2.5 px-4 py-2 text-left text-body-sm',
                       isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-surface',
                     )}
                   >
+                    {Icon && (
+                      <span
+                        className={cn(
+                          'w-6 h-6 flex items-center justify-center rounded-[7px] shrink-0',
+                          tone ? tone.bg : 'bg-surface',
+                          tone ? tone.text : 'text-muted',
+                        )}
+                      >
+                        <Icon className="w-3.5 h-3.5" aria-hidden />
+                      </span>
+                    )}
                     {item.label}
                   </button>
                 );

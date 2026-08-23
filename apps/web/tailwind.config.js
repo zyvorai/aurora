@@ -19,6 +19,10 @@ module.exports = {
         success: 'var(--success)',
         warning: 'var(--warning)',
         danger: 'var(--danger)',
+        'accent-blue': 'var(--accent-blue)',
+        'accent-pink': 'var(--accent-pink)',
+        'accent-teal': 'var(--accent-teal)',
+        'accent-purple': 'var(--accent-purple)',
         gtm: {
           bg: 'var(--background)',
           card: 'var(--surface-elevated)',

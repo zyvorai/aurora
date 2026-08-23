@@ -3,10 +3,14 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { Eyebrow, PageTitle, TextLead } from '@/components/ui/Typography';
 
+/** iPhone-colorway qualitative palette, shared across PageHero, nav-data's
+ * per-persona/portal colors, and the .tahoe-stat-{tone} / .tahoe-icon-badge-{tone} CSS classes. */
+export type Tone = 'sky' | 'violet' | 'emerald' | 'amber' | 'pink' | 'teal' | 'rust';
+
 interface HeroStat {
   label: string;
   value: string | number;
-  tone?: 'sky' | 'violet' | 'emerald' | 'amber';
+  tone?: Tone;
 }
 
 interface PageHeroProps {
@@ -15,11 +19,14 @@ interface PageHeroProps {
   description?: string;
   actions?: ReactNode;
   icon?: LucideIcon;
+  /** Colors the hero's icon badge -- so a persona/portal page's header matches its
+   * workspace tab / stat-tile color instead of always being the flat brand rust. */
+  accent?: Tone;
   stats?: HeroStat[];
   className?: string;
 }
 
-export function PageHero({ eyebrow, title, description, actions, icon: Icon, stats, className }: PageHeroProps) {
+export function PageHero({ eyebrow, title, description, actions, icon: Icon, accent, stats, className }: PageHeroProps) {
   return (
     <section
       className={cn(
@@ -33,7 +40,7 @@ export function PageHero({ eyebrow, title, description, actions, icon: Icon, sta
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4 min-w-0 max-w-2xl">
             {Icon && (
-              <div className="tahoe-icon-badge shrink-0">
+              <div className={cn('tahoe-icon-badge shrink-0', accent && `tahoe-icon-badge-${accent}`)}>
                 <Icon className="h-5 w-5" />
               </div>
             )}

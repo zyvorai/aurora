@@ -623,7 +623,29 @@ cd apps/api && python -m pytest tests/ -v
 
 ## Frontend workspace
 
-Product workspace tabs (`apps/web/src/app/products/[id]/ForgePage.tsx`):
+**Product console shell** (`apps/web/src/components/layout/ProductConsoleShell.tsx`, mounted by
+`products/[id]/layout.tsx` in place of the site-wide `AppShell` for this route tree): a left rail
+(product switcher, a numbered 9-stage pipeline chain with live status pips, a "Surfaces" nav for
+Q&A/Content/Sales Chat/Architect/Analytics, and any tenant-defined custom workflow stages) plus a
+sticky top tab bar (Forge/Pipeline/Sales/Marketing/Partners/Brief) and a persistent right-hand
+run-log dock. No stage's status is hand-set per screen — everything is derived from
+`GET /products/{id}/brief`'s `gtm_readiness` object (see `apps/web/src/lib/chain.ts`).
+
+**The chain** (`sources → ingest → product profile → strategy → discover → qualify → outreach →
+proposal → publish`): each stage is `idle` (locked, reads from the knowledge base), `need`
+(the one thing to do next), `run` (in flight), or `done`, computed by `deriveChain()` from the nine
+`gtm_readiness` booleans plus whichever action the current page has in flight. `StageChain.tsx`
+renders it as a stepper; `NextAction.tsx` derives a single call-to-action from it (replacing the
+old multiple-equal-weight-buttons treatment); `RunLogDock.tsx` polls `GET
+/products/{id}/workflow-runs` so async work is never invisible, independent of which page you're on.
+
+Full Forge (`apps/web/src/app/products/[id]/ForgePage.tsx`) Overview pane: header with a
+chain-derived status badge (`chainStatusLabel()` — "needs sources", "ingesting", "ready", etc.,
+never the raw `profile_status`), the `StageChain` + `NextAction`, the Sources panel, and a
+"Waiting on knowledge" dependency-chain explainer for locked stages. The other fixed tabs (Q&A,
+Content, Sales Chat, Architect, Proposal, Publish, Analytics, Strategy, Outreach) are unchanged in
+behavior — reachable via `?tab=<key>` from the rail's "Surfaces" nav or a chain-stage link — and
+tenant-defined custom stages (`custom:<id>` tab keys) render via `StageBlockRenderer.tsx`.
 
 | Tab | Phase | API |
 |-----|-------|-----|
@@ -642,16 +664,27 @@ Other pages:
 
 | Page | Contents |
 |------|----------|
-| `products/[id]/marketing/page.tsx` | Campaigns panel (create, list, status) |
+| `products/[id]/marketing/page.tsx` | Campaigns panel, outbound-sprint dependency chain + run trigger, GTM strategy readiness card |
+| `products/[id]/sales/page.tsx` | Stat strip, qualified-leads table, Discover gated on `gtm_readiness.profile_built` with blocker-naming copy |
 | `products/[id]/pipeline/page.tsx` | Kanban (clickable → opportunity detail modal with async proposal + success-plan generation), Account Health panel |
+| `products/[id]/partner/page.tsx` | Product profile (gated on `profile_built` with blocker-naming copy), co-branded assets |
 | `dashboard/agents/page.tsx` | Agent registry catalog (11 agents, compute tier, model key) |
-| `dashboard/settings/page.tsx` | Agent registry link, plan usage, suppression list |
+| `dashboard/settings/page.tsx` | Agent registry link, plan usage, suppression list, workflow-stages editor link |
 | `dashboard/admin/danger/page.tsx` | Tenant data export, typed-slug-confirmation purge (admin-only, client + server guarded) |
+| `dashboard/admin/workflow-stages/page.tsx` | Enterprise-only tenant-defined Full Forge stages (icon/tone/content-block editor) — see `POST/GET/PUT/DELETE /admin/workflow-stages` |
+
+**Get Started / sign-in** (`apps/web/src/app/login/page.tsx`): single-column, URL-first signup —
+one field (the product's URL), an illustrative client-side "scanning" readout, then name/company/
+email/password. On submit: `auth.register` → `products.create` (using the step-1 URL) →
+`products.addSource` → `products.ingest`, landing straight in the new product's Full Forge with
+real ingest already running. Sign-in is a quiet toggle in the masthead, not a competing pill.
 
 API client: `apps/web/src/lib/api.ts`
 
-Visual design: glass/"Tahoe" system is the default look across all pages — see
-[Design system](../README.md#design-system) in the README and `apps/web/src/app/globals.css`.
+Visual design: Apple-blue/iPhone-colorway accent system (not orange/rust) is the default look
+across all pages — see [Design system](../README.md#design-system) in the README and
+`apps/web/src/app/globals.css`. The console/chain surfaces use a status-only palette (running =
+primary, needs-you = warning, done = success, idle = muted) layered on the same tokens.
 
 ---
 

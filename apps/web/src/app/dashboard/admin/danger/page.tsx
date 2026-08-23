@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ShieldAlert } from 'lucide-react';
 import { TextMuted, TextSmall } from '@/components/ui/Typography';
+import { SkeletonHero, SkeletonText } from '@/components/ui/Skeleton';
 
 export default function AdminDangerZonePage() {
   const { ready, role } = useAuth();
@@ -54,7 +55,12 @@ export default function AdminDangerZonePage() {
   }
 
   if (!ready) {
-    return <div className="max-w-content mx-auto px-6 py-8 text-muted">Loading…</div>;
+    return (
+      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+        <SkeletonHero />
+        <SkeletonText lines={3} />
+      </div>
+    );
   }
 
   // First client-side route guard in this app: this page is destructive enough
@@ -73,7 +79,7 @@ export default function AdminDangerZonePage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
       <PageHero
         eyebrow="Admin"
         title="Danger Zone"

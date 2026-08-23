@@ -2,7 +2,9 @@
 
 import { cn } from '@/lib/cn';
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'tier-a' | 'tier-b' | 'tier-c';
+export type BadgeVariant =
+  | 'default' | 'success' | 'warning' | 'danger' | 'tier-a' | 'tier-b' | 'tier-c'
+  | 'blue' | 'pink' | 'teal' | 'purple';
 
 const variants: Record<BadgeVariant, string> = {
   default: 'bg-surface text-muted border-border',
@@ -12,6 +14,12 @@ const variants: Record<BadgeVariant, string> = {
   'tier-a': 'bg-success/15 text-success',
   'tier-b': 'bg-warning/15 text-warning',
   'tier-c': 'bg-surface text-muted',
+  // Decorative, non-semantic colorway variants -- for categorization (persona/portal
+  // tags), not status. Keep success/warning/danger meaning status, not decoration.
+  blue: 'bg-accent-blue/15 text-accent-blue',
+  pink: 'bg-accent-pink/15 text-accent-pink',
+  teal: 'bg-accent-teal/15 text-accent-teal',
+  purple: 'bg-accent-purple/15 text-accent-purple',
 };
 
 export function Badge({

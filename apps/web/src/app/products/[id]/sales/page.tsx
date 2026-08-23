@@ -14,6 +14,7 @@ import {
   Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell,
 } from '@/components/ui/Table';
 import { Eyebrow, Stat, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
 
 export default function SalesPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +33,10 @@ export default function SalesPage() {
     loadLeads();
   }, [id, loadLeads]);
 
+  const profileBuilt = brief?.gtm_readiness.profile_built ?? false;
+
   async function runDiscover() {
+    if (!profileBuilt) return;
     setLoading(true);
     setMessage(null);
     try {
@@ -73,7 +77,9 @@ export default function SalesPage() {
       <PageHero
         eyebrow="Sales"
         title="Sales Action"
-        description="Qualified leads, outreach, and proposals — discovery and scoring run without LLM."
+        description="Qualified leads, outreach, and proposals — discovery and scoring run on rules, not a model, so the same input always gives the same output."
+        icon={WORKSPACE_ICONS.sales}
+        accent={WORKSPACE_COLORS.sales}
       />
 
       {brief && (
@@ -93,9 +99,28 @@ export default function SalesPage() {
         </div>
       )}
 
+      {brief && !profileBuilt && (
+        <Card elevated className="border-warning/30">
+          <CardBody className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold text-foreground">Discover needs a product profile</h2>
+              <p className="mt-1 text-body-sm text-muted max-w-[64ch]">
+                Scoring compares each account against what this product actually does. Until the profile is
+                built there is nothing to compare against.
+              </p>
+              <p className="mt-2 font-mono text-xs text-muted">blocked by · ingest → product profile</p>
+            </div>
+            <Link href={`/products/${id}`}>
+              <Button>Go to Forge</Button>
+            </Link>
+          </CardBody>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {actions.map((action) =>
-          action.href ? (
+        {actions.map((action) => {
+          const disabled = action.label === 'Discover leads' && !profileBuilt;
+          return action.href ? (
             <Link key={action.label} href={action.href}>
               <Card elevated className="h-full hover:border-primary/40 transition-colors cursor-pointer">
                 <CardBody className="py-4 text-center">
@@ -107,9 +132,10 @@ export default function SalesPage() {
             <button
               key={action.label}
               type="button"
-              disabled={loading}
+              disabled={loading || disabled}
               onClick={action.onClick}
-              className="text-left disabled:opacity-50"
+              title={disabled ? 'Build the product profile in Forge first' : undefined}
+              className="text-left disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Card elevated className="h-full hover:border-primary/40 transition-colors">
                 <CardBody className="py-4 text-center">
@@ -117,8 +143,8 @@ export default function SalesPage() {
                 </CardBody>
               </Card>
             </button>
-          ),
-        )}
+          );
+        })}
       </div>
 
       {message && <TextMuted>{message}</TextMuted>}
@@ -158,7 +184,17 @@ export default function SalesPage() {
           <Card>
             <CardBody>
               <TextMuted>
-                No leads yet. Run <strong className="text-foreground">Discover leads</strong> or start an Outbound Sprint from Marketing.
+                {profileBuilt ? (
+                  <>
+                    No leads yet. Run <strong className="text-foreground">Discover leads</strong>, then{' '}
+                    <strong className="text-foreground">Qualify leads</strong>, or start an Outbound Sprint from Marketing.
+                  </>
+                ) : (
+                  <>
+                    No leads yet — Discover and Qualify both run after the product profile exists. Build it in{' '}
+                    <Link href={`/products/${id}`} className="text-primary hover:underline">Forge</Link> first.
+                  </>
+                )}
               </TextMuted>
             </CardBody>
           </Card>

@@ -142,19 +142,30 @@ Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-gu
 - `POST /api/v1/products/{id}/campaigns`, `GET .../campaigns`, `GET .../campaigns/{id}/status` — Campaign management
 - `GET /api/v1/products/{id}/opportunities/{opp_id}` — Opportunity detail
 - `GET /api/v1/products/{id}/account-health` — Customer success account health
+- `GET /api/v1/products/{id}/brief` — Executive brief incl. `gtm_readiness` (9 derived, no-LLM status booleans — sources/ingest/profile/strategy/discover/qualify/outreach/proposal/publish)
+- `GET /api/v1/products/{id}/workflow-runs` — Recent/active `WorkflowRun`s for a product (powers the Full Forge run-log dock)
 - `GET /api/v1/agents/registry` — Agent registry catalog
 - `GET /api/v1/admin/plan` — Plan + usage
 - `GET/POST /api/v1/admin/suppression` — Suppression list
 - `GET /api/v1/admin/export` — Tenant data export (admin only)
 - `POST /api/v1/admin/purge` — Tenant knowledge purge, typed-slug confirmation (admin only)
+- `GET/POST/PUT/DELETE /api/v1/admin/workflow-stages` — Tenant-defined custom Full Forge stages (Enterprise plan only)
 
 ## Design system
 
 Default look is a glass/"Tahoe" visual language (blurred glass cards, pill buttons, hero
-orbs) using the platform's orange brand accent — see `apps/web/src/app/globals.css`
-(`.glass*`, `.tahoe-*` classes and `--glass-*`/`--blur-liquid*` tokens). Degrades
-automatically to flat surfaces under `prefers-reduced-transparency`,
-`prefers-reduced-motion`, and browsers without `backdrop-filter` support.
+orbs) using an Apple-blue/iPhone-colorway accent (`--primary`, plus a 7-tone qualitative
+palette — sky/violet/emerald/amber/pink/teal/rust — for category coding on cards and
+icon tiles) — see `apps/web/src/app/globals.css` (`.glass*`, `.tahoe-*` classes and
+`--glass-*`/`--blur-liquid*` tokens, `apps/web/src/lib/tone.ts`). Degrades automatically
+to flat surfaces under `prefers-reduced-transparency`, `prefers-reduced-motion`, and
+browsers without `backdrop-filter` support.
+
+The product workspace (`/products/[id]/*`) uses its own console shell — a left rail +
+top tab bar instead of the site-wide top navbar — built around a derived, 9-stage
+pipeline "chain" (status is never hand-set per screen). See
+[Frontend workspace](docs/gtm-platform-phases.md#frontend-workspace) for the full
+architecture.
 
 ## License
 

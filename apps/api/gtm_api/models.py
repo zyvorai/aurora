@@ -802,3 +802,30 @@ class WorkflowRun(Base):
     started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CustomWorkflowStage(Base):
+    """Tenant-defined custom stage shown in Full Forge's sidebar, alongside the fixed
+    Foundation/GTM/Revenue/Distribution/Intelligence groups -- tenant-wide (no
+    product_id), configured by a tenant admin in Settings. `content_blocks` holds an
+    ordered list of {type, ...} objects (markdown/link/callout/agent_action); `icon`
+    and `tone` are plain strings validated against fixed allow-lists at the schema
+    layer (not a DB enum), matching User.role's precedent -- avoids a migration every
+    time the allowed icon/tone set changes. Distinct from WorkflowRun, which logs
+    workflow *execution*, not definition."""
+
+    __tablename__ = "custom_workflow_stages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    group_label: Mapped[str] = mapped_column(String(100), nullable=False)
+    label: Mapped[str] = mapped_column(String(100), nullable=False)
+    icon: Mapped[str] = mapped_column(String(50), nullable=False)
+    tone: Mapped[str] = mapped_column(String(20), nullable=False)
+    position: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    content_blocks: Mapped[list] = mapped_column(JSONB, default=list)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

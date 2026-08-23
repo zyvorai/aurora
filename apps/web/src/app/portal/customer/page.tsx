@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, LifeBuoy, LogOut, Pencil, Plus, Sparkles } from 'lucide-react';
+import { Building2, LifeBuoy, LogOut, Pencil, Plus } from 'lucide-react';
 import { PageHero } from '@/components/layout/PageHero';
+import { SkeletonLine } from '@/components/ui/Skeleton';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -111,7 +112,11 @@ export default function CustomerHomePage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-muted">Loading…</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <SkeletonLine className="w-40 h-4" />
+      </div>
+    );
   }
 
   if (error || !account) {
@@ -120,10 +125,10 @@ export default function CustomerHomePage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-[var(--blur-liquid)] px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 backdrop-blur-xl backdrop-saturate-[1.8] bg-[var(--nav-bg)] border-b border-[var(--nav-border)] px-6 h-11 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="tahoe-icon-badge !w-8 !h-8 !rounded-md">
-            <Sparkles className="w-4 h-4" aria-hidden />
+          <div className="tahoe-icon-badge tahoe-icon-badge-sky !w-8 !h-8 !rounded-md">
+            <Building2 className="w-4 h-4" aria-hidden />
           </div>
           <span className="font-semibold">Customer Portal</span>
         </div>
@@ -132,9 +137,10 @@ export default function CustomerHomePage() {
         </Button>
       </header>
 
-      <main className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
         <PageHero
           icon={Building2}
+          accent="sky"
           eyebrow="Account"
           title={account.company_name || account.contact_name || account.email}
           description="Your account status and details."
@@ -177,7 +183,7 @@ export default function CustomerHomePage() {
               </Button>
             </div>
             {tickets.length === 0 ? (
-              <EmptyState icon={LifeBuoy} title="No tickets yet" description="Run into an issue? Open a ticket and we'll take a look." />
+              <EmptyState icon={LifeBuoy} tone="sky" title="No tickets yet" description="Run into an issue? Open a ticket and we'll take a look." />
             ) : (
               <Card>
                 <Table>

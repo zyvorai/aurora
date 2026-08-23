@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
 import { Card } from '@/components/ui/Card';
+import { SkeletonHero, SkeletonTable } from '@/components/ui/Skeleton';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +15,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 import { portalAdmin, type CustomerAccount, type ResellerAccount, type SalesPersonAccount } from '@/lib/portal-api';
+import { TONE_CLASSES } from '@/lib/tone';
+import type { Tone } from '@/components/layout/PageHero';
 
 type PortalAccount = CustomerAccount | ResellerAccount | SalesPersonAccount;
 type PortalTab = 'customer' | 'reseller' | 'salesperson';
@@ -22,6 +25,14 @@ const TAB_LABEL: Record<PortalTab, string> = {
   customer: 'Customers',
   reseller: 'Resellers',
   salesperson: 'Sales reps',
+};
+
+// Same per-portal tone each portal's own home page uses (sky/violet/teal), so the
+// admin's tab switcher visually agrees with the portals it's managing.
+const TAB_TONE: Record<PortalTab, Tone> = {
+  customer: 'sky',
+  reseller: 'violet',
+  salesperson: 'teal',
 };
 
 function displayName(account: PortalAccount): string {
@@ -113,7 +124,12 @@ export default function PortalAccountsAdminPage() {
   }
 
   if (!ready) {
-    return <div className="max-w-content mx-auto px-6 py-8 text-muted">Loading…</div>;
+    return (
+      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+        <SkeletonHero />
+        <SkeletonTable />
+      </div>
+    );
   }
 
   // Same pattern as the danger-zone page: a non-admin should never see the approval
@@ -131,7 +147,7 @@ export default function PortalAccountsAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
       <PageHero
         icon={Users}
         eyebrow="Admin"
@@ -147,7 +163,7 @@ export default function PortalAccountsAdminPage() {
             onClick={() => setTab(t)}
             className={cn(
               'px-4 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring capitalize',
-              tab === t ? 'bg-primary text-primary-foreground' : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
+              tab === t ? TONE_CLASSES[TAB_TONE[t]].solid : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
             )}
           >
             {TAB_LABEL[t]}
@@ -156,9 +172,9 @@ export default function PortalAccountsAdminPage() {
       </div>
 
       {loading ? (
-        <div className="text-muted">Loading…</div>
+        <SkeletonTable />
       ) : accounts.length === 0 ? (
-        <EmptyState icon={Users} title="No signup requests yet" description={`${TAB_LABEL[tab]} portal signups will appear here.`} />
+        <EmptyState icon={Users} tone={TAB_TONE[tab]} title="No signup requests yet" description={`${TAB_LABEL[tab]} portal signups will appear here.`} />
       ) : (
         <Card>
           <Table>

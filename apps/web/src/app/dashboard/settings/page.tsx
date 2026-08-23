@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { SkeletonText } from '@/components/ui/Skeleton';
 
 interface CurrentUser {
   id: string;
@@ -63,7 +64,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
       <PageHero eyebrow="Account" title="Settings" description="Manage your account and workspace preferences." />
 
       <section>
@@ -86,7 +87,7 @@ export default function SettingsPage() {
                 </div>
               </>
             ) : (
-              <TextMuted>Loading…</TextMuted>
+              <SkeletonText lines={2} />
             )}
           </CardBody>
         </Card>
@@ -124,7 +125,7 @@ export default function SettingsPage() {
                 />
               </>
             ) : (
-              <TextMuted>Loading…</TextMuted>
+              <SkeletonText lines={2} />
             )}
           </CardBody>
         </Card>
@@ -172,6 +173,20 @@ export default function SettingsPage() {
               <TextMuted>Review and approve customer portal signup requests.</TextMuted>
               <Link href="/dashboard/admin/portal-accounts">
                 <Button variant="secondary">Review requests</Button>
+              </Link>
+            </CardBody>
+          </Card>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section>
+          <SectionHeader label="Full Forge" title="Workflow stages" />
+          <Card elevated>
+            <CardBody className="flex items-center justify-between">
+              <TextMuted>Add tenant-defined stages to every product&apos;s Full Forge sidebar. Enterprise plan only.</TextMuted>
+              <Link href="/dashboard/admin/workflow-stages">
+                <Button variant="secondary">Manage stages</Button>
               </Link>
             </CardBody>
           </Card>

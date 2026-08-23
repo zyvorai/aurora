@@ -399,6 +399,10 @@ export const products = {
     return request<ExecutiveBrief>(`/products/${id}/brief`);
   },
 
+  workflowRuns(id: string, limit = 20): Promise<WorkflowRunStatus[]> {
+    return request<WorkflowRunStatus[]>(`/products/${id}/workflow-runs?limit=${limit}`);
+  },
+
   startOutboundSprint(
     id: string,
     params: {
@@ -708,6 +712,59 @@ export const admin = {
   },
 };
 
+export type StageBlock =
+  | { type: 'markdown'; body: string }
+  | { type: 'link'; label: string; href: string }
+  | { type: 'callout'; label: string; value: string; description?: string }
+  | { type: 'agent_action'; action: string; label: string; params: Record<string, string> };
+
+export interface WorkflowStage {
+  id: string;
+  tenant_id: string;
+  group_label: string;
+  label: string;
+  icon: string;
+  tone: string;
+  position: number;
+  content_blocks: StageBlock[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowStageInput {
+  group_label: string;
+  label: string;
+  icon: string;
+  tone: string;
+  position: number;
+  content_blocks: StageBlock[];
+}
+
+export const workflowStages = {
+  list(): Promise<WorkflowStage[]> {
+    return request('/admin/workflow-stages');
+  },
+
+  create(data: WorkflowStageInput): Promise<WorkflowStage> {
+    return request('/admin/workflow-stages', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update(id: string, data: Partial<WorkflowStageInput>): Promise<WorkflowStage> {
+    return request(`/admin/workflow-stages/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  remove(id: string): Promise<void> {
+    return request(`/admin/workflow-stages/${id}`, { method: 'DELETE' });
+  },
+};
+
 export const agents = {
   registry(): Promise<AgentRegistryEntry[]> {
     return request('/agents/registry');
@@ -754,6 +811,10 @@ export interface ExecutiveBrief {
     profile_built: boolean;
     strategy_ready: boolean;
     outreach_ready: boolean;
+    discover_ready: boolean;
+    qualify_ready: boolean;
+    proposal_ready: boolean;
+    publish_ready: boolean;
   };
   kpis: {
     leads: number;
@@ -783,6 +844,9 @@ export interface WorkflowRunStatus {
   steps: Array<{ name: string; status: string; error?: string }>;
   output_data: Record<string, unknown>;
   error_message?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  created_at?: string;
 }
 
 export interface Opportunity {

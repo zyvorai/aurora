@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { products, type Product } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { ProductProvider } from '@/context/ProductContext';
-import { AppShell } from '@/components/layout/AppShell';
+import { ProductConsoleShell } from '@/components/layout/ProductConsoleShell';
+import { SkeletonLine } from '@/components/ui/Skeleton';
 
 export default function ProductLayout({ children }: { children: ReactNode }) {
   const { id } = useParams<{ id: string }>();
@@ -24,15 +25,17 @@ export default function ProductLayout({ children }: { children: ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted">
-        Loading…
+      <div className="min-h-screen flex items-center justify-center">
+        <SkeletonLine className="w-40 h-4" />
       </div>
     );
   }
 
   return (
     <ProductProvider productId={id} product={product} loading={loading}>
-      <AppShell>{children}</AppShell>
+      <ProductConsoleShell productId={id} product={product}>
+        {children}
+      </ProductConsoleShell>
     </ProductProvider>
   );
 }

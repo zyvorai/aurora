@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from './Button';
 import { SubsectionTitle } from './Typography';
+import { useDelayedUnmount } from '@/hooks/useDelayedUnmount';
 
 interface ModalProps {
   open: boolean;
@@ -15,6 +16,8 @@ interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
+  const rendered = useDelayedUnmount(open, 150);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -24,11 +27,14 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!rendered) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/55 backdrop-blur-sm"
+      className={cn(
+        'fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-sm',
+        open ? 'animate-fade-in bg-black/55' : 'animate-fade-out bg-black/55',
+      )}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -36,7 +42,8 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     >
       <div
         className={cn(
-          'glass-strong rounded-[var(--radius-liquid-lg)] w-full max-w-md animate-glass-in',
+          'glass-strong rounded-[var(--radius-liquid-lg)] w-full max-w-md',
+          open ? 'animate-glass-in' : 'animate-glass-out',
           className,
         )}
         onClick={(e) => e.stopPropagation()}

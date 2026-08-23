@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Kanban } from 'lucide-react';
+import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
 import { showToast } from '@/lib/toast';
 import { workflowProgressPercent } from '@/lib/workflow-progress';
 import AccountHealthPanel from '@/components/success/AccountHealthPanel';
@@ -126,7 +127,9 @@ export default function PipelinePage() {
       <PageHero
         eyebrow="Revenue"
         title="Pipeline"
-        description="CRM kanban — stage moves are instant (T0). Technical eval runs async."
+        description="Drag a card to move a stage. Technical evals run in the background and post their verdict back to the card."
+        icon={WORKSPACE_ICONS.pipeline}
+        accent={WORKSPACE_COLORS.pipeline}
         actions={
           <>
             <Button variant="secondary" disabled={loading} onClick={createManualOpp}>

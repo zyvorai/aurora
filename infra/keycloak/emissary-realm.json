@@ -1,0 +1,42 @@
+{
+  "realm": "emissary",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "emissary",
+      "name": "Emissary",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "REPLACE_WITH_A_GENERATED_SECRET",
+      "redirectUris": [
+        "http://localhost:8000/api/v1/auth/sso/callback",
+        "http://<your-host>:8000/api/v1/auth/sso/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://<your-host>:3000"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "email": "demo-sso@zyvor.dev",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "User",
+      "credentials": [
+        { "type": "password", "value": "demo", "temporary": false }
+      ]
+    }
+  ]
+}

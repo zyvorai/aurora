@@ -20,6 +20,8 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Reveal } from '@/components/ui/Reveal';
+import { TONE_ROTATION } from '@/lib/tone';
+import { cn } from '@/lib/cn';
 import {
   Eyebrow,
   DisplayTitle,
@@ -85,7 +87,7 @@ const CORE_FEATURES = [
   {
     icon: Workflow,
     title: 'Background Agents',
-    description: 'Outbound sprints, technical evals, and proposals run without blocking the UI.',
+    description: 'Outbound sprints, technical evals, and proposals run in the background — close the tab, they keep going.',
   },
   {
     icon: ShieldCheck,
@@ -95,7 +97,7 @@ const CORE_FEATURES = [
   {
     icon: Zap,
     title: 'Lean & Fast',
-    description: 'Executive briefs load instantly — SQL-first, LLM only when you trigger it.',
+    description: 'Executive briefs load instantly, even before an agent has run.',
   },
   {
     icon: Send,
@@ -127,19 +129,22 @@ const LLM_PROVIDERS = [
 export default function FeaturesPage() {
   return (
     <div className="min-h-screen">
-      <nav className="sticky top-0 z-40 border-b border-border bg-[var(--glass-bg)]">
-        <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+      <nav className="sticky top-0 z-40 backdrop-blur-xl backdrop-saturate-[1.8] bg-[var(--nav-bg)] border-b border-[var(--nav-border)]">
+        <div className="mx-auto max-w-6xl px-6 h-11 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" aria-hidden />
+            <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-primary flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden />
             </div>
-            <span className="font-bold tracking-tight text-foreground">Emissary</span>
+            <span className="font-bold tracking-tight text-sm text-foreground">Emissary</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-body-sm font-medium text-muted hover:text-foreground transition-colors">
+          <div className="flex items-center gap-1">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-muted hover:text-foreground rounded-[var(--radius-sm)] px-[11px] py-2 hover:bg-[var(--nav-hover-bg)] transition-colors"
+            >
               Sign in
             </Link>
-            <Link href="/login" className={ctaPrimary + ' !px-4 !py-2 !text-body-sm'}>
+            <Link href="/login" className="ml-2 rounded-[var(--radius-pill)] bg-primary hover:bg-[var(--primary-hover)] text-white text-xs font-semibold px-[13px] py-1.5 transition-colors">
               Get started
             </Link>
           </div>
@@ -151,7 +156,7 @@ export default function FeaturesPage() {
         <DisplayTitle className="mb-5">
           Turn your product into
           <br />
-          an AI-powered GTM engine
+          <span className="text-gradient-apple">an AI-powered GTM engine</span>
         </DisplayTitle>
         <TextLead className="mx-auto max-w-2xl mb-8">
           Emissary onboards from a website or docs, builds a grounded knowledge graph, then runs AI
@@ -184,16 +189,19 @@ export default function FeaturesPage() {
             <TextMuted>Customer sources → discovery → knowledge graph → agents → publishing → analytics</TextMuted>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {PIPELINE_STEPS.map((step, i) => (
-              <Card key={step.title} hover className="p-5 relative">
-                <div className="tahoe-icon-badge mb-4">
-                  <step.icon className="h-5 w-5" />
-                </div>
-                <Badge className="mb-2">Step {i + 1}</Badge>
-                <SubsectionTitle className="mb-1.5">{step.title}</SubsectionTitle>
-                <TextMuted className="text-body-sm">{step.description}</TextMuted>
-              </Card>
-            ))}
+            {PIPELINE_STEPS.map((step, i) => {
+              const toneKey = TONE_ROTATION[i % TONE_ROTATION.length];
+              return (
+                <Card key={step.title} hover className={cn('p-5 relative tahoe-card-edge', `tahoe-card-edge-${toneKey}`)}>
+                  <div className={cn('tahoe-glyph-tile mb-4', `tahoe-glyph-tile-${toneKey}`)}>
+                    <step.icon className="h-5 w-5" />
+                  </div>
+                  <Badge className="mb-2">Step {i + 1}</Badge>
+                  <SubsectionTitle className="mb-1.5">{step.title}</SubsectionTitle>
+                  <TextMuted className="text-body-sm">{step.description}</TextMuted>
+                </Card>
+              );
+            })}
           </div>
         </section>
       </Reveal>
@@ -311,15 +319,18 @@ export default function FeaturesPage() {
           <TextMuted>Every capability is grounded in your actual product — nothing generated blind.</TextMuted>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CORE_FEATURES.map((f) => (
-            <Card key={f.title} hover className="p-5">
-              <div className="tahoe-icon-badge mb-4">
-                <f.icon className="h-5 w-5" />
-              </div>
-              <SubsectionTitle className="mb-1.5">{f.title}</SubsectionTitle>
-              <TextMuted className="text-body-sm">{f.description}</TextMuted>
-            </Card>
-          ))}
+          {CORE_FEATURES.map((f, i) => {
+            const toneKey = TONE_ROTATION[i % TONE_ROTATION.length];
+            return (
+              <Card key={f.title} hover className={cn('p-5 tahoe-card-edge', `tahoe-card-edge-${toneKey}`)}>
+                <div className={cn('tahoe-glyph-tile mb-4', `tahoe-glyph-tile-${toneKey}`)}>
+                  <f.icon className="h-5 w-5" />
+                </div>
+                <SubsectionTitle className="mb-1.5">{f.title}</SubsectionTitle>
+                <TextMuted className="text-body-sm">{f.description}</TextMuted>
+              </Card>
+            );
+          })}
         </div>
       </section>
       </Reveal>

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gtm_api.auth import (
     ROLE_PERMISSIONS,
     create_access_token,
+    create_oauth_exchange_code,
     generate_api_key,
     get_current_user,
     hash_password,
@@ -185,20 +186,33 @@ async def sso_login():
     return RedirectResponse(f"{discovery['authorization_endpoint']}?{urlencode(params)}")
 
 
-@router.get("/sso/callback", response_model=TokenResponse)
+def _sso_error_redirect(message: str) -> RedirectResponse:
+    # Same "redirect the browser to /login/callback?error=" pattern routers/social_auth.py
+    # uses -- this is a full-page redirect flow (the IdP lands the browser here directly),
+    # not a fetch() the frontend could catch, so a raw HTTPException would just show the
+    # user a bare JSON error page at the API's own origin instead of back inside the app.
+    return RedirectResponse(f"{settings.frontend_url.rstrip('/')}/login/callback?{urlencode({'error': message})}")
+
+
+@router.get("/sso/callback")
 async def sso_callback(code: str, db: AsyncSession = Depends(get_db)):
     """Exchange the authorization code, fetch the IdP's userinfo, and log in the
     matching User by email.
 
     Deliberate limitation, not a bug: this app's users are unique per (tenant, email),
     not globally, so a bare email from the IdP cannot always be resolved to a single
-    account. Zero matches -> 404 (no auto-provisioning across tenants); multiple matches
-    -> 409 (ambiguous, same email in >1 tenant). Solving this properly needs a real
-    per-tenant SSO config or domain-based tenant resolution, which is a product decision,
-    not something to silently guess at here.
+    account. Zero matches -> no auto-provisioning across tenants; multiple matches ->
+    ambiguous (same email in >1 tenant). Solving this properly needs a real per-tenant
+    SSO config or domain-based tenant resolution, which is a product decision, not
+    something to silently guess at here.
+
+    On success, redirects to the frontend's /login/callback with a short-lived exchange
+    code (same mechanism routers/social_auth.py uses) rather than returning the session
+    token as raw JSON -- this is what actually logs the browser into the app instead of
+    just displaying a token nobody can use.
     """
     if not settings.sso_enabled:
-        raise HTTPException(status_code=501, detail="SSO is not configured (SSO_ENABLED is false).")
+        return _sso_error_redirect("SSO is not configured (SSO_ENABLED is false).")
 
     discovery = await fetch_oidc_discovery(settings.sso_issuer)
     tokens = await exchange_code_for_tokens(
@@ -208,22 +222,17 @@ async def sso_callback(code: str, db: AsyncSession = Depends(get_db)):
     userinfo = await fetch_userinfo(discovery["userinfo_endpoint"], tokens["access_token"])
     email = userinfo.get("email")
     if not email:
-        raise HTTPException(status_code=400, detail="IdP did not return an 'email' claim.")
+        return _sso_error_redirect("IdP did not return an 'email' claim.")
 
     result = await db.execute(select(User).where(User.email == email, User.is_active.is_(True)))
     matches = result.scalars().all()
     if not matches:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No account provisioned for {email}. SSO does not auto-provision users.",
-        )
+        return _sso_error_redirect(f"No account provisioned for {email}. SSO does not auto-provision users.")
     if len(matches) > 1:
-        raise HTTPException(
-            status_code=409,
-            detail=f"{email} matches accounts in multiple tenants; SSO login is ambiguous. "
-            "Use password login instead.",
+        return _sso_error_redirect(
+            f"{email} matches accounts in multiple tenants; SSO login is ambiguous. Use password login instead."
         )
 
     user = matches[0]
-    token = create_access_token(user.id, user.tenant_id, user.role)
-    return TokenResponse(access_token=token, tenant_id=user.tenant_id, user_id=user.id, role=user.role)
+    exchange_code = create_oauth_exchange_code(user.id, user.tenant_id, user.role)
+    return RedirectResponse(f"{settings.frontend_url.rstrip('/')}/login/callback?{urlencode({'code': exchange_code})}")

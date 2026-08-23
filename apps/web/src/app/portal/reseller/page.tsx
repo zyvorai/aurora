@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, LogOut, Pencil, Plus, Sparkles } from 'lucide-react';
+import { Building2, Handshake, LogOut, Pencil, Plus } from 'lucide-react';
 import { PageHero } from '@/components/layout/PageHero';
+import { SkeletonLine } from '@/components/ui/Skeleton';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -95,17 +96,21 @@ export default function ResellerHomePage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-muted">Loading…</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <SkeletonLine className="w-40 h-4" />
+      </div>
+    );
   }
 
   if (!account) return null;
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-[var(--blur-liquid)] px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 backdrop-blur-xl backdrop-saturate-[1.8] bg-[var(--nav-bg)] border-b border-[var(--nav-border)] px-6 h-11 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="tahoe-icon-badge !w-8 !h-8 !rounded-md">
-            <Sparkles className="w-4 h-4" aria-hidden />
+          <div className="tahoe-icon-badge tahoe-icon-badge-violet !w-8 !h-8 !rounded-md">
+            <Handshake className="w-4 h-4" aria-hidden />
           </div>
           <span className="font-semibold">Reseller Portal</span>
         </div>
@@ -114,9 +119,10 @@ export default function ResellerHomePage() {
         </Button>
       </header>
 
-      <main className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
         <PageHero
-          icon={Building2}
+          icon={Handshake}
+          accent="violet"
           eyebrow="Account"
           title={account.company_name || account.contact_name || account.email}
           description={`Margin tier: ${account.margin_tier}`}
@@ -157,7 +163,7 @@ export default function ResellerHomePage() {
           <section>
             <h2 className="text-lg font-semibold mb-3">My registered deals</h2>
             {deals.length === 0 ? (
-              <EmptyState icon={Building2} title="No deals registered yet" description="Register a prospect to get started." />
+              <EmptyState icon={Building2} tone="violet" title="No deals registered yet" description="Register a prospect to get started." />
             ) : (
               <Card>
                 <Table>

@@ -1,31 +1,61 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ---- Zyvor Labs editorial palette: cream / ink / rust / teal ----
-   Dark mode inverts to an ink background with cream text, same rust accent. */
+/* ---- Zyvor Design System v2 (ported from hypersdk-web): white / ink / rust / teal ----
+   Dark stays this app's default (ThemeContext), inverting to the carbon-black/orange
+   personality; .light-theme carries the white-canvas/rust-accent values below. */
 
 :root {
-  --background: #1a1f1f;
-  --surface: #212726;
-  --surface-elevated: #262d2c;
-  --foreground: #f2efe6;
-  --muted-foreground: #a8ada6;
-  --primary: #c1503c;
-  --primary-hover: #d9694f;
+  --background: #050505;
+  --surface: #0a0a0a;
+  --surface-elevated: #0b0f14;
+  --foreground: #f1f5f9;
+  --muted-foreground: #aeb9c8;
+  /* Primary is Apple/iPhone-style blue -- orange/rust was dropped as the interactive
+     button color entirely; --accent-blue below carries the exact same value so the
+     qualitative "sky" tone and the brand's own interactive color stay identical. */
+  --primary: #0a84ff;
+  --primary-hover: #0066cc;
   --primary-foreground: #ffffff;
-  --border: rgba(242, 239, 230, 0.12);
-  --ring: #c1503c;
-  --success: #3f9c72;
-  --warning: #d6a544;
-  --danger: #d9534f;
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
+  --border: rgba(255, 255, 255, 0.06);
+  --ring: #0a84ff;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --accent-fill: #0a84ff;
+  --accent-tint: rgba(10, 132, 255, 0.14);
+
+  /* iPhone-colorway qualitative palette -- for CATEGORIZATION (personas, portals, stat
+     highlights), the way Apple ships one UI accent but many hardware finishes.
+     --accent-blue anchors to hypersdk-web's --hs-gradient-primary (apple.com's own CTA
+     blue) and is intentionally the same value as --primary above. Brighter here
+     (dark/default) for pop against the near-black background; deeper in .light-theme
+     below for AA text contrast on white. */
+  --accent-blue: #0a84ff;
+  --accent-pink: #ff375f;
+  --accent-teal: #2dd4bf;
+  --accent-purple: #a78bfa;
+  --shadow-card: 0 16px 50px rgba(0, 0, 0, 0.3);
+  --shadow-accent: 0 4px 20px rgba(10, 132, 255, 0.25);
+
+  /* Navbar glass treatment, ported from hypersdk-web's live Navbar/Content component
+     (44px Apple-style bar) -- exact opacity/hairline values, not approximated. */
+  --nav-bg: rgba(29, 29, 31, 0.72);
+  --nav-bg-open: rgba(29, 29, 31, 0.96);
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 100px;
   --section-gap: 1.5rem;
   --content-max-width: 72rem;
+  --font-display: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* typography scale -- trimmed down from the original values; IBM Plex Sans has a
      notably large x-height and reads bigger than most UI fonts at the same px size,
@@ -54,46 +84,61 @@
 
   /* flat card system (formerly "glass / tahoe") -- kept as the same token/class
      names so every component built against them repaints for free. */
-  --radius-liquid: 3px;
-  --radius-liquid-lg: 4px;
+  --radius-liquid: 12px;
+  --radius-liquid-lg: 20px;
   --blur-liquid: 0px;
   --blur-liquid-lg: 0px;
   --blur-liquid-sm: 0px;
-  --glass-bg: #212726;
-  --glass-bg-elevated: #262d2c;
-  --glass-bg-strong: #2b3231;
-  --glass-border: rgba(242, 239, 230, 0.12);
-  --glass-border-strong: rgba(242, 239, 230, 0.22);
-  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --glass-highlight: rgba(242, 239, 230, 0.03);
+  --glass-bg: #0b0f14;
+  --glass-bg-elevated: #12161c;
+  --glass-bg-strong: #171c23;
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-border-strong: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 16px 50px rgba(0, 0, 0, 0.3);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
 }
 
 .light-theme {
-  --background: #f2efe6;
-  --surface: #faf8f2;
+  --background: #ffffff;
+  --surface: #f5f6f8;
   --surface-elevated: #ffffff;
-  --foreground: #1a1f1f;
-  --muted-foreground: #5c6362;
-  --primary: #c1503c;
-  --primary-hover: #a43f2e;
+  --foreground: #14161a;
+  --muted-foreground: #5b6472;
+  --primary: #0071e3;
+  --primary-hover: #0058b3;
   --primary-foreground: #ffffff;
-  --border: rgba(26, 31, 31, 0.12);
-  --ring: #c1503c;
-  --success: #1f7a52;
-  --warning: #b8791f;
-  --danger: #b23a2a;
+  --border: #e3e6ea;
+  --ring: #0071e3;
+  --success: #0f7b4f;
+  --warning: #8a5a00;
+  --danger: #b3261e;
+  --accent-fill: #0071e3;
+  --accent-tint: #e8f1fd;
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.1);
+  --shadow-accent: 0 4px 20px rgba(0, 113, 227, 0.25);
+
+  /* Deeper than the dark-mode values above, for AA text contrast on white. */
+  --accent-blue: #0071e3;
+  --accent-pink: #e11d48;
+  --accent-teal: #0d9488;
+  --accent-purple: #7c3aed;
+
+  --nav-bg: rgba(255, 255, 255, 0.72);
+  --nav-bg-open: rgba(255, 255, 255, 0.96);
+  --nav-border: rgba(20, 22, 26, 0.08);
+  --nav-hover-bg: rgba(20, 22, 26, 0.05);
 
   --glass-bg: #ffffff;
   --glass-bg-elevated: #ffffff;
   --glass-bg-strong: #ffffff;
-  --glass-border: rgba(26, 31, 31, 0.12);
-  --glass-border-strong: rgba(26, 31, 31, 0.22);
-  --glass-shadow: 0 1px 2px rgba(26, 31, 31, 0.08);
-  --glass-highlight: rgba(26, 31, 31, 0.02);
+  --glass-border: #e3e6ea;
+  --glass-border-strong: rgba(20, 22, 26, 0.22);
+  --glass-shadow: 0 1px 2px rgba(20, 22, 26, 0.06);
+  --glass-highlight: rgba(20, 22, 26, 0.02);
 }
 
 body {
-  font-family: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
   font-size: var(--font-size-base);
   line-height: var(--leading-relaxed);
   -webkit-font-smoothing: antialiased;
@@ -101,9 +146,21 @@ body {
   color: var(--foreground);
 }
 
-code, pre {
-  font-family: 'JetBrains Mono', monospace;
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+  font-weight: 600;
 }
+
+code, pre {
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+}
+
+.h-hero { font-size: clamp(38px, 6vw, 64px); line-height: 1.05; }
+.h-sec { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; }
+.h-tile { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.15; }
+.h-card { font-size: 19px; line-height: 1.2; }
+.h-sub { font-size: 15px; line-height: 1.3; font-weight: 500; }
 
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(16px); }
@@ -111,7 +168,10 @@ code, pre {
 }
 
 .animate-fade-up {
-  animation: fade-up 0.5s ease-out forwards;
+  /* 'both' (not just 'forwards') so the .stagger-* delay classes below hold the
+     element at the 'from' state during their delay instead of flashing visible
+     first, then jumping to hidden when the (delayed) animation actually starts. */
+  animation: fade-up 0.5s ease-out both;
 }
 
 @keyframes slide-in {
@@ -131,6 +191,87 @@ code, pre {
 .animate-glass-in {
   animation: glass-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out forwards;
+}
+
+/* ---- exit counterparts -- Modal/CommandPalette/ToastContainer/AppShell's account
+   dropdown all animate IN with the entrances above but used to unmount instantly on
+   close; paired with useDelayedUnmount these play before the DOM node is removed. ---- */
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-out {
+  animation: fade-out 0.15s ease-in forwards;
+}
+
+@keyframes slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(16px); }
+}
+
+.animate-slide-out {
+  animation: slide-out 0.15s ease-in forwards;
+}
+
+@keyframes glass-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.96) translateY(8px); }
+}
+
+.animate-glass-out {
+  animation: glass-out 0.15s ease-in forwards;
+}
+
+/* ---- skeleton loading placeholders ---- */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--glass-border-strong) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ---- chain stage meter -- a moving highlight over a solid-colour fill,
+   for the "running" state (unlike .animate-shimmer, which replaces the
+   background outright and would erase the status colour). ---- */
+@keyframes chain-meter-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+.chain-meter-run { position: relative; overflow: hidden; }
+.chain-meter-run::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: chain-meter-sweep 1.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chain-meter-run::after { animation: none; }
+}
+
+/* ---- staggered entrance delays -- same idea as the login page's
+   .login-fade-in-d1..d4, generalized for any animate-fade-up grid. ---- */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
 
 @keyframes tahoe-orb-pulse {
   0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
@@ -195,6 +336,16 @@ code, pre {
   color: var(--primary);
 }
 
+/* Tone variants for PageHero's icon badge -- same qualitative palette as
+   .tahoe-stat-*, so a persona/portal's hero icon and its stat tiles agree. */
+.tahoe-icon-badge-sky { color: var(--accent-blue); border-color: color-mix(in srgb, var(--accent-blue) 30%, var(--border)); }
+.tahoe-icon-badge-violet { color: var(--accent-purple); border-color: color-mix(in srgb, var(--accent-purple) 30%, var(--border)); }
+.tahoe-icon-badge-emerald { color: var(--success); border-color: color-mix(in srgb, var(--success) 30%, var(--border)); }
+.tahoe-icon-badge-amber { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, var(--border)); }
+.tahoe-icon-badge-pink { color: var(--accent-pink); border-color: color-mix(in srgb, var(--accent-pink) 30%, var(--border)); }
+.tahoe-icon-badge-teal { color: var(--accent-teal); border-color: color-mix(in srgb, var(--accent-teal) 30%, var(--border)); }
+.tahoe-icon-badge-rust { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); }
+
 .tahoe-stat-tile {
   padding: 1rem 1.125rem;
   border-radius: var(--radius-liquid);
@@ -217,10 +368,70 @@ code, pre {
   color: var(--muted-foreground);
 }
 
-.tahoe-stat-sky .tahoe-stat-value { color: var(--primary); }
-.tahoe-stat-violet .tahoe-stat-value { color: #4c7a8a; }
+.tahoe-stat-sky .tahoe-stat-value { color: var(--accent-blue); }
+.tahoe-stat-violet .tahoe-stat-value { color: var(--accent-purple); }
 .tahoe-stat-emerald .tahoe-stat-value { color: var(--success); }
 .tahoe-stat-amber .tahoe-stat-value { color: var(--warning); }
+.tahoe-stat-pink .tahoe-stat-value { color: var(--accent-pink); }
+.tahoe-stat-teal .tahoe-stat-value { color: var(--accent-teal); }
+.tahoe-stat-rust .tahoe-stat-value { color: var(--primary); }
+
+/* ---- glyph tile / card-edge / gradient-stat depth treatment ----
+   Additive, tone-suffixed classes for the handful of surfaces that want a
+   solid gradient-fill icon badge + hover-reveal top edge + gradient stat
+   text (dashboard product cards, /features cards, Full Forge sidebar) --
+   layered on top of the existing outline .tahoe-icon-badge-* / flat
+   .tahoe-stat-* system rather than replacing it, since those two are shared
+   by PageHero and every portal page and must stay exactly as they are. */
+
+.tahoe-glyph-tile {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: #fff;
+}
+
+.tahoe-glyph-tile-sky { background: linear-gradient(135deg, var(--accent-blue) 0%, color-mix(in srgb, var(--accent-blue) 65%, white) 60%, color-mix(in srgb, var(--accent-blue) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-blue) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.tahoe-glyph-tile-violet { background: linear-gradient(135deg, var(--accent-purple) 0%, color-mix(in srgb, var(--accent-purple) 65%, white) 60%, color-mix(in srgb, var(--accent-purple) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-purple) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.tahoe-glyph-tile-emerald { background: linear-gradient(135deg, var(--success) 0%, color-mix(in srgb, var(--success) 65%, white) 60%, color-mix(in srgb, var(--success) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--success) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.tahoe-glyph-tile-amber { background: linear-gradient(135deg, var(--warning) 0%, color-mix(in srgb, var(--warning) 65%, white) 60%, color-mix(in srgb, var(--warning) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--warning) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.tahoe-glyph-tile-pink { background: linear-gradient(135deg, var(--accent-pink) 0%, color-mix(in srgb, var(--accent-pink) 65%, white) 60%, color-mix(in srgb, var(--accent-pink) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-pink) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.tahoe-glyph-tile-teal { background: linear-gradient(135deg, var(--accent-teal) 0%, color-mix(in srgb, var(--accent-teal) 65%, white) 60%, color-mix(in srgb, var(--accent-teal) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-teal) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.tahoe-glyph-tile-rust { background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 65%, white) 60%, color-mix(in srgb, var(--primary) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--primary) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+
+/* Hover-reveal top edge for a tone-coded card -- pairs with .tahoe-glyph-tile-*
+   above so a card "belongs" to its tone even before the glyph registers. */
+.tahoe-card-edge { position: relative; overflow: hidden; }
+.tahoe-card-edge::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.tahoe-card-edge:hover::before { opacity: 1; }
+.tahoe-card-edge-sky::before { background: linear-gradient(90deg, var(--accent-blue), color-mix(in srgb, var(--accent-blue) 55%, white)); }
+.tahoe-card-edge-violet::before { background: linear-gradient(90deg, var(--accent-purple), color-mix(in srgb, var(--accent-purple) 55%, white)); }
+.tahoe-card-edge-emerald::before { background: linear-gradient(90deg, var(--success), color-mix(in srgb, var(--success) 55%, white)); }
+.tahoe-card-edge-amber::before { background: linear-gradient(90deg, var(--warning), color-mix(in srgb, var(--warning) 55%, white)); }
+.tahoe-card-edge-pink::before { background: linear-gradient(90deg, var(--accent-pink), color-mix(in srgb, var(--accent-pink) 55%, white)); }
+.tahoe-card-edge-teal::before { background: linear-gradient(90deg, var(--accent-teal), color-mix(in srgb, var(--accent-teal) 55%, white)); }
+.tahoe-card-edge-rust::before { background: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 55%, white)); }
+
+/* Gradient-clipped stat headline text -- additive modifier alongside the
+   existing .tahoe-stat-value, which stays flat-colored everywhere else. */
+.tahoe-stat-value-gradient { background: linear-gradient(90deg, var(--foreground), var(--tahoe-stat-tint, var(--primary)) 140%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tahoe-stat-sky .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-blue); }
+.tahoe-stat-violet .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-purple); }
+.tahoe-stat-emerald .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--success); }
+.tahoe-stat-amber .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--warning); }
+.tahoe-stat-pink .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-pink); }
+.tahoe-stat-teal .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-teal); }
+.tahoe-stat-rust .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--primary); }
 
 /* ---- cards / empty state ---- */
 
@@ -249,7 +460,7 @@ code, pre {
   width: 16rem; height: 16rem;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(193, 80, 60, 0.14) 0%, rgba(27, 58, 71, 0.08) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(10, 132, 255, 0.14) 0%, rgba(27, 58, 71, 0.08) 45%, transparent 70%);
   animation: tahoe-orb-pulse 4s ease-in-out infinite;
   pointer-events: none;
 }
@@ -259,21 +470,21 @@ code, pre {
   border: 1px solid var(--border);
 }
 
-/* ---- login page: Zyvor Labs editorial skin -- fixed cream/ink/rust/teal palette
+/* ---- login page: Zyvor Design System v2 skin -- fixed white/ink/rust/teal palette
    independent of the app's dark/light token system, same "distinct marketing skin"
    pattern as app/page.tsx and app/features/page.tsx. Left hero panel stays dark
-   (ink/teal) for contrast; right form panel is flat cream/white. ---- */
+   (ink/teal) for contrast; right form panel is flat white. ---- */
 
 .login-hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(160deg, #1B3A47 0%, #1A1F1F 100%);
+  background: linear-gradient(160deg, #21414F 0%, #14161A 100%);
 }
 
 .login-hero-mesh {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(242, 239, 230, 0.1) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   background-size: 22px 22px;
   mask-image: radial-gradient(ellipse 90% 80% at 40% 30%, black 10%, transparent 70%);
   pointer-events: none;
@@ -296,7 +507,14 @@ code, pre {
 .login-fade-in-d4 { animation-delay: 0.4s; opacity: 0; }
 
 .login-text-gradient {
-  color: #D9694F;
+  /* Apple blue -> violet two-tone, matching hypersdk-web's own gradient-CTA treatment
+     (orange retired in favor of blue as the one interactive/brand color). Sits on the
+     dark .login-hero panel, so uses the brighter dark-mode-safe blue (#0A84FF) rather
+     than the deeper #0071E3 used on the white canvas elsewhere. */
+  background: linear-gradient(135deg, #0A84FF 0%, #A78BFA 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .login-stat-pill {
@@ -307,15 +525,15 @@ code, pre {
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: rgba(242, 239, 230, 0.85);
-  background: rgba(242, 239, 230, 0.06);
-  border: 1px solid rgba(242, 239, 230, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .login-feature-icon {
-  background: rgba(193, 80, 60, 0.16);
-  border: 1px solid rgba(193, 80, 60, 0.3);
-  color: #D9694F;
+  background: rgba(10, 132, 255, 0.16);
+  border: 1px solid rgba(10, 132, 255, 0.3);
+  color: #0A84FF;
 }
 
 .login-feature-card {
@@ -324,12 +542,21 @@ code, pre {
 
 .login-feature-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(193, 80, 60, 0.35);
+  border-color: rgba(10, 132, 255, 0.35);
 }
 
 .login-feature-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(242, 239, 230, 0.15) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.login-panel {
+  /* Right-hand form panel is always a flat white surface, independent of the
+     app's dark/light token system -- without this it silently fell through
+     to body's var(--background), which is fine when that's a mid-dark ink
+     but reads as a near-black seam now that dark mode's --background is a
+     much darker #050505 (hypersdk-web token port). */
+  background: #FFFFFF;
 }
 
 .login-panel-grid {
@@ -337,35 +564,35 @@ code, pre {
   inset: 0;
   opacity: 0.025;
   pointer-events: none;
-  background-image: radial-gradient(circle at 1px 1px, rgba(26, 31, 31, 0.9) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgba(20, 22, 26, 0.9) 1px, transparent 0);
   background-size: 32px 32px;
 }
 
 .login-glass {
   background: #FFFFFF;
-  border: 1px solid rgba(26, 31, 31, 0.12);
+  border: 1px solid rgba(20, 22, 26, 0.12);
   border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(26, 31, 31, 0.06);
+  box-shadow: 0 1px 2px rgba(20, 22, 26, 0.06);
   position: relative;
 }
 
 .login-input {
   width: 100%;
   padding: 0.65rem 0.9rem 0.65rem 2.5rem;
-  border-radius: 0.6rem;
-  background: #FAF8F2;
-  border: 1px solid rgba(26, 31, 31, 0.14);
-  color: #1A1F1F;
+  border-radius: 12px;
+  background: #F5F6F8;
+  border: 1px solid rgba(20, 22, 26, 0.14);
+  color: #14161A;
   font-size: 0.875rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.login-input::placeholder { color: rgba(26, 31, 31, 0.4); }
+.login-input::placeholder { color: rgba(20, 22, 26, 0.4); }
 
 .login-input:focus {
   outline: none;
-  border-color: #C1503C;
-  box-shadow: 0 0 0 3px rgba(193, 80, 60, 0.15);
+  border-color: #0071E3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
 }
 
 .login-field-icon {
@@ -375,12 +602,12 @@ code, pre {
   transform: translateY(-50%);
   width: 1rem;
   height: 1rem;
-  color: rgba(26, 31, 31, 0.4);
+  color: rgba(20, 22, 26, 0.4);
   pointer-events: none;
   transition: color 0.2s ease;
 }
 
-.group:focus-within .login-field-icon { color: #C1503C; }
+.group:focus-within .login-field-icon { color: #0071E3; }
 
 .login-btn-primary {
   position: relative;
@@ -390,18 +617,18 @@ code, pre {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border-radius: 0.6rem;
+  border-radius: 12px;
   font-size: 0.875rem;
   font-weight: 600;
   color: white;
   overflow: hidden;
-  background: #C1503C;
-  border: 1px solid #C1503C;
+  background: #0071E3;
+  border: 1px solid #0071E3;
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .login-btn-primary:hover:not(:disabled) {
-  background: #A43F2E;
+  background: #0058B3;
   transform: translateY(-1px);
 }
 
@@ -426,23 +653,35 @@ code, pre {
   .glass-hover-lift:hover { transform: none; }
   .tahoe-empty-orb { animation: none; }
   .login-shake { animation: none; }
-  .animate-fade-up, .animate-slide-in, .animate-glass-in,
+  .animate-fade-up, .animate-slide-in, .animate-glass-in, .animate-fade-in,
+  .animate-fade-out, .animate-slide-out, .animate-glass-out,
   .login-fade-in, .login-fade-in-d1, .login-fade-in-d2, .login-fade-in-d3, .login-fade-in-d4 {
     animation: none;
     opacity: 1;
     transform: none;
   }
+  .animate-shimmer { animation: none; }
 }
 
 .gradient-mesh {
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(193, 80, 60, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 50%, rgba(10, 132, 255, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(27, 58, 71, 0.05) 0%, transparent 50%),
     var(--background);
 }
 
 .focus-ring {
   @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Apple-blue -> rust two-tone gradient, matching hypersdk-web's own
+   --hs-gradient-text treatment -- used sparingly on one hero/CTA element per
+   marketing page, not as a full-page wash. */
+.text-gradient-apple {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @layer components {

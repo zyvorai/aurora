@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { products, type Artifact } from '@/lib/api';
+import { products, workflowStages, type Artifact, type ExecutiveBrief, type WorkflowStage } from '@/lib/api';
 import { useIngestPolling } from '@/lib/useIngestPolling';
 import { useWorkflowPolling } from '@/lib/useWorkflowPolling';
 import { showToast } from '@/lib/toast';
@@ -26,30 +26,62 @@ import ArtifactList from '@/components/artifacts/ArtifactList';
 import AgentTaskProgress from '@/components/AgentTaskProgress';
 import { taskButtonLabel, type AgentTaskId } from '@/lib/agent-tasks';
 import { cn } from '@/lib/cn';
-import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
+import { SkeletonHero } from '@/components/ui/Skeleton';
+import type { Tone } from '@/components/layout/PageHero';
+import {
+  LayoutGrid, MessageCircleQuestion, Target, FileText, MessagesSquare,
+  Send, Blocks, FileSignature, Rocket, BarChart3, type LucideIcon,
+} from 'lucide-react';
+import { StageBlockRenderer } from '@/components/workflow/StageBlockRenderer';
+import { StageChain } from '@/components/workflow/StageChain';
+import { NextAction } from '@/components/workflow/NextAction';
+import { deriveChain, nextActionableStage, chainStageHref, chainStatusLabel, type ChainStageId } from '@/lib/chain';
 
-type Tab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'analytics';
+type FixedTab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'analytics';
+// Custom (tenant-defined) stages use a `custom:<stageId>` tab key alongside the 10
+// fixed ones -- kept as a plain string rather than a template-literal union so
+// TAB_GROUPS/switch-case logic below stays exactly as it was for the fixed tabs.
+type Tab = FixedTab | string;
 
-const TAB_GROUPS: { label: string; tabs: { key: Tab; label: string }[] }[] = [
-  { label: 'Foundation', tabs: [{ key: 'overview', label: 'Overview' }, { key: 'query', label: 'Q&A' }] },
-  { label: 'GTM', tabs: [{ key: 'strategy', label: 'Strategy' }, { key: 'content', label: 'Content' }] },
+// macOS/iOS-Settings-style: each tab gets a small colored icon tile, each group a tone
+// from the same iPhone-colorway palette used everywhere else (WORKSPACE_COLORS etc).
+const TAB_GROUPS: { label: string; tone: Tone; tabs: { key: FixedTab; label: string; icon: LucideIcon }[] }[] = [
   {
-    label: 'Revenue',
+    label: 'Foundation', tone: 'sky',
     tabs: [
-      { key: 'chat', label: 'Sales Chat' },
-      { key: 'outreach', label: 'Outreach' },
-      { key: 'architect', label: 'Architect' },
-      { key: 'proposal', label: 'Proposal' },
+      { key: 'overview', label: 'Overview', icon: LayoutGrid },
+      { key: 'query', label: 'Q&A', icon: MessageCircleQuestion },
     ],
   },
-  { label: 'Distribution', tabs: [{ key: 'publish', label: 'Publish' }] },
-  { label: 'Intelligence', tabs: [{ key: 'analytics', label: 'Analytics' }] },
+  {
+    label: 'GTM', tone: 'violet',
+    tabs: [
+      { key: 'strategy', label: 'Strategy', icon: Target },
+      { key: 'content', label: 'Content', icon: FileText },
+    ],
+  },
+  {
+    label: 'Revenue', tone: 'emerald',
+    tabs: [
+      { key: 'chat', label: 'Sales Chat', icon: MessagesSquare },
+      { key: 'outreach', label: 'Outreach', icon: Send },
+      { key: 'architect', label: 'Architect', icon: Blocks },
+      { key: 'proposal', label: 'Proposal', icon: FileSignature },
+    ],
+  },
+  { label: 'Distribution', tone: 'pink', tabs: [{ key: 'publish', label: 'Publish', icon: Rocket }] },
+  { label: 'Intelligence', tone: 'teal', tabs: [{ key: 'analytics', label: 'Analytics', icon: BarChart3 }] },
 ];
 
-const VALID_TABS = new Set(TAB_GROUPS.flatMap((g) => g.tabs.map((t) => t.key)));
+const VALID_TABS = new Set<string>(TAB_GROUPS.flatMap((g) => g.tabs.map((t) => t.key)));
 
 function parseTab(value: string | null): Tab {
-  if (value && VALID_TABS.has(value as Tab)) return value as Tab;
+  // Custom-stage tabs aren't known until fetched, so accept the `custom:` shape
+  // on faith here -- selectTab/the sidebar only ever produce valid ids anyway,
+  // and an unmatched custom id just renders nothing in the tab body below.
+  if (value && (VALID_TABS.has(value) || value.startsWith('custom:'))) return value;
   return 'overview';
 }
 
@@ -73,10 +105,30 @@ export default function ProductForgePageInner() {
   const [proposalScope, setProposalScope] = useState('');
   const [refreshingKnowledge, setRefreshingKnowledge] = useState(false);
   const [generatingProposalAsync, setGeneratingProposalAsync] = useState(false);
+  const [customStages, setCustomStages] = useState<WorkflowStage[]>([]);
   const sessionId = useState(() => uuid())[0];
   const role = readStoredRole();
   const canApprove = role === 'admin' || role === 'approver';
   const canPublish = role === 'admin';
+
+  useEffect(() => {
+    // Tenant-defined custom stages (enterprise-plan only) -- a 403/404 here just
+    // means the tenant isn't entitled or has none configured, not an error worth
+    // surfacing to every user on every product page.
+    workflowStages.list().then(setCustomStages).catch(() => setCustomStages([]));
+  }, []);
+
+  const [brief, setBrief] = useState<ExecutiveBrief | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => products.brief(id).then((b) => !cancelled && setBrief(b)).catch(() => {});
+    load();
+    const intervalId = window.setInterval(load, 8000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [id]);
 
   const { polling: ingestPolling, startPolling: startIngestPolling } = useIngestPolling({
     productId: id,
@@ -128,6 +180,19 @@ export default function ProductForgePageInner() {
     },
   });
 
+  // The stage the current tab is actively driving -- overrides that stage's
+  // derived need/idle status to "run" so the chain reflects in-page activity,
+  // not just the last-fetched readiness snapshot.
+  const runningStageId: ChainStageId | null =
+    ingestPolling ? 'ingest'
+    : loadingAction === 'understand' ? 'profile'
+    : loadingAction === 'strategy' ? 'strategy'
+    : loadingAction === 'outreach' ? 'outreach'
+    : (loadingAction === 'proposal' || generatingProposalAsync) ? 'proposal'
+    : null;
+  const chainStages = deriveChain(brief?.gtm_readiness, runningStageId);
+  const nextStage = nextActionableStage(chainStages);
+
   useEffect(() => {
     setTab(parseTab(searchParams.get('tab')));
   }, [searchParams]);
@@ -149,7 +214,7 @@ export default function ProductForgePageInner() {
     setResult(null);
     if (action === 'outreach' && params?.company_url) {
       setTaskDetail(String(params.company_url));
-    } else if (action === 'architect' && params?.question) {
+    } else if ((action === 'architect' || action === 'query') && params?.question) {
       setTaskDetail(String(params.question));
     } else if (action === 'proposal' && params?.scope) {
       setTaskDetail(String(params.scope));
@@ -162,13 +227,15 @@ export default function ProductForgePageInner() {
     // These three run as async jobs (avoids the ~100s Cloudflare edge timeout
     // on slow LLM calls) -- kick off and return; the shared useWorkflowPolling
     // instance's onComplete/onError clears loading/result once the job finishes.
-    if (action === 'understand' || action === 'strategy' || action === 'content') {
+    if (action === 'understand' || action === 'strategy' || action === 'content' || action === 'query') {
       try {
         const accepted = action === 'understand'
           ? await products.startBuildProfile(id)
           : action === 'strategy'
             ? await products.startStrategy(id)
-            : await products.startContent(id, params as { content_type: string; topic: string });
+            : action === 'content'
+              ? await products.startContent(id, params as { content_type: string; topic: string })
+              : await products.startQuery(id, params as { question: string });
         startWorkflowPolling(accepted.workflow_run_id);
       } catch (err) {
         setResult({ error: err instanceof Error ? err.message : 'Failed' });
@@ -270,7 +337,11 @@ export default function ProductForgePageInner() {
   }
 
   if (productLoading || !product) {
-    return <div className="text-muted">Loading forge…</div>;
+    return (
+      <div className="space-y-6">
+        <SkeletonHero />
+      </div>
+    );
   }
 
   return (
@@ -279,45 +350,49 @@ export default function ProductForgePageInner() {
         eyebrow="Full Forge"
         title={product.name}
         description={product.website_url ?? 'All agent tools in one workspace'}
+        icon={WORKSPACE_ICONS.forge}
+        accent={WORKSPACE_COLORS.forge}
         actions={
-          <Badge variant={product.profile_status === 'ready' ? 'success' : 'warning'}>
-            {product.profile_status}
+          <Badge variant={nextStage === null ? 'success' : nextStage.status === 'run' ? 'default' : 'warning'}>
+            {chainStatusLabel(chainStages)}
           </Badge>
         }
       />
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <nav className="lg:w-52 shrink-0 space-y-4" aria-label="Forge topics">
-          {TAB_GROUPS.map((group) => (
-            <div key={group.label}>
-              <Eyebrow className="text-primary mb-2 px-2">{group.label}</Eyebrow>
-              <ul className="space-y-0.5">
-                {group.tabs.map((t) => (
-                  <li key={t.key}>
-                    <button
-                      type="button"
-                      onClick={() => selectTab(t.key)}
-                      aria-current={tab === t.key ? 'page' : undefined}
-                      className={cn(
-                        'w-full text-left px-3 py-2 rounded-md text-body-sm transition-colors focus-ring',
-                        tab === t.key
-                          ? 'bg-primary/10 text-primary font-medium'
-                          : 'text-muted hover:text-foreground hover:bg-surface',
-                      )}
-                    >
-                      {t.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
-
-        <div className="flex-1 min-w-0 space-y-6">
+      <div className="space-y-6">
           {tab === 'overview' && (
             <div className="space-y-6">
-              <SourcesPanel productId={id} />
+              <StageChain stages={chainStages} activeId={runningStageId ?? undefined} onSelect={(stageId) => router.push(chainStageHref(id, stageId))} />
+              <NextAction
+                stage={nextStage}
+                loading={loading || ingestPolling}
+                onAct={() => {
+                  if (!nextStage) return;
+                  if (nextStage.id === 'sources') {
+                    document.getElementById('sources-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                  }
+                  if (nextStage.id === 'ingest') {
+                    runAction('ingest');
+                    return;
+                  }
+                  if (nextStage.id === 'profile') {
+                    runAction('understand');
+                    return;
+                  }
+                  if (nextStage.id === 'strategy') {
+                    // No required inputs (unlike outreach/proposal, which need a form
+                    // filled in first) -- safe to trigger directly like ingest/profile.
+                    runAction('strategy');
+                    selectTab('strategy');
+                    return;
+                  }
+                  router.push(chainStageHref(id, nextStage.id));
+                }}
+              />
+              <div id="sources-panel">
+                <SourcesPanel productId={id} />
+              </div>
               <div className="flex flex-wrap gap-3">
                 <Button disabled={loading || ingestPolling} onClick={() => runAction('ingest')}>
                   {ingestPolling ? 'Ingesting…' : taskButtonLabel(loadingAction, loading, 'Crawl & Ingest', 'ingest')}
@@ -361,6 +436,55 @@ export default function ProductForgePageInner() {
                       </Card>
                     ))}
                   </div>
+                </section>
+              )}
+              {chainStages.some((s) => s.status === 'idle') && (
+                <section>
+                  <SectionHeader
+                    label="Waiting on knowledge"
+                    title="Locked until ingest finishes"
+                    description="These unlock automatically once ingest finishes."
+                  />
+                  <Card>
+                    <CardBody>
+                      <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+                        {chainStages
+                          .filter((s) => s.status !== 'idle' || s.id === 'sources' || s.id === 'ingest')
+                          .map((s, i) => (
+                            <span key={s.id} className="flex items-center gap-1.5">
+                              {i > 0 && <span className="text-muted">→</span>}
+                              <span
+                                className={cn(
+                                  'px-2 py-0.5 rounded-[5px] border',
+                                  s.status === 'done'
+                                    ? 'border-success/30 bg-success/10 text-success'
+                                    : s.status === 'need' || s.status === 'run'
+                                      ? 'border-warning/30 bg-warning/10 text-warning'
+                                      : 'border-border bg-background text-muted',
+                                )}
+                              >
+                                {s.label.toLowerCase()}
+                              </span>
+                            </span>
+                          ))}
+                        {chainStages
+                          .filter((s) => s.status === 'idle')
+                          .map((s) => (
+                            <span key={s.id} className="flex items-center gap-1.5">
+                              <span className="text-muted">·</span>
+                              <span className="px-2 py-0.5 rounded-[5px] border border-border bg-background text-muted">
+                                {s.label.toLowerCase()}
+                              </span>
+                            </span>
+                          ))}
+                      </div>
+                      <TextMuted className="mt-3 max-w-[64ch]">
+                        {chainStages.filter((s) => s.status === 'idle').length} stages are dark because they
+                        read from the knowledge base. None of them need a decision from you — they start
+                        themselves in order.
+                      </TextMuted>
+                    </CardBody>
+                  </Card>
                 </section>
               )}
             </div>
@@ -515,6 +639,18 @@ export default function ProductForgePageInner() {
             </Button>
           )}
 
+          {tab.startsWith('custom:') && (() => {
+            const stage = customStages.find((s) => `custom:${s.id}` === tab);
+            if (!stage) return null;
+            return (
+              <StageBlockRenderer
+                blocks={stage.content_blocks}
+                running={loading}
+                onRunAction={(action, params) => runAction(action as AgentTaskId, params)}
+              />
+            );
+          })()}
+
           {loading && loadingAction && (
             <AgentTaskProgress task={loadingAction} detail={taskDetail} />
           )}
@@ -526,7 +662,6 @@ export default function ProductForgePageInner() {
               </CardBody>
             </Card>
           )}
-        </div>
       </div>
 
       <ChatWidget productId={id} />

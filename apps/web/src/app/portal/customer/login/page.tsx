@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Sparkles } from 'lucide-react';
+import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -37,10 +37,10 @@ function LoginForm() {
   }
 
   return (
-    <Card strong className="login-glass">
+    <Card strong>
       <CardBody className="p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="tahoe-icon-badge !w-10 !h-10 !rounded-lg">
+          <div className="tahoe-icon-badge tahoe-icon-badge-sky !w-10 !h-10 !rounded-lg">
             <Sparkles className="w-5 h-5" aria-hidden />
           </div>
           <h1 className="text-xl font-semibold">Customer sign in</h1>
@@ -67,9 +67,14 @@ function LoginForm() {
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
-          {error && <TextSmall className="text-danger">{error}</TextSmall>}
+          {error && (
+            <div className="flex items-center gap-2 bg-danger/10 border border-danger/30 rounded-[var(--radius-md)] p-3 login-shake">
+              <AlertCircle className="w-4 h-4 text-danger shrink-0" aria-hidden />
+              <TextSmall className="text-danger">{error}</TextSmall>
+            </div>
+          )}
           <Button type="submit" disabled={loading} className="w-full" size="lg">
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}
           </Button>
         </form>
         <p className="text-xs text-center mt-4 text-muted">

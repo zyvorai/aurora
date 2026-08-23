@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import CampaignsPanel from '@/components/campaigns/CampaignsPanel';
 import { SectionTitle, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
 
 export default function MarketingPage() {
   const { id } = useParams<{ id: string }>();
@@ -57,6 +58,8 @@ export default function MarketingPage() {
         eyebrow="Marketing"
         title="Marketing Studio"
         description="Strategy and campaigns run in the background — your browser won't block."
+        icon={WORKSPACE_ICONS.marketing}
+        accent={WORKSPACE_COLORS.marketing}
       />
 
       {brief && (
@@ -77,13 +80,30 @@ export default function MarketingPage() {
         <SectionHeader
           label="Featured workflow"
           title="Outbound Sprint"
-          description="Product → market research → discover → qualify → campaign (async 202 + poll)"
+          description="One workflow chains the whole outbound motion: product → market research → ICP → discover → qualify → campaign."
         />
         <Card elevated className="max-w-xl">
           <CardBody className="space-y-4">
+            <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+              {['product', 'market research', 'ICP', 'discover', 'qualify', 'campaign'].map((step, i) => (
+                <span key={step} className="flex items-center gap-1.5">
+                  {i > 0 && <span className="text-muted">→</span>}
+                  <span
+                    className={
+                      i === 0
+                        ? 'px-2 py-0.5 rounded-[5px] border border-success/30 bg-success/10 text-success'
+                        : 'px-2 py-0.5 rounded-[5px] border border-border bg-background text-muted'
+                    }
+                  >
+                    {step}
+                  </span>
+                </span>
+              ))}
+            </div>
             <Button disabled={running} onClick={runOutboundSprint}>
               {running ? 'Running outbound sprint…' : 'Run Outbound Sprint'}
             </Button>
+            <TextSmall className="text-muted">Runs continue if you close this tab.</TextSmall>
             {run && (
               <div className="space-y-2">
                 <ProgressBar percent={workflowProgressPercent(run)} label={`Status: ${run.status}`} />

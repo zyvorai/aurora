@@ -8,7 +8,9 @@ import { PageHero } from '@/components/layout/PageHero';
 import ExecutiveBriefView from '@/components/ExecutiveBriefView';
 import InsightsPanel from '@/components/InsightsPanel';
 import { Button } from '@/components/ui/Button';
-import { TextMuted, TextSmall } from '@/components/ui/Typography';
+import { TextSmall } from '@/components/ui/Typography';
+import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
+import { SkeletonText } from '@/components/ui/Skeleton';
 
 export default function BriefPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,9 +48,11 @@ export default function BriefPage() {
         eyebrow="Executive Brief"
         title={product?.name ?? 'Product'}
         description={brief?.narrative ?? 'Tier 0 dashboard — SQL aggregates, no LLM at read time.'}
+        icon={WORKSPACE_ICONS.brief}
+        accent={WORKSPACE_COLORS.brief}
       />
       {error && <TextSmall className="text-danger">{error}</TextSmall>}
-      {!brief && !error && <TextMuted>Loading brief…</TextMuted>}
+      {!brief && !error && <SkeletonText lines={5} />}
       {brief && <ExecutiveBriefView brief={brief} />}
       {insights && (
         <InsightsPanel

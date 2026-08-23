@@ -10,6 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow,
 } from '@/components/ui/Table';
 import { TextMuted, TextSmall } from '@/components/ui/Typography';
+import { SkeletonTable } from '@/components/ui/Skeleton';
 
 export default function AgentRegistryPage() {
   const [entries, setEntries] = useState<AgentRegistryEntry[]>([]);
@@ -23,7 +24,7 @@ export default function AgentRegistryPage() {
   }, []);
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-content mx-auto px-6 py-8 space-y-6 animate-fade-up">
       <PageHero
         eyebrow="Platform"
         title="Agent Registry"
@@ -31,7 +32,7 @@ export default function AgentRegistryPage() {
       />
 
       {loading ? (
-        <TextMuted>Loading agent registry…</TextMuted>
+        <SkeletonTable />
       ) : (
         <Card elevated>
           <CardBody className="p-0">

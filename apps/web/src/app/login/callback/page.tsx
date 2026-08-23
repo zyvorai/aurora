@@ -41,24 +41,24 @@ function CallbackInner() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: 'linear-gradient(160deg, #1B3A47 0%, #1A1F1F 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #21414F 0%, #14161A 100%)' }}
     >
       <div className="login-glass rounded-2xl px-8 py-10 w-full max-w-sm text-center">
-        <div className="w-12 h-12 rounded-xl bg-[#C1503C] flex items-center justify-center mx-auto mb-5 border border-white/15">
+        <div className="w-12 h-12 rounded-xl bg-[#0A84FF] flex items-center justify-center mx-auto mb-5 border border-white/15">
           <Sparkles className="w-6 h-6 text-white" aria-hidden />
         </div>
         {error ? (
           <>
-            <AlertTriangle className="w-6 h-6 text-[#B8791F] mx-auto mb-3" aria-hidden />
-            <p className="text-[#1A1F1F]/80 text-body-sm mb-5">{error}</p>
+            <AlertTriangle className="w-6 h-6 text-[#8A5A00] mx-auto mb-3" aria-hidden />
+            <p className="text-[#14161A]/80 text-body-sm mb-5">{error}</p>
             <Link href="/login" className="login-btn-primary inline-flex">
               Back to sign in
             </Link>
           </>
         ) : (
           <>
-            <Loader2 className="w-5 h-5 text-[#1A1F1F]/60 mx-auto mb-3 animate-spin" aria-hidden />
-            <p className="text-[#1A1F1F]/60 text-body-sm">Signing you in…</p>
+            <Loader2 className="w-5 h-5 text-[#14161A]/60 mx-auto mb-3 animate-spin" aria-hidden />
+            <p className="text-[#14161A]/60 text-body-sm">Signing you in…</p>
           </>
         )}
       </div>

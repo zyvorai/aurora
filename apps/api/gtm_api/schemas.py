@@ -549,6 +549,10 @@ class GtmReadiness(BaseModel):
     profile_built: bool
     strategy_ready: bool
     outreach_ready: bool
+    discover_ready: bool
+    qualify_ready: bool
+    proposal_ready: bool
+    publish_ready: bool
 
 
 class BriefKpis(BaseModel):
@@ -818,6 +822,41 @@ class PurgeRequest(BaseModel):
 class PurgeResponse(BaseModel):
     status: str
     tenant_id: str
+
+
+# Custom workflow stages (tenant-defined Full Forge sidebar stages)
+class WorkflowStageResponse(BaseModel):
+    id: uuid.UUID
+    tenant_id: uuid.UUID
+    group_label: str
+    label: str
+    icon: str
+    tone: str
+    position: int
+    content_blocks: list[dict[str, Any]]
+    created_by: Optional[uuid.UUID] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class WorkflowStageCreateRequest(BaseModel):
+    group_label: str = Field(..., min_length=1, max_length=100)
+    label: str = Field(..., min_length=1, max_length=100)
+    icon: str = Field(..., max_length=50)
+    tone: str = Field(..., max_length=20)
+    position: int = 0
+    content_blocks: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class WorkflowStageUpdateRequest(BaseModel):
+    group_label: Optional[str] = Field(None, min_length=1, max_length=100)
+    label: Optional[str] = Field(None, min_length=1, max_length=100)
+    icon: Optional[str] = Field(None, max_length=50)
+    tone: Optional[str] = Field(None, max_length=20)
+    position: Optional[int] = None
+    content_blocks: Optional[list[dict[str, Any]]] = None
 
 
 # Generic

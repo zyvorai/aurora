@@ -9,8 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gtm_api.models import (
     Artifact,
     ArtifactType,
+    ChannelPost,
     DashboardSnapshot,
+    DiscoveredAccount,
     Lead,
+    LeadScoreRecord,
     Product,
     Source,
     SourceStatus,
@@ -83,6 +86,34 @@ async def build_executive_brief(
             Lead.tenant_id == tenant_id,
         )
     )
+    discovered_count = await db.execute(
+        select(func.count(DiscoveredAccount.id)).where(
+            DiscoveredAccount.product_id == product.id,
+            DiscoveredAccount.tenant_id == tenant_id,
+        )
+    )
+    qualified_count = await db.execute(
+        select(func.count(LeadScoreRecord.id)).where(
+            LeadScoreRecord.product_id == product.id,
+            LeadScoreRecord.tenant_id == tenant_id,
+        )
+    )
+    proposal_count = await db.execute(
+        select(func.count(Artifact.id)).where(
+            Artifact.product_id == product.id,
+            Artifact.tenant_id == tenant_id,
+            Artifact.artifact_type == ArtifactType.PROPOSAL,
+        )
+    )
+    published_count = await db.execute(
+        select(func.count(ChannelPost.id))
+        .join(Artifact, Artifact.id == ChannelPost.artifact_id)
+        .where(
+            Artifact.product_id == product.id,
+            ChannelPost.tenant_id == tenant_id,
+            ChannelPost.published_at.isnot(None),
+        )
+    )
 
     profile_built = product.profile_status == "ready" and bool(product.profile)
     strategy_ready = (strategy_count.scalar() or 0) > 0
@@ -95,6 +126,10 @@ async def build_executive_brief(
         "profile_built": profile_built,
         "strategy_ready": strategy_ready,
         "outreach_ready": (outreach_count.scalar() or 0) > 0,
+        "discover_ready": (discovered_count.scalar() or 0) > 0,
+        "qualify_ready": (qualified_count.scalar() or 0) > 0,
+        "proposal_ready": (proposal_count.scalar() or 0) > 0,
+        "publish_ready": (published_count.scalar() or 0) > 0,
     }
 
     kpis = {

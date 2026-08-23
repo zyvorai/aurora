@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
 import { Card } from '@/components/ui/Card';
+import { SkeletonHero, SkeletonTable } from '@/components/ui/Skeleton';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -76,7 +77,12 @@ export default function TicketsAdminPage() {
   }
 
   if (!ready) {
-    return <div className="max-w-content mx-auto px-6 py-8 text-muted">Loading…</div>;
+    return (
+      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+        <SkeletonHero />
+        <SkeletonTable />
+      </div>
+    );
   }
 
   if (role !== 'admin') {
@@ -92,7 +98,7 @@ export default function TicketsAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
       <PageHero
         icon={LifeBuoy}
         eyebrow="Admin"
@@ -119,9 +125,9 @@ export default function TicketsAdminPage() {
       </div>
 
       {loading ? (
-        <div className="text-muted">Loading…</div>
+        <SkeletonTable />
       ) : tickets.length === 0 ? (
-        <EmptyState icon={LifeBuoy} title="No tickets" description="Customer-reported issues will appear here." />
+        <EmptyState icon={LifeBuoy} tone="pink" title="No tickets" description="Customer-reported issues will appear here." />
       ) : (
         <Card>
           <Table>

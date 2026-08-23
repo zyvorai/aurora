@@ -18,10 +18,12 @@ import {
   ShieldAlert,
   TrendingUp,
   Users,
+  Workflow,
   type LucideIcon,
 } from 'lucide-react';
 import type { AppRole, PersonaPath } from '@/lib/role-routing';
 import { personaHref, personaLabel } from '@/lib/role-routing';
+import type { Tone } from '@/components/layout/PageHero';
 
 export type NavGroupId = 'home' | 'workspace' | 'system';
 
@@ -47,13 +49,26 @@ export interface NavGroup {
 
 const WORKSPACE_PERSONAS: PersonaPath[] = ['brief', 'sales', 'pipeline', 'marketing', 'partner', 'forge'];
 
-const WORKSPACE_ICONS: Record<PersonaPath, LucideIcon> = {
+export const WORKSPACE_ICONS: Record<PersonaPath, LucideIcon> = {
   brief: LayoutDashboard,
   sales: Users,
   pipeline: Kanban,
   marketing: Megaphone,
   partner: Handshake,
   forge: Hammer,
+};
+
+/** iPhone-colorway accent per persona -- orange/rust was retired as a brand color (the
+ * app's own --primary is now the same Apple blue as 'sky'), so 'forge' (the default/
+ * full workspace) gets 'amber', the one tone not already claimed by another persona,
+ * keeping all six workspace tabs visually distinct. */
+export const WORKSPACE_COLORS: Record<PersonaPath, Tone> = {
+  brief: 'sky',
+  sales: 'emerald',
+  pipeline: 'violet',
+  marketing: 'pink',
+  partner: 'teal',
+  forge: 'amber',
 };
 
 /**
@@ -118,6 +133,13 @@ export function getNavGroups(hasProduct: boolean, role: AppRole | null): NavGrou
       label: 'Danger Zone',
       icon: ShieldAlert,
       href: () => '/dashboard/admin/danger',
+      roles: ['admin'],
+    },
+    {
+      id: 'workflow-stages',
+      label: 'Workflow Stages',
+      icon: Workflow,
+      href: () => '/dashboard/admin/workflow-stages',
       roles: ['admin'],
     },
   ];

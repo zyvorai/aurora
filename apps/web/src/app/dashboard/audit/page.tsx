@@ -13,6 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow,
 } from '@/components/ui/Table';
 import { TextMuted } from '@/components/ui/Typography';
+import { SkeletonTable } from '@/components/ui/Skeleton';
 import { ClipboardList } from 'lucide-react';
 
 const POLL_MS = 10_000;
@@ -70,7 +71,7 @@ export default function AuditLogPage() {
   }, [entries, actionFilter, search]);
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-content mx-auto px-6 py-8 space-y-6 animate-fade-up">
       <PageHero eyebrow="Compliance" title="Audit Log" description="Immutable trail of write/approve/publish actions across your tenant." />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -93,7 +94,7 @@ export default function AuditLogPage() {
       </div>
 
       {loading ? (
-        <TextMuted>Loading audit log…</TextMuted>
+        <SkeletonTable />
       ) : filtered.length === 0 ? (
         <EmptyState icon={ClipboardList} title="No audit entries found" description="Actions will appear here as your team works." />
       ) : (

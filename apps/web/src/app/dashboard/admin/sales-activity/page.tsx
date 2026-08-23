@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
 import { Card, CardBody } from '@/components/ui/Card';
+import { SkeletonHero, SkeletonTable } from '@/components/ui/Skeleton';
 import { Badge } from '@/components/ui/Badge';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -27,7 +28,12 @@ export default function SalesActivityAdminPage() {
   }, [role]);
 
   if (!ready) {
-    return <div className="max-w-content mx-auto px-6 py-8 text-muted">Loading…</div>;
+    return (
+      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+        <SkeletonHero />
+        <SkeletonTable />
+      </div>
+    );
   }
 
   // Same pattern as the other admin pages: a non-admin should never see this render at
@@ -45,7 +51,7 @@ export default function SalesActivityAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
       <PageHero
         icon={TrendingUp}
         eyebrow="Admin"
@@ -54,10 +60,11 @@ export default function SalesActivityAdminPage() {
       />
 
       {loading ? (
-        <div className="text-muted">Loading…</div>
+        <SkeletonTable />
       ) : activity.length === 0 ? (
         <EmptyState
           icon={Users}
+          tone="emerald"
           title="No approved sales reps yet"
           description="Approve sales-rep portal signups to see their activity here."
         />
