@@ -41,12 +41,14 @@ echo "$HEALTH_JSON" | grep -q '"status"' || fail "GET /health response missing '
 info "API health: $HEALTH_JSON"
 
 WEB_STATUS="$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 10 "http://${HOST}:3000" || echo "000")"
-[ "$WEB_STATUS" = "200" ] || fail "Web root returned HTTP ${WEB_STATUS} (expected 200)"
+# 307 is expected for an unauthenticated request -- the root page redirects to /login.
+[ "$WEB_STATUS" = "200" ] || [ "$WEB_STATUS" = "307" ] || fail "Web root returned HTTP ${WEB_STATUS} (expected 200 or 307)"
 info "Web root: HTTP ${WEB_STATUS}"
 
 info "Checking container status over SSH..."
+REMOTE_DIR="${DEPLOY_DIR:-.deployments/aurora}"
 ssh -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new "${DEPLOY_USER}@${HOST}" \
-    'cd "$HOME/.deployments/aurora" && sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml ps' \
+    "cd \"\$HOME/${REMOTE_DIR}\" && sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml ps" \
     || fail "Could not query container status over SSH"
 
 info "All checks passed."
