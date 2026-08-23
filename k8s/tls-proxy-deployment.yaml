@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aurora-tls-proxy
+  namespace: aurora
+  labels:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: tls-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aurora
+      app.kubernetes.io/component: tls-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aurora
+        app.kubernetes.io/component: tls-proxy
+    spec:
+      containers:
+        - name: nginx
+          image: docker.io/library/nginx:alpine
+          ports:
+            - containerPort: 443
+              name: https
+          volumeMounts:
+            - name: conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: tls
+              mountPath: /etc/aurora-tls
+              readOnly: true
+      volumes:
+        - name: conf
+          configMap:
+            name: aurora-tls-proxy-conf
+        - name: tls
+          secret:
+            secretName: aurora-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aurora-tls-proxy
+  namespace: aurora
+  labels:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: tls-proxy
+spec:
+  type: NodePort
+  ports:
+    - port: 443
+      targetPort: 443
+      nodePort: 30443
+      name: https
+  selector:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: tls-proxy

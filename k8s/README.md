@@ -29,16 +29,33 @@ update the `env:` overrides in `deployment-api.yaml` and
 
 ## Ports
 
-- `aurora-web` — NodePort 30900 → container 3000
-- `aurora-api` — NodePort 30901 → container 8000
+- **`https://<host>:30443`** — the real entrypoint. TLS-terminating nginx
+  (`aurora-tls-proxy`, self-signed cert — see below) reverse-proxying
+  `/api/*` + `/health` to `aurora-api`, everything else to `aurora-web`, all
+  same-origin so the web client's own fetches never hit mixed-content
+  blocking.
+- `aurora-web` — NodePort 30900 → container 3000 (plain HTTP, direct)
+- `aurora-api` — NodePort 30901 → container 8000 (plain HTTP, direct)
 
 `aurora-web`'s image is built separately from docker-compose's, because
 `NEXT_PUBLIC_API_URL` is baked into the Next.js bundle at build time and must
-point at `aurora-api`'s NodePort. If you change `API_NODEPORT`, the web image
-must be rebuilt to match — `deploy-k8s.sh` does this automatically.
+point at the HTTPS entrypoint above (not the plain-HTTP API NodePort — that
+would get mixed-content-blocked once the page itself is served over HTTPS).
+If you change `TLS_NODEPORT`, the web image must be rebuilt to match —
+`deploy-k8s.sh` does this automatically.
+
+## TLS
+
+No CA issues a trusted certificate for a bare IP address — real HTTPS needs
+a domain pointed at this host first. Until then, `deploy-k8s.sh` generates a
+self-signed cert (CN/SAN = the host IP) on first run and stores it as the
+`aurora-tls` k8s Secret; it won't regenerate it on subsequent runs. Browsers
+will show a trust warning ("Advanced" → "Proceed") until this moves to a
+real domain + CA-issued (or Let's Encrypt) cert — at that point, swap
+`aurora-tls`'s contents and drop the self-signed generation step.
 
 ## Known gap
 
-SSO doesn't work through this NodePort yet — the Keycloak client's
-registered redirect URI still points at the docker-compose deployment's
-address. Email/password signup and login work fully.
+SSO doesn't work through any of these entrypoints yet — the Keycloak
+client's registered redirect URI still points at the docker-compose
+deployment's original address. Email/password signup and login work fully.
