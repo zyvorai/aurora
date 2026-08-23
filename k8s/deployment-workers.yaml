@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aurora-workers
+  namespace: aurora
+  labels:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: workers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aurora
+      app.kubernetes.io/component: workers
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aurora
+        app.kubernetes.io/component: workers
+    spec:
+      containers:
+        - name: workers
+          image: docker.io/library/emissary-workers:latest
+          imagePullPolicy: Never
+          envFrom:
+            - secretRef:
+                name: aurora-env
+          env:
+            # Same host-address overrides as deployment-api.yaml -- keep in sync.
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://gtm:gtm_dev@175.110.122.71:5432/gtm_platform
+            - name: REDIS_URL
+              value: redis://175.110.122.71:6379/0
+            - name: QDRANT_URL
+              value: http://175.110.122.71:6333
+            - name: NEO4J_URI
+              value: bolt://175.110.122.71:7687
+            - name: MINIO_ENDPOINT
+              value: 175.110.122.71:9000
+            - name: OLLAMA_BASE_URL
+              value: http://175.110.122.71:11434/v1
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi

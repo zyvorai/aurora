@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aurora-api
+  namespace: aurora
+  labels:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: api
+spec:
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30901
+      name: http
+  selector:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aurora-web
+  namespace: aurora
+  labels:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: web
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30900
+      name: http
+  selector:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: web

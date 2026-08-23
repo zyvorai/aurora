@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aurora-web
+  namespace: aurora
+  labels:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aurora
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aurora
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+        - name: web
+          # NEXT_PUBLIC_API_URL is baked in at build time (Next.js), so this
+          # image is built separately from the docker-compose one -- see
+          # scripts/deploy-k8s.sh. It must match aurora-api's NodePort below.
+          image: docker.io/library/aurora-web:k8s
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - secretRef:
+                name: aurora-env
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi

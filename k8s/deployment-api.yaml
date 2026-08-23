@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aurora-api
+  namespace: aurora
+  labels:
+    app.kubernetes.io/name: aurora
+    app.kubernetes.io/component: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aurora
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aurora
+        app.kubernetes.io/component: api
+    spec:
+      containers:
+        - name: api
+          # Built and imported locally via scripts/deploy-k8s.sh (no registry
+          # required) -- reuses the same image docker-compose already builds.
+          image: docker.io/library/emissary-api:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - secretRef:
+                name: aurora-env
+          env:
+            # Backing services (postgres/redis/qdrant/neo4j/minio/ollama) still
+            # run via docker-compose on the same host, not in this cluster --
+            # these override the docker-compose-internal service-name URLs
+            # (postgres:5432 etc, unreachable from a pod's network namespace)
+            # with the host's own address, which those services are bound to
+            # publicly. Keep in sync with docker-compose.prod.yml's api service
+            # if credentials/ports change there.
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://gtm:gtm_dev@175.110.122.71:5432/gtm_platform
+            - name: REDIS_URL
+              value: redis://175.110.122.71:6379/0
+            - name: QDRANT_URL
+              value: http://175.110.122.71:6333
+            - name: NEO4J_URI
+              value: bolt://175.110.122.71:7687
+            - name: MINIO_ENDPOINT
+              value: 175.110.122.71:9000
+            - name: OLLAMA_BASE_URL
+              value: http://175.110.122.71:11434/v1
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
