@@ -18,11 +18,13 @@
       "secret": "REPLACE_WITH_A_GENERATED_SECRET",
       "redirectUris": [
         "http://localhost:8000/api/v1/auth/sso/callback",
-        "http://<your-host>:8000/api/v1/auth/sso/callback"
+        "http://175.110.122.71:8000/api/v1/auth/sso/callback",
+        "https://175.110.122.71:30443/api/v1/auth/sso/callback"
       ],
       "webOrigins": [
         "http://localhost:3000",
-        "http://<your-host>:3000"
+        "http://175.110.122.71:3000",
+        "https://175.110.122.71:30443"
       ]
     }
   ],

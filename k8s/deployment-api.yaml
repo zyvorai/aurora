@@ -50,6 +50,20 @@ spec:
               value: 175.110.122.71:9000
             - name: OLLAMA_BASE_URL
               value: http://175.110.122.71:11434/v1
+            # aurora-env's SSO_REDIRECT_URI (from the docker-compose deploy's
+            # .env) points at that deployment's own :8000 callback -- this
+            # cluster is reached through the HTTPS TLS-proxy entrypoint
+            # instead (k8s/tls-proxy-deployment.yaml, NodePort 30443), so it
+            # needs its own callback URL, already registered as an additional
+            # (not replacement) redirect URI on the Keycloak client.
+            - name: SSO_REDIRECT_URI
+              value: https://175.110.122.71:30443/api/v1/auth/sso/callback
+            # After exchanging the SSO code, the API redirects the browser
+            # back to "<frontend_url>/login/callback" -- must be this
+            # deployment's own web origin, not the docker-compose one from
+            # aurora-env's FRONTEND_URL.
+            - name: FRONTEND_URL
+              value: https://175.110.122.71:30443
           livenessProbe:
             httpGet:
               path: /health
