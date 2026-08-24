@@ -1,0 +1,82 @@
+# Trial backing infra — public images only (no Aurora source required).
+#
+#   docker compose -f docker-compose.infra.trial.yml up -d
+#   # then load aurora images and:
+#   docker compose -f docker-compose.trial.yml --env-file .env up -d
+#
+# Shares Docker network "aurora-trial" so api/workers resolve postgres/redis/…
+# by service name. Default passwords match .env.trial.example — change them
+# before any real deployment.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gtm_platform
+      POSTGRES_USER: gtm
+      POSTGRES_PASSWORD: gtm_dev
+    volumes:
+      - aurora_trial_pg:/var/lib/postgresql/data
+    networks: [aurora-trial]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gtm -d gtm_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    networks: [aurora-trial]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    volumes:
+      - aurora_trial_qdrant:/qdrant/storage
+    networks: [aurora-trial]
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/gtm_dev_neo4j
+      NEO4J_PLUGINS: "[]"
+    volumes:
+      - aurora_trial_neo4j:/data
+    networks: [aurora-trial]
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: gtm_minio
+      MINIO_ROOT_PASSWORD: gtm_minio_dev
+    volumes:
+      - aurora_trial_minio:/data
+    networks: [aurora-trial]
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - aurora_trial_ollama:/root/.ollama
+    networks: [aurora-trial]
+    restart: unless-stopped
+
+networks:
+  aurora-trial:
+    name: aurora-trial
+
+volumes:
+  aurora_trial_pg:
+  aurora_trial_qdrant:
+  aurora_trial_neo4j:
+  aurora_trial_minio:
+  aurora_trial_ollama:

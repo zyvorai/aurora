@@ -4,6 +4,18 @@ Turn your technical product into an AI-powered salesperson.
 
 Multi-tenant SaaS platform where software companies onboard by providing a website or documentation. The platform automatically discovers the product, builds a searchable knowledge graph + RAG store, then runs AI marketing, sales, and solution agents.
 
+## Which repo am I in?
+
+| You want to… | Use |
+|--------------|-----|
+| **Try / install Aurora** (customer, evaluator) | **[`hypersdk/aurora`](https://github.com/hypersdk/aurora)** — download the trial tarball, follow `GETTING-STARTED.md` inside |
+| **Develop Aurora from source** (this repo) | Keep reading — `make start` below |
+| Product marketing / schedule a demo | [zyvor.dev/aurora](https://zyvor.dev/aurora) |
+
+This repository is the **application source**. The public trial ships **binaries
+only** from [`hypersdk/aurora`](https://github.com/hypersdk/aurora) (no source).
+If you landed here looking for a download button, go there.
+
 ## Architecture
 
 ```
@@ -29,18 +41,23 @@ Customer Sources → Product Discovery → Knowledge Extraction → AI Knowledge
 | Cache/Queue | Redis |
 | Object Storage | MinIO |
 
-## Quick Start
+## Quick Start (developers with source)
 
-**Requires Docker Desktop running.**
+**Requires Docker Desktop running.** Customers without source: use the
+[trial package](https://github.com/hypersdk/aurora/releases) instead.
 
 ```bash
 make start    # infra + DB + API + web (background)
 # → http://localhost:3000  (web)
 # → http://localhost:8000  (api)
+# Sign in: marketing@zyvor.dev / Admin@321
 make stop     # when done
 ```
 
-First time or manual setup: see **[docs/dev-guide.md](docs/dev-guide.md)** (full install, Makefile reference, start/stop scripts, troubleshooting).
+**First useful thing after login:** add a product URL → ingest a source → open
+the product brief → run one agent (strategy / chat / content). Operator SSO
+guide: [docs/sso-oidc.md](docs/sso-oidc.md). Full local setup:
+[docs/dev-guide.md](docs/dev-guide.md).
 
 ```bash
 # Optional: Ollama (free local LLM, default provider)

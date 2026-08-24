@@ -60,7 +60,8 @@ public GitHub repo [`hypersdk/aurora`](https://github.com/hypersdk/aurora):
 ./scripts/publish-trial-release.sh 0.1.0
 ```
 
-Packages include `INSTALL.md`, `SSO.md` (demo logins / OIDC), and `AFTER-TRIAL.md`.
+Packages include `GETTING-STARTED.md`, `INSTALL.md`, `SSO.md`,
+`docker-compose.infra.trial.yml`, and `AFTER-TRIAL.md`.
 Operator SSO guide in this repo: [`docs/sso-oidc.md`](sso-oidc.md).
 
 `hypersdk-web` markets Aurora at [zyvor.dev/aurora](https://zyvor.dev/aurora) but does

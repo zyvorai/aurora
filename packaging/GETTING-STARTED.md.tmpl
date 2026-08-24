@@ -1,0 +1,116 @@
+# Getting started with Aurora (trial package)
+
+You downloaded a **binary trial** from [`hypersdk/aurora`](https://github.com/hypersdk/aurora).
+There is no application source in this archive. This page is the shortest path
+from download → signed-in product → first useful result.
+
+## Who should use which GitHub repo?
+
+| Repo | What it is | Who it's for |
+|------|------------|--------------|
+| **[`hypersdk/aurora`](https://github.com/hypersdk/aurora)** (this package) | Binaries only — images, Helm, compose, guides | **Customers / evaluators** |
+| Source tree (Zyvor internal / licensed source) | Full application source + `make start` | Zyvor engineers and partners with source access |
+
+If you only want to try Aurora: stay on the distro repo and this package.
+Do **not** look for a public source clone to “build from” — there isn’t one
+in the trial distribution.
+
+## 15-minute path (Docker / Podman)
+
+### 0. Prerequisites
+
+- Docker Desktop **or** Podman + `docker compose` / `podman compose`
+- ~8 GB RAM free (Neo4j + Ollama are heavy on first pull)
+- Internet once (to pull public infra images: Postgres, Redis, Qdrant, Neo4j, MinIO, Ollama)
+
+### 1. Download and extract
+
+```bash
+curl -LO https://github.com/hypersdk/aurora/releases/download/v__VERSION__/aurora-__VERSION__.tar.gz
+curl -LO https://github.com/hypersdk/aurora/releases/download/v__VERSION__/aurora-__VERSION__.tar.gz.sha256
+shasum -a 256 -c aurora-__VERSION__.tar.gz.sha256
+tar xzf aurora-__VERSION__.tar.gz && cd aurora-__VERSION__
+```
+
+### 2. Load Aurora images
+
+```bash
+docker load -i images/aurora-api-__VERSION__.tar
+docker load -i images/aurora-web-__VERSION__.tar
+docker load -i images/aurora-workers-__VERSION__.tar
+# Podman: podman load -i …
+```
+
+### 3. Start backing services, then Aurora
+
+```bash
+docker compose -f docker-compose.infra.trial.yml up -d
+# wait until postgres is healthy, then:
+
+cp .env.trial.example .env
+# set SECRET_KEY=$(openssl rand -hex 32)
+# leave DATABASE_URL / REDIS_URL / … defaults if using the infra compose above
+
+docker compose -f docker-compose.trial.yml --env-file .env up -d
+```
+
+Optional: pull a small Ollama model so agents have a local LLM
+(`docker compose -f docker-compose.infra.trial.yml exec ollama ollama pull llama3.1:8b`
+— or set `LLM_PROVIDER=openai` + `OPENAI_API_KEY` in `.env`).
+
+### 4. Open and sign in
+
+- Web UI: **http://localhost:3000** (or the host/port you set in `.env`)
+- API health: `curl -s http://127.0.0.1:8000/health`
+
+| Login | Password |
+|-------|----------|
+| `marketing@zyvor.dev` | `Admin@321` |
+
+Change this password immediately outside a throwaway lab. SSO (`demo`/`demo`)
+is optional — see `SSO.md` only if you already have an OIDC IdP.
+
+### 5. First useful workflow (what to do after login)
+
+1. **Create / open a product** — paste your product website or docs URL when
+   prompted (onboarding checklist on `/dashboard`).
+2. **Add a source** — website or documentation URL → **Ingest**.
+3. Wait until the source status reaches **completed** (workers must be up —
+   they are in `docker-compose.trial.yml`).
+4. Open the product **profile / brief** — confirm Aurora extracted a grounded
+   product summary.
+5. Run one agent action from the product console, e.g. **strategy**, **chat**,
+   or **content** — anything that proves RAG is answering from your source.
+6. (Optional) Generate content → use the **approval** gate before publish.
+
+You have succeeded when: you are signed in, at least one source is
+`completed`, and one agent response cites your product.
+
+### 6. Verify license trial clock
+
+```bash
+curl -s http://127.0.0.1:8000/api/v1/license/status
+```
+
+Keyless for 30 days from first DB contact. After that: email
+**sales@zyvor.dev** → set `AURORA_LICENSE_KEY` (see `AFTER-TRIAL.md`).
+
+## Helm / k3s instead of Compose?
+
+See `INSTALL.md` Path B / C. You still need the same backing services
+(Postgres, Redis, Qdrant, Neo4j, MinIO, LLM) reachable from the cluster —
+bring your own or run the infra compose on a node and point Helm `env.*`
+URLs at them.
+
+## Stuck?
+
+| Symptom | Check |
+|---------|-------|
+| `compose` fails on unknown network `aurora-trial` | Start `docker-compose.infra.trial.yml` first |
+| Web loads, login fails | API up? `curl /health`; `SEED_DEFAULT_ADMIN` not false |
+| Ingest stuck on `pending` | `workers` container running? |
+| Agents return empty / errors | Ollama model pulled, or OpenAI key set |
+| Port 3000 busy | `AURORA_WEB_BIND=0.0.0.0:3001` in `.env` / compose |
+
+More detail: `INSTALL.md` (all install paths), `SSO.md` (OIDC), `AFTER-TRIAL.md`
+(license key). Commercial help: **sales@zyvor.dev** · [zyvor.dev/aurora](https://zyvor.dev/aurora)

@@ -1,7 +1,10 @@
 # Aurora __VERSION__ — Installation
 
-Self-contained offline package. **No source code** is included — only container
-images, Helm chart, compose files, and install guides.
+Self-contained offline package for the **Aurora application images**.
+**No source code** is included.
+
+**New here?** Start with **`GETTING-STARTED.md`** (download → infra → login →
+first product ingest). This file is the full install reference.
 
 ## What's in the box
 
@@ -11,12 +14,14 @@ images/
   aurora-web-__VERSION__.tar
   aurora-workers-__VERSION__.tar
 charts/aurora-__VERSION__.tgz
-docker-compose.trial.yml
+docker-compose.infra.trial.yml   # Postgres/Redis/Qdrant/Neo4j/MinIO/Ollama
+docker-compose.trial.yml         # Aurora api + workers + web
 .env.trial.example
-k8s/                    # optional raw manifests (k3s / plain kubectl)
+k8s/                             # optional raw manifests (k3s / plain kubectl)
 LICENSE
-INSTALL.md              # this file
-SSO.md                  # Keycloak / OIDC + demo logins
+GETTING-STARTED.md               # shortest path for evaluators
+INSTALL.md                       # this file
+SSO.md                           # Keycloak / OIDC + demo logins
 AFTER-TRIAL.md
 ```
 
@@ -26,8 +31,6 @@ AFTER-TRIAL.md
 - **After day 30:** API returns HTTP 402 until you set `AURORA_LICENSE_KEY`.
 - **Keys:** email **sales@zyvor.dev**.
 
-Check status anytime:
-
 ```bash
 curl -s https://<your-host>/api/v1/license/status | jq
 ```
@@ -35,44 +38,48 @@ curl -s https://<your-host>/api/v1/license/status | jq
 ## Prerequisites
 
 - Docker **or** Podman (for compose / image load)
-- **or** Kubernetes / k3s + Helm 3 (recommended production path)
-- Backing services: Postgres, Redis, Qdrant, Neo4j, MinIO, and an LLM
-  (Ollama local or OpenAI via `LLM_PROVIDER` / `OPENAI_API_KEY`)
+- **or** Kubernetes / k3s + Helm 3 (production path)
+- Backing services: Postgres, Redis, Qdrant, Neo4j, MinIO, and an LLM —
+  **use `docker-compose.infra.trial.yml` in this package**, or point `.env` /
+  Helm `env.*` at services you already run
 
 ## Path A — Docker / Podman Compose (fastest eval)
 
 ```bash
-# Load images (Podman: replace docker with podman)
+# Load Aurora images (Podman: replace docker with podman)
 docker load -i images/aurora-api-__VERSION__.tar
 docker load -i images/aurora-web-__VERSION__.tar
 docker load -i images/aurora-workers-__VERSION__.tar
 
+# 1) Backing infra (public images — pulled once)
+docker compose -f docker-compose.infra.trial.yml up -d
+
+# 2) App
 cp .env.trial.example .env
-# edit .env — especially SECRET_KEY and NEXT_PUBLIC / FRONTEND URLs
+# edit .env — set SECRET_KEY=$(openssl rand -hex 32)
+# defaults already target the infra compose service names
 
 docker compose -f docker-compose.trial.yml --env-file .env up -d
-# Podman: podman compose -f docker-compose.trial.yml --env-file .env up -d
 ```
 
-Open the URL you set for the web UI. Default admin seed (change immediately):
-`marketing@zyvor.dev` / `Admin@321` (disable with `SEED_DEFAULT_ADMIN=false`).
-
-### Demo logins & SSO
+Open **http://localhost:3000**. Sign in:
 
 | Path | Username / email | Password |
 |------|------------------|----------|
 | Email/password (default) | `marketing@zyvor.dev` | `Admin@321` |
 | Keycloak SSO (when configured) | `demo` | `demo` |
 
-SSO is off by default. To enable OIDC (Keycloak, Auth0, Okta, Azure AD, …),
-set `SSO_ENABLED=true` plus `SSO_ISSUER` / `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` /
-`SSO_REDIRECT_URI` in `.env` (see `SSO.md` in this package). Register
-`<your-api>/api/v1/auth/sso/callback` as the IdP redirect URI.
+Change the admin password immediately outside a throwaway lab
+(`SEED_DEFAULT_ADMIN=false` disables the seed). SSO is off by default — see
+`SSO.md`.
+
+**After login:** create a product → add a website/docs source → ingest → open
+the product brief → run one agent (strategy / chat / content). Full checklist:
+`GETTING-STARTED.md`.
 
 ## Path B — Helm (k3s / Kubernetes)
 
 ```bash
-# Load images onto every node (or push to your registry and retag values)
 docker load -i images/aurora-api-__VERSION__.tar
 docker load -i images/aurora-web-__VERSION__.tar
 docker load -i images/aurora-workers-__VERSION__.tar
@@ -98,6 +105,9 @@ helm install aurora charts/aurora-__VERSION__.tgz \
 
 Optional ingress: `--set ingress.enabled=true --set ingress.host=aurora.example.com`.
 
+You must supply reachable backing services (run
+`docker-compose.infra.trial.yml` on a node, or use managed Postgres/Redis/…).
+
 After trial:
 
 ```bash
@@ -113,6 +123,7 @@ creating an `aurora-env` Secret from your `.env`.
 
 ## Support
 
+- Getting started checklist: **`GETTING-STARTED.md`**
 - Sales / license keys: **sales@zyvor.dev**
-- See `AFTER-TRIAL.md`
-- SSO / OIDC / demo logins: see `SSO.md`
+- After trial: **`AFTER-TRIAL.md`**
+- SSO / OIDC / demo logins: **`SSO.md`**
