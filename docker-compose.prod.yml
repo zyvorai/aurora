@@ -2,14 +2,10 @@
 #
 #   docker compose -f infra/docker-compose.yml -f docker-compose.prod.yml up -d
 #
-# infra/docker-compose.yml (dev-oriented, untouched) provides postgres/qdrant/
-# neo4j/redis/minio/ollama. This file adds the three application services and
-# points them at those services by Docker DNS name instead of localhost.
-#
-# .env at the repo root is used both for compose variable substitution below
-# (NEXT_PUBLIC_API_URL) and, via env_file:, as each container's base runtime
-# env -- the environment: blocks then override the handful of host-dependent
-# URLs so they resolve inside the compose network.
+# Images are named aurora-api / aurora-workers / aurora-web (`name:` below).
+# The public HTTPS entrypoint is the K3s TLS proxy (see k8s/), not hypersdk-web.
+
+name: aurora
 
 services:
   api:
@@ -42,10 +38,8 @@ services:
       ollama:
         condition: service_started
     ports:
-      # Bound to localhost only -- the public entry point is the hypersdk-web
-      # reverse proxy (same host, host networking), which reaches this over
-      # 127.0.0.1. A public 0.0.0.0 binding here let anyone skip HTTPS/the
-      # proxy entirely and hit the API over plain HTTP directly.
+      # Bound to localhost only — public HTTPS is the K3s TLS proxy (k8s/),
+      # not a reverse proxy in hypersdk-web.
       - "127.0.0.1:8000:8000"
     restart: unless-stopped
 

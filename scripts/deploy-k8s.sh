@@ -28,7 +28,7 @@
 #
 # Environment:
 #   COMPOSE_DIR      Remote docker-compose deploy dir to build images from
-#                     (default: .deployments/emissary, matching deploy-remote.sh)
+#                     (default: .deployments/aurora, matching deploy-remote.sh)
 #   WEB_NODEPORT      Plain-HTTP NodePort for aurora-web (default: 30900)
 #   API_NODEPORT      Plain-HTTP NodePort for aurora-api (default: 30901)
 #   TLS_NODEPORT      HTTPS NodePort for the TLS proxy (default: 30443)
@@ -37,7 +37,7 @@ set -euo pipefail
 
 HOST="${1:?usage: $0 HOST USER}"
 DEPLOY_USER="${2:?usage: $0 HOST USER}"
-COMPOSE_DIR="${COMPOSE_DIR:-.deployments/emissary}"
+COMPOSE_DIR="${COMPOSE_DIR:-.deployments/aurora}"
 WEB_NODEPORT="${WEB_NODEPORT:-30900}"
 API_NODEPORT="${API_NODEPORT:-30901}"
 TLS_NODEPORT="${TLS_NODEPORT:-30443}"
@@ -55,8 +55,8 @@ ssh "${DEPLOY_USER}@${HOST}" "
     set -e
     cd \"\$HOME/${COMPOSE_DIR}\"
     sudo docker save aurora-web:k8s-tls -o /tmp/aurora-web.tar
-    sudo docker save emissary-api:latest -o /tmp/aurora-api.tar
-    sudo docker save emissary-workers:latest -o /tmp/aurora-workers.tar
+    sudo docker save aurora-api:latest -o /tmp/aurora-api.tar
+    sudo docker save aurora-workers:latest -o /tmp/aurora-workers.tar
     sudo k3s ctr images import /tmp/aurora-web.tar
     sudo k3s ctr images import /tmp/aurora-api.tar
     sudo k3s ctr images import /tmp/aurora-workers.tar

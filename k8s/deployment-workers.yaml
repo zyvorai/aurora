@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: workers
-          image: docker.io/library/emissary-workers:latest
+          image: docker.io/library/aurora-workers:latest
           imagePullPolicy: Never
           envFrom:
             - secretRef:

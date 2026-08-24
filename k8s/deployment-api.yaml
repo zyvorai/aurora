@@ -22,7 +22,7 @@ spec:
         - name: api
           # Built and imported locally via scripts/deploy-k8s.sh (no registry
           # required) -- reuses the same image docker-compose already builds.
-          image: docker.io/library/emissary-api:latest
+          image: docker.io/library/aurora-api:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8000

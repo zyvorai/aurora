@@ -10,11 +10,10 @@ one; this is additive, not a replacement — both can run side by side).
 
 ## Why this exists
 
-Aurora is sold as an independent product and no longer depends on
-`hypersdk-web` / `zyvor.dev` for ingress. This stack is the standalone
-entrypoint: a K8s `NodePort` Service (TLS proxy on 30443), matching the
-pattern used by other products in this cluster (`zyvor-janus-api` /
-`zyvor-janus-web`, etc).
+Aurora is an independent product and no longer depends on `hypersdk-web` /
+`zyvor.dev` for ingress. Marketing: [zyvor.dev/aurora](https://zyvor.dev/aurora).
+This stack is the standalone app entrypoint: a K8s `NodePort` Service (TLS
+proxy on 30443).
 
 If you changed the frontend locally, **rsync `apps/web` to the remote deploy
 tree before rebuilding** — `deploy-k8s.sh` alone can rebuild from a stale

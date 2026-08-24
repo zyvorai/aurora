@@ -39,7 +39,7 @@ Submit the `.csr` to the CA. Keep the `.key` private — it stays on the server,
 | `*.key` | Private key matching the CSR |
 
 Place both under this directory on the **remote host**
-(e.g. `~/.deployments/emissary/infra/nginx/certs/` or your deploy path), then restart
+(e.g. `~/.deployments/aurora/infra/nginx/certs/` or your deploy path), then restart
 nginx via the compose overlay. `deploy-remote.sh` auto-enables the overlay when matching
 cert/key files exist.
 
