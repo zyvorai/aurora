@@ -60,5 +60,5 @@ public GitHub repo [`hypersdk/aurora`](https://github.com/hypersdk/aurora):
 ./scripts/publish-trial-release.sh 0.1.0
 ```
 
-`hypersdk-web` / zyvor.dev does **not** host or proxy Aurora — see that site’s README
-for the same download links (marketing/docs only).
+`hypersdk-web` markets Aurora at [zyvor.dev/aurora](https://zyvor.dev/aurora) but does
+**not** host or proxy the application — see that page for the trial download.

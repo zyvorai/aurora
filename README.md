@@ -82,23 +82,23 @@ real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC
 `.env` must be an address a **visitor's browser** can reach (not `localhost`) —
 `deploy-remote.sh` refuses to build with that left unset.
 
-**TLS / production entrypoint:** Aurora is an **independent product**. It is **not** hosted
-or reverse-proxied by the sibling [`hypersdk-web`](https://github.com/ssahani/hypersdk-web)
-site (`zyvor.dev`) — that repo is the HyperSDK marketing site only. Production for Aurora
-is the K3s stack in [`k8s/`](k8s/README.md): `./scripts/deploy-k8s.sh <host> <user>` →
-HTTPS on **`https://<host>:30443`** (TLS-terminating nginx NodePort, self-signed until a
-real domain + CA cert are attached). Sync local `apps/web` to the remote deploy tree before
-rebuilding if you changed the frontend. Optional compose nginx overlay:
-[infra/nginx/certs/README.md](infra/nginx/certs/README.md).
+**TLS / production entrypoint:** Aurora is an **independent product** (the live app is not
+reverse-proxied by [`hypersdk-web`](https://github.com/ssahani/hypersdk-web) /
+[zyvor.dev](https://zyvor.dev)). Product marketing and trial download live on the website:
+
+**→ [zyvor.dev/aurora](https://zyvor.dev/aurora)**
+
+Production deploy for the app itself is the K3s stack in [`k8s/`](k8s/README.md):
+`./scripts/deploy-k8s.sh <host> <user>` → HTTPS on **`https://<host>:30443`**. Sync local
+`apps/web` to the remote deploy tree before rebuilding if you changed the frontend. Optional
+compose nginx overlay: [infra/nginx/certs/README.md](infra/nginx/certs/README.md).
 
 ### Customer trial download (no source)
 
-Binary packages (Docker / Podman / Helm / k3s) publish to the public distribution repo
-**[`hypersdk/aurora`](https://github.com/hypersdk/aurora)** — not this source tree and not
-`hypersdk-web`.
-
 | | |
 |---|---|
+| Website | [zyvor.dev/aurora](https://zyvor.dev/aurora) |
+| Distro repo | [`hypersdk/aurora`](https://github.com/hypersdk/aurora) |
 | Latest release | [v0.1.0 — 30-day trial](https://github.com/hypersdk/aurora/releases/tag/v0.1.0) |
 | Package | [`aurora-0.1.0.tar.gz`](https://github.com/hypersdk/aurora/releases/download/v0.1.0/aurora-0.1.0.tar.gz) |
 | Checksum | [`aurora-0.1.0.tar.gz.sha256`](https://github.com/hypersdk/aurora/releases/download/v0.1.0/aurora-0.1.0.tar.gz.sha256) |
