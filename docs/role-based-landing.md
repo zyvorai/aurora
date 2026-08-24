@@ -58,17 +58,21 @@ exactly as before.
 
 ### Dashboard
 
-- Hero subtitle describes the user’s default workspace (e.g. “Your default workspace is Sales Workspace…”).
-- Each product card’s **primary button** opens the role default; **secondary** opens Brief or Full Forge as a fallback.
-- **Onboard product** → after create, redirect to role default for the new product.
+- Empty / first-run tenants see **Create your first product** plus
+  `OnboardingChecklist` (create → ingest → first agent). Creating a product with a
+  website URL auto-runs `addSource` + `ingest`, then redirects to the role default.
+- With products: each card’s **primary button** opens the role default; **secondary**
+  opens Brief or Full Forge as a fallback. Hero copy still names the user’s default
+  workspace.
 
 ### Product shell
 
-- `/products/[id]/*` routes render inside `ProductConsoleShell` (left rail + top tab
-  bar), not the site-wide `AppShell` navbar used elsewhere. The top tab bar is the same
-  role-driven workspace list as before (Forge/Pipeline/Sales/Marketing/Partners/Brief).
+- `/products/[id]/*` renders inside `ProductConsoleShell`: shared `GlobalNav` on top,
+  then left rail + top tab bar (Forge/Pipeline/Sales/Marketing/Partners/Brief). App
+  routes outside the product tree use `AppShell` + the same `GlobalNav`.
 - Full Forge's header badge is chain-derived (e.g. "needs sources", "ingesting",
   "ready" — `chainStatusLabel()` in `apps/web/src/lib/chain.ts`), not a static label.
+  Until sources exist, Forge also shows `OnboardingChecklist`.
 
 ---
 
@@ -119,11 +123,12 @@ Sign out, sign in again (or clear `localStorage` and re-login) so `role` is refr
 | File | Purpose |
 |------|---------|
 | [`apps/web/src/lib/role-routing.ts`](../apps/web/src/lib/role-routing.ts) | Role → persona map, post-login resolver, dashboard CTAs |
-| [`apps/web/src/app/page.tsx`](../apps/web/src/app/page.tsx) | Login/register → `resolvePostLoginRoute()` |
-| [`apps/web/src/app/dashboard/page.tsx`](../apps/web/src/app/dashboard/page.tsx) | Role-aware product card buttons |
+| [`apps/web/src/app/login/page.tsx`](../apps/web/src/app/login/page.tsx) | Sign-in / URL-first signup → `resolvePostLoginRoute()` (or Forge after create) |
+| [`apps/web/src/app/dashboard/page.tsx`](../apps/web/src/app/dashboard/page.tsx) | Onboarding checklist + role-aware product card buttons |
 | [`apps/web/src/hooks/useAuth.ts`](../apps/web/src/hooks/useAuth.ts) | Exposes `role` from `localStorage` |
-| [`apps/web/src/components/layout/AppHeader.tsx`](../apps/web/src/components/layout/AppHeader.tsx) | Default workspace badge |
-| [`apps/web/src/components/layout/ProductShell.tsx`](../apps/web/src/components/layout/ProductShell.tsx) | Role-aware breadcrumb home link |
+| [`apps/web/src/components/layout/GlobalNav/GlobalNav.tsx`](../apps/web/src/components/layout/GlobalNav/GlobalNav.tsx) | Shared mega-menu chrome (marketing + app + product) |
+| [`apps/web/src/components/layout/ProductConsoleShell.tsx`](../apps/web/src/components/layout/ProductConsoleShell.tsx) | Product left rail + workspace tabs |
+| [`apps/web/src/components/OnboardingChecklist.tsx`](../apps/web/src/components/OnboardingChecklist.tsx) | First-run create → ingest → agent steps |
 | [`apps/web/src/app/dashboard/admin/danger/page.tsx`](../apps/web/src/app/dashboard/admin/danger/page.tsx) | Admin-only page with an inline `role !== 'admin'` guard |
 
 ### Key functions

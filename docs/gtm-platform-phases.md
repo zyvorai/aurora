@@ -623,12 +623,20 @@ cd apps/api && python -m pytest tests/ -v
 
 ## Frontend workspace
 
-**Product console shell** (`apps/web/src/components/layout/ProductConsoleShell.tsx`, mounted by
-`products/[id]/layout.tsx` in place of the site-wide `AppShell` for this route tree): a left rail
-(product switcher, a numbered 9-stage pipeline chain with live status pips, a "Surfaces" nav for
-Q&A/Content/Sales Chat/Architect/Analytics, and any tenant-defined custom workflow stages) plus a
-sticky top tab bar (Forge/Pipeline/Sales/Marketing/Partners/Brief) and a persistent right-hand
-run-log dock. No stage's status is hand-set per screen — everything is derived from
+**Site chrome:** `GlobalNav` (`apps/web/src/components/layout/GlobalNav/`) provides Apple-style
+mega-menu flyouts on marketing (`MarketingLayout`), authenticated app (`AppShell`), product
+console (`ProductConsoleShell`), and portal auth pages. Marketing home is `/`
+(`HomeSections` + `SiteFooter`); URL-first signup/sign-in is `/login`. Empty `/dashboard`
+(and Full Forge before sources exist) shows `OnboardingChecklist` — create product → ingest →
+first agent run. Creating a product on the dashboard with a website URL auto-runs
+`addSource` + `ingest` (same path as signup).
+
+**Product console shell** (`ProductConsoleShell.tsx`, mounted by `products/[id]/layout.tsx`):
+`GlobalNav` on top, then a left rail (product switcher, numbered 9-stage pipeline chain with
+live status pips, "Surfaces" nav for Q&A/Content/Sales Chat/Architect/Analytics, and any
+tenant-defined custom workflow stages) plus a sticky top tab bar
+(Forge/Pipeline/Sales/Marketing/Partners/Brief) and a persistent right-hand run-log dock. No
+stage's status is hand-set per screen — everything is derived from
 `GET /products/{id}/brief`'s `gtm_readiness` object (see `apps/web/src/lib/chain.ts`).
 
 **The chain** (`sources → ingest → product profile → strategy → discover → qualify → outreach →
@@ -681,10 +689,10 @@ real ingest already running. Sign-in is a quiet toggle in the masthead, not a co
 
 API client: `apps/web/src/lib/api.ts`
 
-Visual design: Apple-blue/iPhone-colorway accent system (not orange/rust) is the default look
-across all pages — see [Design system](../README.md#design-system) in the README and
-`apps/web/src/app/globals.css`. The console/chain surfaces use a status-only palette (running =
-primary, needs-you = warning, done = success, idle = muted) layered on the same tokens.
+Visual design: light-first Apple.com-style system (flat surfaces, pill primary, Apple-blue
+`--primary`) — see [Design system](../README.md#design-system) and
+`apps/web/src/app/globals.css`. Dark mode via `html.dark-theme`. Console/chain surfaces use a
+status-only palette (running = primary, needs-you = warning, done = success, idle = muted).
 
 ---
 
@@ -772,19 +780,10 @@ found by actually testing the deployed web app in a browser against the remote h
 not just curling the API directly. `deploy-remote.sh` now refuses to build with this
 still unset (override with `ALLOW_LOCALHOST_API_URL=true` if you really mean it).
 
-**TLS / real domain**: in production this app doesn't terminate its own TLS — the sibling
-`hypersdk-web` repo's `website-server` (a Go reverse proxy already fronting `*.zyvor.dev`
-with its own `zyvor.dev` certificate) matches `aurora.zyvor.dev` and the still-live
-`emissary.zyvor.dev` (`isAuroraHost` in `cmd/website-server/main.go` over there) and
-forwards `/api/*` + `/health` to this repo's api container, everything else to web —
-confirmed live via `curl --resolve aurora.zyvor.dev:443:<host> https://aurora.zyvor.dev/`.
-
-This repo also ships its own optional nginx overlay (`infra/nginx/docker-compose.nginx.yml`)
-that can terminate HTTPS for a domain directly, for deployments not sitting behind that
-proxy — `deploy-remote.sh` auto-enables it once matching cert/key files exist under
-`infra/nginx/certs/` on the remote host; see
-[infra/nginx/certs/README.md](../infra/nginx/certs/README.md) for the CA request + DNS
-steps (manual, external to this repo). Not needed for the current `hypersdk-web`-fronted
-setup.
+**TLS / production:** Aurora is independent of `hypersdk-web` / `zyvor.dev`. Prefer the K3s
+entrypoint in [`k8s/README.md`](../k8s/README.md) — `./scripts/deploy-k8s.sh` →
+`https://<host>:30443` (self-signed until a real domain + CA cert). Optional compose nginx
+overlay: [infra/nginx/certs/README.md](../infra/nginx/certs/README.md)
+(`deploy-remote.sh` enables it when cert/key files exist under `infra/nginx/certs/`).
 
 Full local dev guide (setup, scripts, Makefile, troubleshooting): [dev-guide.md](./dev-guide.md)

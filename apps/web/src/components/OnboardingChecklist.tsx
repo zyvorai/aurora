@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronUp, Circle, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronUp, Lock, X } from 'lucide-react';
 import { products } from '@/lib/api';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -16,16 +16,24 @@ interface Step {
   key: string;
   title: string;
   done: boolean;
+  locked: boolean;
   hint: string;
   href?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 interface OnboardingChecklistProps {
   hasProduct: boolean;
   firstProductId?: string;
+  onCreateProduct?: () => void;
 }
 
-export default function OnboardingChecklist({ hasProduct, firstProductId }: OnboardingChecklistProps) {
+export default function OnboardingChecklist({
+  hasProduct,
+  firstProductId,
+  onCreateProduct,
+}: OnboardingChecklistProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -56,25 +64,33 @@ export default function OnboardingChecklist({ hasProduct, firstProductId }: Onbo
       key: 'product',
       title: 'Create your first product',
       done: hasProduct,
-      hint: 'Point the platform at a website or docs URL.',
+      locked: false,
+      hint: 'Paste a website or docs URL — Aurora builds a product profile from it.',
+      actionLabel: 'Create product',
+      onAction: onCreateProduct,
     },
     {
       key: 'ingest',
       title: 'Add and ingest a source',
       done: sourceIngested,
+      locked: !hasProduct,
       hint: 'Sources build the knowledge base agents ground their answers in.',
       href: firstProductId ? `/products/${firstProductId}` : undefined,
+      actionLabel: 'Add a source',
     },
     {
       key: 'agent',
       title: 'Run your first agent',
       done: agentRun,
+      locked: !hasProduct || !sourceIngested,
       hint: 'Generate a strategy, Q&A answer, or proposal to see it in action.',
       href: firstProductId ? `/products/${firstProductId}` : undefined,
+      actionLabel: 'Open product',
     },
-  ], [hasProduct, sourceIngested, agentRun, firstProductId]);
+  ], [hasProduct, sourceIngested, agentRun, firstProductId, onCreateProduct]);
 
   const completedCount = steps.filter((s) => s.done).length;
+  const nextStep = steps.find((s) => !s.done && !s.locked) ?? steps.find((s) => !s.done);
 
   useEffect(() => {
     if (completedCount === steps.length && !dismissed) {
@@ -91,50 +107,124 @@ export default function OnboardingChecklist({ hasProduct, firstProductId }: Onbo
   if (dismissed) return null;
 
   return (
-    <Card elevated className="animate-fade-up border-primary/20">
-      <CardBody>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <Text className="font-semibold">Getting started</Text>
-            <TextSmall className="text-muted">{completedCount}/{steps.length} complete</TextSmall>
+    <Card elevated className="animate-fade-up border-primary/25">
+      <CardBody className="space-y-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <Text className="font-semibold text-[17px]">
+              {hasProduct ? 'Getting started' : 'Start here — 3 quick steps'}
+            </Text>
+            <TextMuted className="mt-1 text-body-sm">
+              {hasProduct
+                ? `${completedCount} of ${steps.length} complete`
+                : 'New here? Create a product first. Everything else unlocks after that.'}
+            </TextMuted>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="sm" onClick={() => setCollapsed((c) => !c)} aria-label={collapsed ? 'Expand' : 'Collapse'}>
               {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={dismiss} aria-label="Dismiss">
-              <X className="h-4 w-4" />
-            </Button>
+            {hasProduct ? (
+              <Button variant="ghost" size="sm" onClick={dismiss} aria-label="Dismiss">
+                <X className="h-4 w-4" />
+              </Button>
+            ) : null}
           </div>
         </div>
 
+        {!collapsed && nextStep && !nextStep.done ? (
+          <div className="rounded-2xl bg-surface px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+            <div className="min-w-0">
+              <TextSmall className="text-primary font-medium">Next up</TextSmall>
+              <p className="text-[17px] font-semibold tracking-tight mt-0.5">{nextStep.title}</p>
+              <TextMuted className="text-body-sm mt-1">{nextStep.hint}</TextMuted>
+            </div>
+            {nextStep.onAction ? (
+              <Button size="lg" className="shrink-0" onClick={nextStep.onAction}>
+                {nextStep.actionLabel}
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </Button>
+            ) : nextStep.href ? (
+              <Link href={nextStep.href} className="shrink-0">
+                <Button size="lg">
+                  {nextStep.actionLabel}
+                  <ArrowRight className="h-4 w-4 ml-1.5" />
+                </Button>
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+
         {!collapsed && (
-          <ul className="mt-4 space-y-3">
-            {steps.map((step) => (
-              <li key={step.key} className="flex items-start gap-3">
-                {step.done ? (
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-success text-[10px] text-white">✓</span>
-                ) : (
-                  <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className={cn('text-body-sm font-medium', step.done && 'text-muted line-through')}>
-                    {step.title}
-                  </p>
-                  {!step.done && (
-                    <div className="flex items-center gap-2">
-                      <TextMuted className="text-body-sm">{step.hint}</TextMuted>
-                      {step.href && (
-                        <Link href={step.href} className="text-body-sm text-primary hover:underline">
-                          Go →
-                        </Link>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <ol className="space-y-1">
+            {steps.map((step, index) => {
+              const interactive = !step.done && !step.locked && (step.onAction || step.href);
+              const content = (
+                <>
+                  <span
+                    className={cn(
+                      'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                      step.done && 'bg-success text-white',
+                      !step.done && !step.locked && 'bg-primary text-white',
+                      step.locked && 'bg-surface text-muted',
+                    )}
+                    aria-hidden
+                  >
+                    {step.done ? <Check className="h-3.5 w-3.5" /> : step.locked ? <Lock className="h-3 w-3" /> : index + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={cn('text-body-sm font-medium', step.done && 'text-muted line-through')}>
+                      {step.title}
+                    </p>
+                    {!step.done && (
+                      <TextMuted className="text-body-sm mt-0.5">
+                        {step.locked ? 'Complete the previous step first.' : step.hint}
+                      </TextMuted>
+                    )}
+                  </div>
+                  {interactive ? (
+                    <span className="text-body-sm text-primary font-medium shrink-0 inline-flex items-center gap-1">
+                      {step.actionLabel}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  ) : null}
+                </>
+              );
+
+              if (step.onAction && interactive) {
+                return (
+                  <li key={step.key}>
+                    <button
+                      type="button"
+                      onClick={step.onAction}
+                      className="w-full flex items-start gap-3 rounded-xl px-2 py-3 text-left hover:bg-surface transition-colors"
+                    >
+                      {content}
+                    </button>
+                  </li>
+                );
+              }
+
+              if (step.href && interactive) {
+                return (
+                  <li key={step.key}>
+                    <Link
+                      href={step.href}
+                      className="flex items-start gap-3 rounded-xl px-2 py-3 hover:bg-surface transition-colors"
+                    >
+                      {content}
+                    </Link>
+                  </li>
+                );
+              }
+
+              return (
+                <li key={step.key} className="flex items-start gap-3 rounded-xl px-2 py-3">
+                  {content}
+                </li>
+              );
+            })}
+          </ol>
         )}
       </CardBody>
     </Card>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Handshake, LogOut, Pencil, Plus } from 'lucide-react';
+import { Building2, Handshake, Pencil, Plus } from 'lucide-react';
+import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
 import { PageHero } from '@/components/layout/PageHero';
 import { SkeletonLine } from '@/components/ui/Skeleton';
 import { Card, CardBody } from '@/components/ui/Card';
@@ -15,6 +16,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { showToast } from '@/lib/toast';
 import { resellerPortal, type ResellerAccount, type DealRegistration } from '@/lib/portal-api';
 import { clearPortalSession, getPortalToken } from '@/lib/portal-auth';
+import { PortalStatusNotice } from '@/components/portal/PortalStatusNotice';
 
 const STATUS_VARIANT: Record<ResellerAccount['status'], BadgeVariant> = {
   pending: 'warning',
@@ -106,20 +108,10 @@ export default function ResellerHomePage() {
   if (!account) return null;
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-40 backdrop-blur-xl backdrop-saturate-[1.8] bg-[var(--nav-bg)] border-b border-[var(--nav-border)] px-6 h-11 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="tahoe-icon-badge tahoe-icon-badge-violet !w-8 !h-8 !rounded-md">
-            <Handshake className="w-4 h-4" aria-hidden />
-          </div>
-          <span className="font-semibold">Reseller Portal</span>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleSignOut}>
-          <LogOut className="w-4 h-4 mr-1.5" aria-hidden /> Sign out
-        </Button>
-      </header>
+    <div className="min-h-screen flex flex-col bg-background">
+      <GlobalNav variant="portal" portalLabel="Reseller Portal" onSignOut={handleSignOut} />
 
-      <main className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
+      <main className="flex-1 max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up w-full">
         <PageHero
           icon={Handshake}
           accent="violet"
@@ -158,6 +150,8 @@ export default function ResellerHomePage() {
             )}
           </CardBody>
         </Card>
+
+        <PortalStatusNotice status={account.status} signupHref="/portal/reseller/signup" />
 
         {account.status === 'approved' && (
           <section>

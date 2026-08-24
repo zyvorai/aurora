@@ -17,7 +17,7 @@ export function DisplayTitle({ children, className, as: Tag = 'h1', id }: Typogr
     <Tag
       id={id}
       className={cn(
-        'text-display md:text-[3rem] font-bold tracking-tight leading-tight',
+        'text-display md:text-[clamp(2.5rem,5vw,4rem)] font-semibold tracking-tight leading-tight',
         className,
       )}
     >
@@ -31,7 +31,7 @@ export function PageTitle({ children, className, as: Tag = 'h1', id }: Typograph
     <Tag
       id={id}
       className={cn(
-        'text-page-title md:text-[2.25rem] font-bold tracking-tight leading-tight',
+        'text-[clamp(1.75rem,3vw,2.125rem)] font-semibold tracking-tight leading-tight',
         className,
       )}
     >
@@ -42,7 +42,7 @@ export function PageTitle({ children, className, as: Tag = 'h1', id }: Typograph
 
 export function SectionTitle({ children, className, as: Tag = 'h2', id }: TypographyProps) {
   return (
-    <Tag id={id} className={cn('text-title font-semibold text-foreground', className)}>
+    <Tag id={id} className={cn('text-[clamp(1.5rem,2.5vw,1.75rem)] font-semibold text-foreground tracking-tight', className)}>
       {children}
     </Tag>
   );

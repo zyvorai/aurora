@@ -7,19 +7,17 @@ export type BadgeVariant =
   | 'blue' | 'pink' | 'teal' | 'purple';
 
 const variants: Record<BadgeVariant, string> = {
-  default: 'bg-surface text-muted border-border',
-  success: 'bg-success/15 text-success',
-  warning: 'bg-warning/15 text-warning',
-  danger: 'bg-danger/15 text-danger',
-  'tier-a': 'bg-success/15 text-success',
-  'tier-b': 'bg-warning/15 text-warning',
+  default: 'bg-surface text-muted',
+  success: 'bg-surface text-success',
+  warning: 'bg-surface text-warning',
+  danger: 'bg-surface text-danger',
+  'tier-a': 'bg-surface text-success',
+  'tier-b': 'bg-surface text-warning',
   'tier-c': 'bg-surface text-muted',
-  // Decorative, non-semantic colorway variants -- for categorization (persona/portal
-  // tags), not status. Keep success/warning/danger meaning status, not decoration.
-  blue: 'bg-accent-blue/15 text-accent-blue',
-  pink: 'bg-accent-pink/15 text-accent-pink',
-  teal: 'bg-accent-teal/15 text-accent-teal',
-  purple: 'bg-accent-purple/15 text-accent-purple',
+  blue: 'bg-surface text-primary',
+  pink: 'bg-surface text-accent-pink',
+  teal: 'bg-surface text-accent-teal',
+  purple: 'bg-surface text-accent-purple',
 };
 
 export function Badge({
@@ -34,7 +32,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-transparent',
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
         variants[variant],
         className,
       )}

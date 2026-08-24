@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { AlertCircle, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { MarketingLayout } from '@/components/layout/MarketingLayout';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -39,10 +40,10 @@ function SignupForm() {
 
   if (submitted) {
     return (
-      <Card strong>
+      <Card elevated>
         <CardBody className="p-8 text-center">
           <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-4" aria-hidden />
-          <h1 className="text-xl font-semibold mb-2">Request received</h1>
+          <h1 className="text-[28px] font-semibold tracking-tight mb-2">Request received</h1>
           <p className="text-muted text-body-sm">
             An administrator will review your request. You&apos;ll be able to sign in once your
             account is approved.
@@ -53,14 +54,9 @@ function SignupForm() {
   }
 
   return (
-    <Card strong>
+    <Card elevated>
       <CardBody className="p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="tahoe-icon-badge tahoe-icon-badge-sky !w-10 !h-10 !rounded-lg">
-            <Sparkles className="w-5 h-5" aria-hidden />
-          </div>
-          <h1 className="text-xl font-semibold">Request portal access</h1>
-        </div>
+        <h1 className="text-[28px] font-semibold tracking-tight mb-6">Request portal access</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="text"
@@ -120,12 +116,12 @@ function SignupForm() {
 
 export default function CustomerSignupPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-16 gradient-mesh">
-      <div className="w-full max-w-md animate-glass-in">
+    <MarketingLayout>
+      <div className="max-w-[480px] mx-auto px-5 py-12">
         <Suspense fallback={null}>
           <SignupForm />
         </Suspense>
       </div>
-    </div>
+    </MarketingLayout>
   );
 }

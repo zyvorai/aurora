@@ -15,17 +15,17 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function applyTheme(theme: Theme) {
-  document.documentElement.classList.toggle('light-theme', theme === 'light');
+  document.documentElement.classList.toggle('dark-theme', theme === 'dark');
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<Theme>('light');
 
   useEffect(() => {
     const storedTheme = localStorage.getItem(STORAGE_KEY);
-    const systemPrefersLight = window.matchMedia?.('(prefers-color-scheme: light)').matches ?? false;
+    const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
     const initialTheme: Theme =
-      storedTheme === 'light' || (!storedTheme && systemPrefersLight) ? 'light' : 'dark';
+      storedTheme === 'dark' || (!storedTheme && systemPrefersDark) ? 'dark' : 'light';
     setThemeState(initialTheme);
     applyTheme(initialTheme);
   }, []);
@@ -57,7 +57,7 @@ export function useTheme(): ThemeContextValue {
 export const THEME_INIT_SCRIPT = `
 try {
   var t = localStorage.getItem('${STORAGE_KEY}');
-  var systemLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-  if (t === 'light' || (!t && systemLight)) document.documentElement.classList.add('light-theme');
+  var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (t === 'dark' || (!t && systemDark)) document.documentElement.classList.add('dark-theme');
 } catch (e) {}
 `;

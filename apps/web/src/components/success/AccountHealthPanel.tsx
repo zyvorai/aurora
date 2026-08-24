@@ -35,7 +35,7 @@ export default function AccountHealthPanel({ productId }: AccountHealthPanelProp
   const load = useCallback(() => {
     setLoading(true);
     products.accountHealth(productId)
-      .then(setRecords)
+      .then((data) => setRecords(Array.isArray(data) ? data : []))
       .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load account health'))
       .finally(() => setLoading(false));
   }, [productId]);

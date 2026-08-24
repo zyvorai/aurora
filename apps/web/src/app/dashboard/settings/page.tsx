@@ -113,7 +113,7 @@ export default function SettingsPage() {
         <SectionHeader label="Account" title="Plan usage" />
         <Card elevated>
           <CardBody className="space-y-3">
-            {plan ? (
+            {plan?.features && plan?.usage ? (
               <>
                 <div className="flex items-center justify-between">
                   <TextMuted>Plan</TextMuted>

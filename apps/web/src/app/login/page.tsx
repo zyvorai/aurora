@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, ArrowRight, Eye, EyeOff, KeyRound, Loader2, Sparkles } from 'lucide-react';
+import { AlertCircle, ArrowRight, Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
+import { MarketingLayout } from '@/components/layout/MarketingLayout';
 import { auth, products } from '@/lib/api';
 import { resolveApiBase } from '@/lib/api-base';
 import { resolvePostLoginRoute, storeAuthSession } from '@/lib/role-routing';
@@ -121,14 +122,10 @@ export default function LoginPage() {
         : 'Good — that’ll do.';
 
   return (
-    <div className="aurora-console min-h-screen bg-background">
-      <div className="max-w-[560px] mx-auto px-5 py-9 pb-16">
-        <div className="flex items-center gap-2.5 mb-8">
-          <div className="w-8 h-8 rounded-[9px] bg-primary flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-white" aria-hidden />
-          </div>
-          <span className="font-display text-[17px] font-semibold tracking-tight">Aurora</span>
-          <span className="ml-auto text-body-sm text-muted">
+    <MarketingLayout>
+      <div className="max-w-[480px] mx-auto px-5 py-12 pb-16">
+        <div className="flex items-center justify-end mb-8">
+          <span className="text-body-sm text-muted">
             {view === 'signup' ? (
               <>Already have an account? <button type="button" onClick={() => setView('signin')} className="text-primary font-medium hover:underline">Sign in</button></>
             ) : (
@@ -419,6 +416,6 @@ export default function LoginPage() {
           </>
         )}
       </div>
-    </div>
+    </MarketingLayout>
   );
 }

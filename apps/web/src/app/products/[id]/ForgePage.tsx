@@ -38,6 +38,7 @@ import {
 import { StageBlockRenderer } from '@/components/workflow/StageBlockRenderer';
 import { StageChain } from '@/components/workflow/StageChain';
 import { NextAction } from '@/components/workflow/NextAction';
+import OnboardingChecklist from '@/components/OnboardingChecklist';
 import { deriveChain, nextActionableStage, chainStageHref, chainStatusLabel, type ChainStageId } from '@/lib/chain';
 
 type FixedTab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'analytics';
@@ -364,6 +365,7 @@ export default function ProductForgePageInner() {
       <div className="space-y-6">
           {tab === 'overview' && (
             <div className="space-y-6">
+              <OnboardingChecklist hasProduct firstProductId={id} />
               <TextMuted className="max-w-[64ch]">
                 Everything below runs off one knowledge base — the chain shows where {product.name} stands
                 and what it&apos;s waiting on. Nothing here needs a decision from you until it&apos;s ready.

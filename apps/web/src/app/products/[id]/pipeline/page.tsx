@@ -45,7 +45,7 @@ export default function PipelinePage() {
   const [selectedOppId, setSelectedOppId] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    products.opportunities(id).then(setOpportunities).catch(() => setOpportunities([]));
+    products.opportunities(id).then((data) => setOpportunities(Array.isArray(data) ? data : [])).catch(() => setOpportunities([]));
     products.pipelineSummary(id).then(setSummary).catch(() => setSummary(null));
   }, [id]);
 

@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { MarketingLayout } from '@/components/layout/MarketingLayout';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -37,14 +38,9 @@ function LoginForm() {
   }
 
   return (
-    <Card strong>
+    <Card elevated>
       <CardBody className="p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="tahoe-icon-badge tahoe-icon-badge-sky !w-10 !h-10 !rounded-lg">
-            <Sparkles className="w-5 h-5" aria-hidden />
-          </div>
-          <h1 className="text-xl font-semibold">Customer sign in</h1>
-        </div>
+        <h1 className="text-[28px] font-semibold tracking-tight mb-6">Customer sign in</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="text"
@@ -87,12 +83,12 @@ function LoginForm() {
 
 export default function CustomerLoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-16 gradient-mesh">
-      <div className="w-full max-w-md animate-glass-in">
+    <MarketingLayout>
+      <div className="max-w-[480px] mx-auto px-5 py-12">
         <Suspense fallback={null}>
           <LoginForm />
         </Suspense>
       </div>
-    </div>
+    </MarketingLayout>
   );
 }

@@ -4,12 +4,11 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  BarChart3, Blocks, CheckCircle2, ChevronDown, ChevronsLeft, ChevronsRight, FileSignature,
-  FileText, FolderOpen, Layers, LogOut, MessageCircleQuestion, MessagesSquare, Moon, Rocket,
-  Search, Send, Sun, Target, type LucideIcon,
+  BarChart3, Blocks, CheckCircle2, ChevronsLeft, ChevronsRight, FileSignature,
+  FileText, FolderOpen, Layers, MessagesSquare, MessageCircleQuestion, Rocket,
+  Search, Send, Target, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/context/ThemeContext';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { useResizableRail } from '@/hooks/useResizableRail';
 import { getNavGroups } from '@/lib/nav-data';
@@ -17,6 +16,8 @@ import { products, workers, workflowStages, type ExecutiveBrief, type Product, t
 import { deriveChain, chainStageHref, type ChainStage, type ChainStageId } from '@/lib/chain';
 import { RunLogDock } from '@/components/workflow/RunLogDock';
 import CommandPalette, { type CommandPaletteItem } from '@/components/CommandPalette';
+import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
+import navStyles from '@/components/layout/GlobalNav/GlobalNav.module.css';
 import { cn } from '@/lib/cn';
 
 const STATUS_DOT: Record<ChainStage['status'], string> = {
@@ -58,9 +59,7 @@ export function ProductConsoleShell({
   const router = useRouter();
   const pathname = usePathname();
   const { role, signOut } = useAuth({ requireAuth: false });
-  const { theme, toggleTheme } = useTheme();
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [brief, setBrief] = useState<ExecutiveBrief | null>(null);
   const [customStages, setCustomStages] = useState<WorkflowStage[]>([]);
 
@@ -121,11 +120,85 @@ export function ProductConsoleShell({
     onSelect: () => router.push(item.href(productId)),
   }));
 
+  const accountItems =
+    systemGroup?.items.map((item) => ({
+      label: item.label,
+      href: item.href(productId),
+    })) ?? [];
+
+  const workspaceSubnav = workspaceGroup ? (
+    <div className={navStyles.subnavInner}>
+      {workspaceGroup.items.map((item) => {
+        const href = item.href(productId);
+        const active = pathname === href;
+        return (
+          <Link
+            key={item.id}
+            href={href}
+            className={cn(
+              'px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
+              active ? 'border-primary text-foreground' : 'border-transparent text-muted hover:text-foreground',
+            )}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </div>
+  ) : null;
+
+  const appMobileExtra = (
+    <>
+      {workspaceGroup ? (
+        <>
+          <div className={navStyles.sheetItem}>
+            <div className={navStyles.sheetTop} aria-hidden>
+              Workspace
+            </div>
+            <div className={navStyles.sheetSub} data-open="true">
+              {workspaceGroup.items.map((item) => (
+                <Link key={item.id} href={item.href(productId)}>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : null}
+      {systemGroup ? (
+        <>
+          <div className={navStyles.sheetItem}>
+            <div className={navStyles.sheetTop} aria-hidden>
+              Account
+            </div>
+            <div className={navStyles.sheetSub} data-open="true">
+              {systemGroup.items.map((item) => (
+                <Link key={item.id} href={item.href(productId)}>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : null}
+    </>
+  );
+
   return (
-    <div className="aurora-console min-h-screen flex flex-col lg:flex-row bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
+      <GlobalNav
+        variant="app"
+        roleInitial={role?.[0] ?? 'U'}
+        accountItems={accountItems}
+        onSearchClick={() => setPaletteOpen(true)}
+        onSignOut={signOut}
+        appMobileExtra={appMobileExtra}
+        subnav={workspaceSubnav}
+      />
+      <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
       <aside
         style={{ '--rail-w': `${rail.effectiveWidth}px` } as CSSProperties}
-        className="relative w-full lg:w-[var(--rail-w)] shrink-0 border-b lg:border-b-0 lg:border-r border-border bg-surface lg:sticky lg:top-0 lg:h-screen flex flex-row lg:flex-col gap-3 lg:gap-0 p-2.5 overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto"
+        className="relative w-full lg:w-[var(--rail-w)] shrink-0 border-b lg:border-b-0 lg:border-r border-border bg-surface lg:sticky lg:top-[var(--nav-h)] lg:h-[calc(100vh-var(--nav-h))] flex flex-row lg:flex-col gap-3 lg:gap-0 p-2.5 overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto"
       >
         <Link
           href="/dashboard"
@@ -164,7 +237,7 @@ export function ProductConsoleShell({
                 href={chainStageHref(productId, stage.id)}
                 title={stage.label}
                 className={cn(
-                  'flex items-center gap-2 lg:gap-2.5 px-2 py-1.5 rounded-[var(--radius-sm)] text-body-sm text-foreground/80 hover:bg-background transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 lg:gap-2.5 px-2 py-1.5 rounded-[var(--radius-sm)] text-body-sm text-foreground/80 hover:bg-surface-elevated transition-colors whitespace-nowrap',
                   rail.collapsed && 'lg:justify-center',
                 )}
               >
@@ -256,88 +329,12 @@ export function ProductConsoleShell({
         )}
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col">
-        <div className="sticky top-0 z-30 backdrop-blur-xl backdrop-saturate-150 bg-[var(--nav-bg)] border-b border-[var(--nav-border)] px-5 py-2.5 flex items-center gap-3.5">
-          <div className="flex gap-0.5 overflow-x-auto">
-            {workspaceGroup?.items.map((item) => {
-              const href = item.href(productId);
-              const active = pathname === href;
-              return (
-                <Link
-                  key={item.id}
-                  href={href}
-                  className={cn(
-                    'px-2.5 py-1.5 rounded-[7px] text-body-sm whitespace-nowrap transition-colors',
-                    active ? 'bg-surface text-foreground font-medium shadow-sm ring-1 ring-border' : 'text-muted hover:bg-[var(--nav-hover-bg)] hover:text-foreground',
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-          <div className="flex-1" />
-          <button
-            type="button"
-            onClick={() => setPaletteOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-sm)] text-sm text-muted hover:text-foreground hover:bg-[var(--nav-hover-bg)] transition-colors focus-ring"
-          >
-            <Search className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Search</span>
-            <kbd className="hidden sm:inline font-mono text-[0.7rem] opacity-60">⌘K</kbd>
-          </button>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="w-[30px] h-[30px] flex items-center justify-center rounded-[var(--radius-sm)] text-muted hover:text-foreground hover:bg-[var(--nav-hover-bg)] transition-colors focus-ring"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setAccountOpen((v) => !v)}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius-sm)] text-muted hover:text-foreground hover:bg-[var(--nav-hover-bg)] transition-colors focus-ring"
-            >
-              <div className="w-6 h-6 flex items-center justify-center rounded-full bg-background text-xs font-semibold uppercase">
-                {role?.[0] ?? 'U'}
-              </div>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-            {accountOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setAccountOpen(false)} />
-                <div role="menu" className="absolute right-0 top-full mt-2 w-56 border border-border bg-surface shadow-lg z-50 py-1">
-                  {systemGroup?.items.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.href(productId)}
-                      onClick={() => setAccountOpen(false)}
-                      className="block px-4 py-2 text-sm text-foreground hover:bg-background transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                  <div className="my-1 border-t border-border" />
-                  <button
-                    type="button"
-                    onClick={signOut}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-danger hover:bg-background transition-colors text-left"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    Sign out
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-1 min-w-0">
-          <main className="flex-1 min-w-0">{children}</main>
+      <div className="flex-1 min-w-0 flex flex-col min-h-0">
+        <div className="flex flex-1 min-w-0 min-h-0">
+          <main className="flex-1 min-w-0 bg-background">{children}</main>
           <RunLogDock productId={productId} />
         </div>
+      </div>
       </div>
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} items={paletteItems} />

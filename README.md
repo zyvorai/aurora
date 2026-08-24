@@ -82,12 +82,13 @@ real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC
 `.env` must be an address a **visitor's browser** can reach (not `localhost`) —
 `deploy-remote.sh` refuses to build with that left unset.
 
-**TLS / real domain:** in production, `aurora.zyvor.dev` (and the still-live `emissary.zyvor.dev`)
-is fronted by the sibling `hypersdk-web` repo's `website-server` — a Go reverse proxy that already
-terminates TLS for `*.zyvor.dev` and forwards host-matched requests here (see `isAuroraHost` /
-`AURORA_UPSTREAM` in `cmd/website-server/main.go` over there). This repo's own optional nginx/TLS
-overlay ([infra/nginx/certs/README.md](infra/nginx/certs/README.md)) is a standalone fallback for
-deployments that aren't fronted by that proxy — not needed for the current setup.
+**TLS / production entrypoint:** Aurora is sold as an independent product and is **not** fronted
+by `hypersdk-web` / `zyvor.dev`. The live path is the K3s stack in [`k8s/`](k8s/README.md) —
+`./scripts/deploy-k8s.sh <host> <user>` → HTTPS on **`https://<host>:30443`** (TLS-terminating
+nginx NodePort, self-signed until a real domain + CA cert are attached). Sync local `apps/web`
+to the remote deploy tree before rebuilding if you changed the frontend (the remote cache alone
+can be stale). Optional docker-compose nginx overlay:
+[infra/nginx/certs/README.md](infra/nginx/certs/README.md).
 
 ## LLM Providers
 
@@ -156,19 +157,21 @@ Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-gu
 
 ## Design system
 
-Default look is a glass/"Tahoe" visual language (blurred glass cards, pill buttons, hero
-orbs) using an Apple-blue/iPhone-colorway accent (`--primary`, plus a 7-tone qualitative
-palette — sky/violet/emerald/amber/pink/teal/rust — for category coding on cards and
-icon tiles) — see `apps/web/src/app/globals.css` (`.glass*`, `.tahoe-*` classes and
-`--glass-*`/`--blur-liquid*` tokens, `apps/web/src/lib/tone.ts`). Degrades automatically
-to flat surfaces under `prefers-reduced-transparency`, `prefers-reduced-motion`, and
-browsers without `backdrop-filter` support.
+Light-first **Apple.com-style** system: flat surfaces, SF/system typography tokens, pill
+primary buttons, and an Apple-blue accent (`--primary`) defined in
+`apps/web/src/app/globals.css`. Dark mode is opt-in via `html.dark-theme`
+(`ThemeContext`). Legacy `.glass*` / `.tahoe-*` class names still exist as aliases to the
+flat Apple styles for older call sites.
 
-The product workspace (`/products/[id]/*`) uses its own console shell — a left rail +
-top tab bar instead of the site-wide top navbar — built around a derived, 9-stage
-pipeline "chain" (status is never hand-set per screen). See
-[Frontend workspace](docs/gtm-platform-phases.md#frontend-workspace) for the full
-architecture.
+**Chrome:** `GlobalNav` (mega-menu flyouts) sits on marketing (`MarketingLayout`), app
+(`AppShell`), product console (`ProductConsoleShell`), and portal auth pages. Marketing
+home is `/` (`HomeSections`); sign-up/sign-in live at `/login`. New tenants get an
+`OnboardingChecklist` on `/dashboard` and Full Forge until sources are ingested and an
+agent has run.
+
+The product workspace (`/products/[id]/*`) keeps a left rail + top tab bar under that same
+`GlobalNav`, built around a derived 9-stage pipeline chain. See
+[Frontend workspace](docs/gtm-platform-phases.md#frontend-workspace).
 
 ## License
 

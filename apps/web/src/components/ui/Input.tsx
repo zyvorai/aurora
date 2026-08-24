@@ -8,7 +8,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
     <input
       ref={ref}
       className={cn(
-        'w-full px-4 py-2.5 bg-background border border-border rounded-md text-body text-foreground placeholder:text-muted focus-ring',
+        'w-full px-4 py-2.5 bg-surface border border-border rounded-[12px] text-body text-foreground placeholder:text-muted focus-ring',
         className,
       )}
       {...props}
@@ -22,7 +22,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
     <textarea
       ref={ref}
       className={cn(
-        'w-full px-4 py-2.5 bg-background border border-border rounded-md text-body text-foreground placeholder:text-muted focus-ring resize-none',
+        'w-full px-4 py-2.5 bg-surface border border-border rounded-[12px] text-body text-foreground placeholder:text-muted focus-ring resize-none',
         className,
       )}
       {...props}

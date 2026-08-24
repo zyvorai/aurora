@@ -11,17 +11,15 @@ import {
   Network,
   Send,
   ShieldCheck,
-  Sparkles,
   Users,
   Workflow,
   Zap,
 } from 'lucide-react';
+import { MarketingLayout } from '@/components/layout/MarketingLayout';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Reveal } from '@/components/ui/Reveal';
-import { TONE_ROTATION } from '@/lib/tone';
-import { cn } from '@/lib/cn';
 import {
   Eyebrow,
   DisplayTitle,
@@ -40,13 +38,11 @@ export const metadata: Metadata = {
 };
 
 const ctaPrimary =
-  'inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 font-semibold text-white ' +
-  'bg-primary border border-primary hover:bg-[var(--primary-hover)] transition-colors';
+  'inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] px-6 py-2.5 font-medium text-white ' +
+  'bg-primary hover:bg-[var(--primary-hover)] transition-colors';
 
-const ctaSecondary =
-  'inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 font-semibold text-foreground ' +
-  'border border-[var(--glass-border)] bg-[var(--glass-bg)] ' +
-  'hover:border-[var(--glass-border-strong)] hover:bg-[var(--glass-bg-elevated)] transition-colors';
+const ctaLink =
+  'inline-flex items-center gap-1 text-primary text-body hover:underline';
 
 const STATS = [
   { label: 'Specialized agents', value: '11' },
@@ -128,35 +124,13 @@ const LLM_PROVIDERS = [
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen">
-      <nav className="sticky top-0 z-40 backdrop-blur-xl backdrop-saturate-[1.8] bg-[var(--nav-bg)] border-b border-[var(--nav-border)]">
-        <div className="mx-auto max-w-6xl px-6 h-11 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-primary flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden />
-            </div>
-            <span className="font-bold tracking-tight text-sm text-foreground">Aurora</span>
-          </Link>
-          <div className="flex items-center gap-1">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-muted hover:text-foreground rounded-[var(--radius-sm)] px-[11px] py-2 hover:bg-[var(--nav-hover-bg)] transition-colors"
-            >
-              Sign in
-            </Link>
-            <Link href="/login" className="ml-2 rounded-[var(--radius-pill)] bg-primary hover:bg-[var(--primary-hover)] text-white text-xs font-semibold px-[13px] py-1.5 transition-colors">
-              Get started
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <MarketingLayout>
       <section className="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center">
         <Eyebrow className="justify-center flex mb-4">GTM Orchestration Platform</Eyebrow>
         <DisplayTitle className="mb-5">
           Turn your product into
           <br />
-          <span className="text-gradient-apple">an AI-powered GTM engine</span>
+          an AI-powered GTM engine
         </DisplayTitle>
         <TextLead className="mx-auto max-w-2xl mb-8">
           Aurora onboards from a website or docs, builds a grounded knowledge graph, then runs AI
@@ -167,14 +141,14 @@ export default function FeaturesPage() {
             Get started free
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link href="/login" className={ctaSecondary}>
-            Sign in
+          <Link href="/login" className={ctaLink}>
+            Sign in <span aria-hidden>›</span>
           </Link>
         </div>
         <TextMuted className="mt-4 text-body-sm">No credit card required — onboard your first product in minutes</TextMuted>
       </section>
 
-      <section className="border-y border-border bg-[var(--glass-bg)]">
+      <section id="workspaces" className="border-y border-border bg-[var(--glass-bg)] scroll-mt-[var(--nav-h)]">
         <div className="mx-auto max-w-4xl px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {STATS.map((s) => (
             <Stat key={s.label} label={s.label} value={s.value} className="mx-auto" />
@@ -183,31 +157,28 @@ export default function FeaturesPage() {
       </section>
 
       <Reveal>
-        <section className="mx-auto max-w-6xl px-6 py-16">
+        <section id="discover" className="mx-auto max-w-6xl px-6 py-16 scroll-mt-[var(--nav-h)]">
           <div className="text-center mb-10">
             <SectionTitle as="h2" className="mb-2">How it works</SectionTitle>
             <TextMuted>Customer sources → discovery → knowledge graph → agents → publishing → analytics</TextMuted>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {PIPELINE_STEPS.map((step, i) => {
-              const toneKey = TONE_ROTATION[i % TONE_ROTATION.length];
-              return (
-                <Card key={step.title} hover className={cn('p-5 relative tahoe-card-edge', `tahoe-card-edge-${toneKey}`)}>
-                  <div className={cn('tahoe-glyph-tile mb-4', `tahoe-glyph-tile-${toneKey}`)}>
+          <div id="orchestrate" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PIPELINE_STEPS.map((step, i) => (
+                <Card key={step.title} hover elevated className="p-5">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-primary">
                     <step.icon className="h-5 w-5" />
                   </div>
                   <Badge className="mb-2">Step {i + 1}</Badge>
                   <SubsectionTitle className="mb-1.5">{step.title}</SubsectionTitle>
                   <TextMuted className="text-body-sm">{step.description}</TextMuted>
                 </Card>
-              );
-            })}
+            ))}
           </div>
         </section>
       </Reveal>
 
       <Reveal>
-      <section className="mx-auto max-w-6xl px-6 py-20">
+      <section id="grounded" className="mx-auto max-w-6xl px-6 py-20 scroll-mt-[var(--nav-h)]">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div>
             <Eyebrow className="mb-3">Grounded in your product</Eyebrow>
@@ -256,7 +227,7 @@ export default function FeaturesPage() {
       </Reveal>
 
       <Reveal>
-      <section className="mx-auto max-w-6xl px-6 py-20">
+      <section id="agents" className="mx-auto max-w-6xl px-6 py-20 scroll-mt-[var(--nav-h)]">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <Card elevated className="p-5 order-2 lg:order-1">
             <div className="flex items-center gap-2 mb-4 text-body-sm text-muted">
@@ -313,30 +284,27 @@ export default function FeaturesPage() {
       </Reveal>
 
       <Reveal>
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section id="publish" className="mx-auto max-w-6xl px-6 py-16 scroll-mt-[var(--nav-h)]">
         <div className="text-center mb-10">
           <SectionTitle as="h2" className="mb-2">Built for real GTM work</SectionTitle>
           <TextMuted>Every capability is grounded in your actual product — nothing generated blind.</TextMuted>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CORE_FEATURES.map((f, i) => {
-            const toneKey = TONE_ROTATION[i % TONE_ROTATION.length];
-            return (
-              <Card key={f.title} hover className={cn('p-5 tahoe-card-edge', `tahoe-card-edge-${toneKey}`)}>
-                <div className={cn('tahoe-glyph-tile mb-4', `tahoe-glyph-tile-${toneKey}`)}>
+          {CORE_FEATURES.map((f) => (
+              <Card key={f.title} hover elevated className="p-5">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-primary">
                   <f.icon className="h-5 w-5" />
                 </div>
                 <SubsectionTitle className="mb-1.5">{f.title}</SubsectionTitle>
                 <TextMuted className="text-body-sm">{f.description}</TextMuted>
               </Card>
-            );
-          })}
+          ))}
         </div>
       </section>
       </Reveal>
 
       <Reveal>
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section id="llm" className="mx-auto max-w-6xl px-6 py-16 scroll-mt-[var(--nav-h)]">
         <div className="text-center mb-10">
           <SectionTitle as="h2" className="mb-2">Bring your own LLM</SectionTitle>
           <TextMuted>One provider factory, switched entirely by environment variable.</TextMuted>
@@ -373,39 +341,6 @@ export default function FeaturesPage() {
         </Link>
       </section>
       </Reveal>
-
-      <footer className="bg-[var(--glass-bg-strong)] border-t border-border">
-        <div className="mx-auto max-w-6xl px-6 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
-          <div className="col-span-2 sm:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden />
-              </div>
-              <span className="font-bold text-foreground text-body-sm">Aurora</span>
-            </div>
-            <TextMuted className="text-body-sm">GTM Orchestration Platform</TextMuted>
-          </div>
-          <div>
-            <SubsectionTitle className="text-body-sm mb-3">Product</SubsectionTitle>
-            <ul className="space-y-2">
-              <li><Link href="/features" className="text-body-sm text-muted hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link href="/login" className="text-body-sm text-muted hover:text-foreground transition-colors">Get started</Link></li>
-            </ul>
-          </div>
-          <div>
-            <SubsectionTitle className="text-body-sm mb-3">Account</SubsectionTitle>
-            <ul className="space-y-2">
-              <li><Link href="/login" className="text-body-sm text-muted hover:text-foreground transition-colors">Sign in</Link></li>
-              <li><Link href="/login" className="text-body-sm text-muted hover:text-foreground transition-colors">Create workspace</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-border">
-          <div className="mx-auto max-w-6xl px-6 py-5">
-            <span className="text-body-sm text-muted">© {new Date().getFullYear()} Aurora</span>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MarketingLayout>
   );
 }

@@ -4,76 +4,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---- Zyvor Design System v2 (ported from hypersdk-web): white / ink / rust / teal ----
-   Dark stays this app's default (ThemeContext), inverting to the carbon-black/orange
-   personality; .light-theme carries the white-canvas/rust-accent values below. */
+/* ---- Apple.com visual system: light-first default, .dark-theme on html for dark ---- */
 
 :root {
-  --background: #050505;
-  --surface: #0a0a0a;
-  --surface-elevated: #0b0f14;
-  --foreground: #f1f5f9;
-  --muted-foreground: #aeb9c8;
-  /* Primary is Apple/iPhone-style blue -- orange/rust was dropped as the interactive
-     button color entirely; --accent-blue below carries the exact same value so the
-     qualitative "sky" tone and the brand's own interactive color stay identical. */
-  --primary: #0a84ff;
-  --primary-hover: #0066cc;
+  --background: #ffffff;
+  --surface: #f5f5f7;
+  --surface-elevated: #ffffff;
+  --foreground: #1d1d1f;
+  --muted-foreground: #6e6e73;
+  --primary: #0071e3;
+  --primary-hover: #0077ed;
   --primary-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.06);
-  --ring: #0a84ff;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --accent-fill: #0a84ff;
-  --accent-tint: rgba(10, 132, 255, 0.14);
-
-  /* iPhone-colorway qualitative palette -- for CATEGORIZATION (personas, portals, stat
-     highlights), the way Apple ships one UI accent but many hardware finishes.
-     --accent-blue anchors to hypersdk-web's --hs-gradient-primary (apple.com's own CTA
-     blue) and is intentionally the same value as --primary above. Brighter here
-     (dark/default) for pop against the near-black background; deeper in .light-theme
-     below for AA text contrast on white. */
-  --accent-blue: #0a84ff;
-  --accent-pink: #ff375f;
-  --accent-teal: #2dd4bf;
-  --accent-purple: #a78bfa;
-  --shadow-card: 0 16px 50px rgba(0, 0, 0, 0.3);
-  --shadow-accent: 0 4px 20px rgba(10, 132, 255, 0.25);
-
-  /* Navbar glass treatment, ported from hypersdk-web's live Navbar/Content component
-     (44px Apple-style bar) -- exact opacity/hairline values, not approximated. */
-  --nav-bg: rgba(29, 29, 31, 0.72);
-  --nav-bg-open: rgba(29, 29, 31, 0.96);
-  --nav-border: rgba(255, 255, 255, 0.08);
-  --nav-hover-bg: rgba(255, 255, 255, 0.08);
-
-  --radius-sm: 6px;
+  --border: #d2d2d7;
+  --ring: #0071e3;
+  --success: #248a3d;
+  --warning: #bf4800;
+  --danger: #d70015;
+  --accent-fill: #0071e3;
+  --accent-tint: #e8f1fd;
+  --accent-blue: #0071e3;
+  --accent-pink: #e11d48;
+  --accent-teal: #0d9488;
+  --accent-purple: #7c3aed;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-accent: 0 4px 14px rgba(0, 113, 227, 0.2);
+  --nav-bg: rgba(255, 255, 255, 0.72);
+  --nav-bg-open: rgba(255, 255, 255, 0.96);
+  --nav-border: rgba(0, 0, 0, 0.08);
+  --nav-hover-bg: rgba(0, 0, 0, 0.04);
+  --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --radius-pill: 100px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 980px;
   --section-gap: 1.5rem;
   --content-max-width: 72rem;
-  --font-display: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
-  /* typography scale -- trimmed down from the original values; IBM Plex Sans has a
-     notably large x-height and reads bigger than most UI fonts at the same px size,
-     so the same numeric scale that looked right for other fonts read oversized here. */
-  --font-size-xs: 0.6875rem;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.8125rem;
-  --font-size-base: 0.9375rem;
-  --font-size-lg: 1.0625rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.625rem;
-  --font-size-3xl: 1.75rem;
-  --font-size-display: 2.125rem;
-  --leading-tight: 1.2;
-  --leading-normal: 1.45;
-  --leading-relaxed: 1.55;
-  --tracking-eyebrow: 0.08em;
-
-  /* legacy aliases */
+  --font-size-base: 1.0625rem;
+  --font-size-lg: 1.1875rem;
+  --font-size-xl: 1.3125rem;
+  --font-size-2xl: 1.75rem;
+  --font-size-3xl: 2rem;
+  --font-size-display: 2.5rem;
+  --leading-tight: 1.1;
+  --leading-normal: 1.47;
+  --leading-relaxed: 1.47;
+  --tracking-eyebrow: 0.02em;
   --bg-primary: var(--background);
   --bg-secondary: var(--surface);
   --bg-card: var(--surface-elevated);
@@ -81,126 +59,101 @@
   --text-secondary: var(--muted-foreground);
   --accent: var(--primary);
   --accent-hover: var(--primary-hover);
-
-  /* flat card system (formerly "glass / tahoe") -- kept as the same token/class
-     names so every component built against them repaints for free. */
-  --radius-liquid: 12px;
+  --radius-liquid: 18px;
   --radius-liquid-lg: 20px;
-  --blur-liquid: 0px;
-  --blur-liquid-lg: 0px;
-  --blur-liquid-sm: 0px;
-  --glass-bg: #0b0f14;
-  --glass-bg-elevated: #12161c;
-  --glass-bg-strong: #171c23;
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-border-strong: rgba(255, 255, 255, 0.12);
-  --glass-shadow: 0 16px 50px rgba(0, 0, 0, 0.3);
-  --glass-highlight: rgba(255, 255, 255, 0.03);
-}
-
-.light-theme {
-  --background: #ffffff;
-  --surface: #f5f6f8;
-  --surface-elevated: #ffffff;
-  --foreground: #14161a;
-  --muted-foreground: #5b6472;
-  --primary: #0071e3;
-  --primary-hover: #0058b3;
-  --primary-foreground: #ffffff;
-  --border: #e3e6ea;
-  --ring: #0071e3;
-  --success: #0f7b4f;
-  --warning: #8a5a00;
-  --danger: #b3261e;
-  --accent-fill: #0071e3;
-  --accent-tint: #e8f1fd;
-  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.1);
-  --shadow-accent: 0 4px 20px rgba(0, 113, 227, 0.25);
-
-  /* Deeper than the dark-mode values above, for AA text contrast on white. */
-  --accent-blue: #0071e3;
-  --accent-pink: #e11d48;
-  --accent-teal: #0d9488;
-  --accent-purple: #7c3aed;
-
-  --nav-bg: rgba(255, 255, 255, 0.72);
-  --nav-bg-open: rgba(255, 255, 255, 0.96);
-  --nav-border: rgba(20, 22, 26, 0.08);
-  --nav-hover-bg: rgba(20, 22, 26, 0.05);
-
   --glass-bg: #ffffff;
   --glass-bg-elevated: #ffffff;
-  --glass-bg-strong: #ffffff;
-  --glass-border: #e3e6ea;
-  --glass-border-strong: rgba(20, 22, 26, 0.22);
-  --glass-shadow: 0 1px 2px rgba(20, 22, 26, 0.06);
-  --glass-highlight: rgba(20, 22, 26, 0.02);
+  --glass-bg-strong: #fbfbfd;
+  --glass-border: #d2d2d7;
+  --glass-border-strong: #86868b;
+  --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --glass-highlight: transparent;
+  --nav-h: 44px;
+  --hs-nav-h: 44px;
+  --hs-max-width: 1180px;
+  --hs-gutter: 22px;
+  --hs-s1: 4px;
+  --hs-s2: 8px;
+  --hs-s3: 12px;
+  --hs-s4: 16px;
+  --hs-s5: 22px;
+  --hs-s6: 32px;
+  --hs-s7: 44px;
+  --hs-s8: 64px;
+  --hs-s9: 88px;
+  --hs-s10: 120px;
+  --hs-radius-sm: 8px;
+  --hs-radius-md: 12px;
+  --hs-radius-pill: 980px;
+  --hs-e2: 0 6px 20px rgba(0, 0, 0, 0.08);
+  --hs-fast: 0.16s;
+  --hs-font-mono: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --hs-accent: var(--primary);
+  --hs-accent-deep: var(--primary-hover);
+  --hs-text-heading: var(--foreground);
+  --hs-text-muted: var(--muted-foreground);
+  --hs-text-subtle: #86868b;
+  --hs-border: var(--border);
+  --hs-surface: var(--surface-elevated);
+  --hs-surface-2: var(--surface);
+  --hs-err: var(--danger);
+  --hs-deep: #1d1d1f;
+  --hs-deep-mint: #5be8a8;
+  --hs-bg-alt: #f5f5f7;
 }
 
-/* ---- Aurora Console + Get Started scope: literal 1:1 with the reference mockups
-   (cobalt/amber/green status colors, Bricolage Grotesque + IBM Plex Sans/Mono). The
-   mockups are deliberately light-only, so light mode here is the literal palette;
-   dark mode keeps the app's existing dark surface and only re-hues the three status
-   colors to brightened cobalt/amber/green so the theme toggle still does something
-   coherent without inventing values neither mockup specifies. ---- */
-.aurora-console {
-  --primary: #5b7fff;
-  --primary-hover: #3d5fe0;
-  --warning: #e2820f;
-  --success: #22b37a;
+html.dark-theme {
+  --background: #000000;
+  --surface: #1d1d1f;
+  --surface-elevated: #2c2c2e;
+  --foreground: #f5f5f7;
+  --muted-foreground: #a1a1a6;
+  --primary: #0a84ff;
+  --primary-hover: #409cff;
+  --border: rgba(255, 255, 255, 0.12);
+  --ring: #0a84ff;
+  --success: #30d158;
+  --warning: #ff9f0a;
+  --danger: #ff453a;
+  --accent-blue: #0a84ff;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --nav-bg: rgba(29, 29, 31, 0.72);
+  --nav-bg-open: rgba(29, 29, 31, 0.96);
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-hover-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg: #1d1d1f;
+  --glass-bg-elevated: #2c2c2e;
+  --glass-bg-strong: #1d1d1f;
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --hs-text-subtle: #a1a1a6;
+  --hs-bg-alt: #1d1d1f;
+  --hs-e2: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
-html.light-theme .aurora-console {
-  --background: #eceef3;
-  --surface: #ffffff;
-  --surface-elevated: #f5f6f9;
-  --foreground: #12161f;
-  --muted-foreground: #6d7686;
-  --primary: #1f3bd8;
-  --primary-hover: #1832bd;
-  --primary-foreground: #ffffff;
-  --border: #dee2ea;
-  --ring: #1f3bd8;
-  --success: #0d7a54;
-  --warning: #b85306;
-  --danger: #b3261e;
-  --glass-bg: #ffffff;
-  --glass-bg-elevated: #f5f6f9;
-  --glass-bg-strong: #ffffff;
-  --glass-border: #dee2ea;
-  --glass-border-strong: #3c4453;
-  --glass-shadow: 0 1px 2px rgba(18, 22, 31, 0.06), 0 8px 24px -16px rgba(18, 22, 31, 0.18);
-  --nav-bg: rgba(255, 255, 255, 0.88);
-  --nav-bg-open: rgba(255, 255, 255, 0.96);
-  --nav-border: #dee2ea;
-  --nav-hover-bg: #edeff4;
-  --radius-sm: 7px;
-  --radius-md: 9px;
-  --radius-lg: 11px;
-  --radius-liquid: 9px;
-  --radius-liquid-lg: 13px;
+html {
+  scroll-padding-top: var(--nav-h, 44px);
 }
 
-.aurora-console,
-.aurora-console input,
-.aurora-console button {
-  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+/* Marketing layout wrapper — inherits :root tokens */
+.marketing-theme {
+  min-height: 100vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--foreground);
 }
 
-.aurora-console h1,
-.aurora-console h2,
-.aurora-console h3,
-.aurora-console h4,
-.aurora-console .font-display {
-  font-family: 'Bricolage Grotesque', var(--font-display);
-}
-
-.aurora-console .font-mono {
-  font-family: 'IBM Plex Mono', monospace;
+.marketing-theme,
+.marketing-theme input,
+.marketing-theme button {
+  font-family: var(--font-display);
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-display);
   font-size: var(--font-size-base);
   line-height: var(--leading-relaxed);
   -webkit-font-smoothing: antialiased;
@@ -210,16 +163,16 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  letter-spacing: -0.035em;
+  letter-spacing: -0.022em;
   font-weight: 600;
 }
 
 code, pre {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-.h-hero { font-size: clamp(38px, 6vw, 64px); line-height: 1.05; }
-.h-sec { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; }
+.h-hero { font-size: clamp(48px, 6vw, 80px); line-height: 1.05; }
+.h-sec { font-size: clamp(32px, 4vw, 48px); line-height: 1.08; }
 .h-tile { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.15; }
 .h-card { font-size: 19px; line-height: 1.2; }
 .h-sub { font-size: 15px; line-height: 1.3; font-weight: 500; }
@@ -319,7 +272,7 @@ code, pre {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
   animation: chain-meter-sweep 1.6s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -340,83 +293,65 @@ code, pre {
   50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
 }
 
-/* ---- flat surfaces (class names kept from the old glass/tahoe system) ---- */
+/* ---- Apple flat surfaces (glass/tahoe class names kept as aliases) ---- */
 
 .glass {
   background-color: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius-liquid);
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.18s ease;
 }
 
 .glass-elevated {
   background-color: var(--glass-bg-elevated);
-  border-color: var(--glass-border-strong);
 }
 
 .glass-strong {
   background-color: var(--glass-bg-strong);
-  border-color: var(--glass-border-strong);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--shadow-card);
 }
 
 .glass:hover, .glass-elevated:hover {
-  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .glass-hover-lift {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .glass-hover-lift:hover {
-  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
-
-/* ---- page hero ---- */
 
 .tahoe-hero {
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
-.tahoe-hero-shine {
+.tahoe-hero-shine { display: none; }
+
+.tahoe-icon-badge {
   display: none;
 }
 
-.tahoe-icon-badge {
-  width: 3.25rem;
-  height: 3.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-liquid);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--primary);
-}
-
-/* Tone variants for PageHero's icon badge -- same qualitative palette as
-   .tahoe-stat-*, so a persona/portal's hero icon and its stat tiles agree. */
-.tahoe-icon-badge-sky { color: var(--accent-blue); border-color: color-mix(in srgb, var(--accent-blue) 30%, var(--border)); }
-.tahoe-icon-badge-violet { color: var(--accent-purple); border-color: color-mix(in srgb, var(--accent-purple) 30%, var(--border)); }
-.tahoe-icon-badge-emerald { color: var(--success); border-color: color-mix(in srgb, var(--success) 30%, var(--border)); }
-.tahoe-icon-badge-amber { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 30%, var(--border)); }
-.tahoe-icon-badge-pink { color: var(--accent-pink); border-color: color-mix(in srgb, var(--accent-pink) 30%, var(--border)); }
-.tahoe-icon-badge-teal { color: var(--accent-teal); border-color: color-mix(in srgb, var(--accent-teal) 30%, var(--border)); }
-.tahoe-icon-badge-rust { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); }
+.tahoe-icon-badge-sky,
+.tahoe-icon-badge-violet,
+.tahoe-icon-badge-emerald,
+.tahoe-icon-badge-amber,
+.tahoe-icon-badge-pink,
+.tahoe-icon-badge-teal,
+.tahoe-icon-badge-rust { display: none; }
 
 .tahoe-stat-tile {
-  padding: 1rem 1.125rem;
-  border-radius: var(--radius-liquid);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  padding: 1rem 0;
+  border: none;
+  background: transparent;
 }
 
 .tahoe-stat-value {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--foreground);
@@ -424,111 +359,72 @@ code, pre {
 
 .tahoe-stat-label {
   font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-weight: 400;
   color: var(--muted-foreground);
 }
 
-.tahoe-stat-sky .tahoe-stat-value { color: var(--accent-blue); }
-.tahoe-stat-violet .tahoe-stat-value { color: var(--accent-purple); }
-.tahoe-stat-emerald .tahoe-stat-value { color: var(--success); }
-.tahoe-stat-amber .tahoe-stat-value { color: var(--warning); }
-.tahoe-stat-pink .tahoe-stat-value { color: var(--accent-pink); }
-.tahoe-stat-teal .tahoe-stat-value { color: var(--accent-teal); }
-.tahoe-stat-rust .tahoe-stat-value { color: var(--primary); }
-
-/* ---- glyph tile / card-edge / gradient-stat depth treatment ----
-   Additive, tone-suffixed classes for the handful of surfaces that want a
-   solid gradient-fill icon badge + hover-reveal top edge + gradient stat
-   text (dashboard product cards, /features cards, Full Forge sidebar) --
-   layered on top of the existing outline .tahoe-icon-badge-* / flat
-   .tahoe-stat-* system rather than replacing it, since those two are shared
-   by PageHero and every portal page and must stay exactly as they are. */
+.tahoe-stat-sky .tahoe-stat-value,
+.tahoe-stat-violet .tahoe-stat-value,
+.tahoe-stat-emerald .tahoe-stat-value,
+.tahoe-stat-amber .tahoe-stat-value,
+.tahoe-stat-pink .tahoe-stat-value,
+.tahoe-stat-teal .tahoe-stat-value,
+.tahoe-stat-rust .tahoe-stat-value {
+  color: var(--foreground);
+}
 
 .tahoe-glyph-tile {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  color: #fff;
+  background: var(--surface);
+  color: var(--primary);
+  border: 1px solid var(--border);
 }
 
-.tahoe-glyph-tile-sky { background: linear-gradient(135deg, var(--accent-blue) 0%, color-mix(in srgb, var(--accent-blue) 65%, white) 60%, color-mix(in srgb, var(--accent-blue) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-blue) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-.tahoe-glyph-tile-violet { background: linear-gradient(135deg, var(--accent-purple) 0%, color-mix(in srgb, var(--accent-purple) 65%, white) 60%, color-mix(in srgb, var(--accent-purple) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-purple) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-.tahoe-glyph-tile-emerald { background: linear-gradient(135deg, var(--success) 0%, color-mix(in srgb, var(--success) 65%, white) 60%, color-mix(in srgb, var(--success) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--success) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-.tahoe-glyph-tile-amber { background: linear-gradient(135deg, var(--warning) 0%, color-mix(in srgb, var(--warning) 65%, white) 60%, color-mix(in srgb, var(--warning) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--warning) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-.tahoe-glyph-tile-pink { background: linear-gradient(135deg, var(--accent-pink) 0%, color-mix(in srgb, var(--accent-pink) 65%, white) 60%, color-mix(in srgb, var(--accent-pink) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-pink) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-.tahoe-glyph-tile-teal { background: linear-gradient(135deg, var(--accent-teal) 0%, color-mix(in srgb, var(--accent-teal) 65%, white) 60%, color-mix(in srgb, var(--accent-teal) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent-teal) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-.tahoe-glyph-tile-rust { background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 65%, white) 60%, color-mix(in srgb, var(--primary) 35%, white) 130%); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--primary) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-
-/* Hover-reveal top edge for a tone-coded card -- pairs with .tahoe-glyph-tile-*
-   above so a card "belongs" to its tone even before the glyph registers. */
-.tahoe-card-edge { position: relative; overflow: hidden; }
-.tahoe-card-edge::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  opacity: 0;
-  transition: opacity 0.18s ease;
+.tahoe-glyph-tile-sky,
+.tahoe-glyph-tile-violet,
+.tahoe-glyph-tile-emerald,
+.tahoe-glyph-tile-amber,
+.tahoe-glyph-tile-pink,
+.tahoe-glyph-tile-teal,
+.tahoe-glyph-tile-rust {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: none;
 }
-.tahoe-card-edge:hover::before { opacity: 1; }
-.tahoe-card-edge-sky::before { background: linear-gradient(90deg, var(--accent-blue), color-mix(in srgb, var(--accent-blue) 55%, white)); }
-.tahoe-card-edge-violet::before { background: linear-gradient(90deg, var(--accent-purple), color-mix(in srgb, var(--accent-purple) 55%, white)); }
-.tahoe-card-edge-emerald::before { background: linear-gradient(90deg, var(--success), color-mix(in srgb, var(--success) 55%, white)); }
-.tahoe-card-edge-amber::before { background: linear-gradient(90deg, var(--warning), color-mix(in srgb, var(--warning) 55%, white)); }
-.tahoe-card-edge-pink::before { background: linear-gradient(90deg, var(--accent-pink), color-mix(in srgb, var(--accent-pink) 55%, white)); }
-.tahoe-card-edge-teal::before { background: linear-gradient(90deg, var(--accent-teal), color-mix(in srgb, var(--accent-teal) 55%, white)); }
-.tahoe-card-edge-rust::before { background: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 55%, white)); }
 
-/* Gradient-clipped stat headline text -- additive modifier alongside the
-   existing .tahoe-stat-value, which stays flat-colored everywhere else. */
-.tahoe-stat-value-gradient { background: linear-gradient(90deg, var(--foreground), var(--tahoe-stat-tint, var(--primary)) 140%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.tahoe-stat-sky .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-blue); }
-.tahoe-stat-violet .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-purple); }
-.tahoe-stat-emerald .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--success); }
-.tahoe-stat-amber .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--warning); }
-.tahoe-stat-pink .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-pink); }
-.tahoe-stat-teal .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--accent-teal); }
-.tahoe-stat-rust .tahoe-stat-value-gradient { --tahoe-stat-tint: var(--primary); }
+.tahoe-card-edge::before { display: none; }
 
-/* ---- cards / empty state ---- */
+.tahoe-stat-value-gradient {
+  background: none;
+  color: var(--foreground);
+}
 
 .tahoe-glass-card {
   border-radius: var(--radius-liquid);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  transition: border-color 0.15s ease;
+  box-shadow: var(--glass-shadow);
 }
 
 .tahoe-glass-card:hover {
-  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .tahoe-empty {
-  position: relative;
-  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-liquid);
 }
 
-.tahoe-empty-orb {
-  position: absolute;
-  left: 50%; top: 35%;
-  width: 16rem; height: 16rem;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(10, 132, 255, 0.14) 0%, rgba(27, 58, 71, 0.08) 45%, transparent 70%);
-  animation: tahoe-orb-pulse 4s ease-in-out infinite;
-  pointer-events: none;
-}
+.tahoe-empty-orb { display: none; }
 
 .tahoe-empty-icon {
-  background: var(--surface-elevated);
+  background: var(--surface);
   border: 1px solid var(--border);
 }
 
@@ -725,30 +621,17 @@ code, pre {
   .animate-shimmer { animation: none; }
 }
 
-.gradient-mesh {
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(10, 132, 255, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(27, 58, 71, 0.05) 0%, transparent 50%),
-    var(--background);
+.text-gradient-apple {
+  color: var(--foreground);
 }
 
 .focus-ring {
   @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
-/* Apple-blue -> rust two-tone gradient, matching hypersdk-web's own
-   --hs-gradient-text treatment -- used sparingly on one hero/CTA element per
-   marketing page, not as a full-page wash. */
-.text-gradient-apple {
-  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 @layer components {
   .text-eyebrow {
-    @apply font-mono text-xs font-medium uppercase tracking-widest text-primary;
+    @apply text-xs font-normal text-muted;
     letter-spacing: var(--tracking-eyebrow);
   }
 
@@ -759,8 +642,7 @@ code, pre {
   }
 
   .text-stat-label {
-    @apply text-xs font-medium uppercase text-muted;
-    letter-spacing: var(--tracking-eyebrow);
+    @apply text-xs font-normal text-muted;
   }
 
   .text-prose {

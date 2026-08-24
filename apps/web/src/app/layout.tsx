@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         )}
       </head>
-      <body className="gradient-mesh min-h-screen antialiased flex flex-col" suppressHydrationWarning>
+      <body className="min-h-screen antialiased flex flex-col bg-background" suppressHydrationWarning>
         <ThemeProvider>
           <DevHmrGuard />
           {children}

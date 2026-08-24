@@ -37,7 +37,7 @@ export default function CampaignsPanel({ productId }: CampaignsPanelProps) {
   const load = useCallback(() => {
     setLoading(true);
     campaignsApi.list(productId)
-      .then(setList)
+      .then((data) => setList(Array.isArray(data) ? data : []))
       .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load campaigns'))
       .finally(() => setLoading(false));
   }, [productId]);

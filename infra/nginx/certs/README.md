@@ -1,69 +1,53 @@
-# TLS certificate for aurora.zyvor.dev
+# Optional TLS certificate (compose nginx overlay)
 
-**Not needed for the current deployment.** `aurora.zyvor.dev` is already live, fronted by
-the sibling `hypersdk-web` repo's `website-server` reverse proxy (its own `zyvor.dev` TLS
-cert, no separate cert for this subdomain required — see `isAuroraHost` in
-`cmd/website-server/main.go` over there). This directory + the steps below are only for
-standing up this repo's *own* nginx/TLS overlay, for a deployment not sitting behind that
-proxy.
+**Not required for the current production path.** Aurora runs as an independent
+product on K3s — see [`k8s/README.md`](../../../k8s/README.md) —
+`https://<host>:30443` with a self-signed cert until you attach a real domain +
+CA-issued certificate to the `aurora-tls` Secret.
 
-This directory is gitignored — never commit real key material here.
+This directory is only for the **optional** docker-compose nginx overlay
+(`infra/nginx/docker-compose.nginx.yml`) when you want HTTPS on the compose stack
+instead of (or in addition to) K3s. It is gitignored — never commit real key material.
 
-## What to request from the CA (BigRock / SSL2BUY)
+`hypersdk-web` / `zyvor.dev` no longer reverse-proxies Aurora.
 
-A certificate whose Subject Alternative Name (SAN) list includes:
+## What to request from the CA
+
+A certificate whose Subject Alternative Name (SAN) list includes your public hostname,
+e.g.:
 
 ```
-aurora.zyvor.dev
+aurora.example.com
 ```
 
-(The existing `zyvor.dev.crt` in `../../hypersdk-web/bigrock-ssl/` only covers
-`zyvor.dev` and `www.zyvor.dev` — it will NOT validate for this subdomain.
-Either request a SAN cert for `aurora.zyvor.dev` specifically, or a true
-`*.zyvor.dev` wildcard if you want to reuse it across future subdomains too.)
-
-Generate a CSR for the request, e.g.:
+Generate a CSR:
 
 ```bash
 openssl req -new -newkey rsa:2048 -nodes \
-  -keyout aurora.zyvor.dev.key \
-  -out aurora.zyvor.dev.csr \
-  -subj "/CN=aurora.zyvor.dev"
+  -keyout aurora.example.com.key \
+  -out aurora.example.com.csr \
+  -subj "/CN=aurora.example.com"
 ```
 
-Submit `aurora.zyvor.dev.csr` to the CA. Keep `aurora.zyvor.dev.key`
-private — it stays on this server, never in git, never sent anywhere.
+Submit the `.csr` to the CA. Keep the `.key` private — it stays on the server, never in git.
 
 ## Where the resulting files go
 
-Once the CA issues the certificate:
-
 | File | Purpose |
 |------|---------|
-| `aurora.zyvor.dev.crt` | The issued certificate (+ intermediate chain, fullchain style) |
-| `aurora.zyvor.dev.key` | The private key generated above (do not regenerate — must match the CSR that was submitted) |
+| `*.crt` | Issued certificate (+ intermediate chain, fullchain style) |
+| `*.key` | Private key matching the CSR |
 
-Place both files in this directory on the **remote host**
-(`~/.deployments/aurora/infra/nginx/certs/`), then restart nginx:
-
-```bash
-ssh sus@175.110.122.71 'cd ~/.deployments/aurora && sudo docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml -f infra/nginx/docker-compose.nginx.yml restart nginx'
-```
-
-## DNS
-
-Add an A record at your DNS provider before any of this is reachable:
-
-```
-aurora.zyvor.dev.  A  175.110.122.71
-```
+Place both under this directory on the **remote host**
+(e.g. `~/.deployments/emissary/infra/nginx/certs/` or your deploy path), then restart
+nginx via the compose overlay. `deploy-remote.sh` auto-enables the overlay when matching
+cert/key files exist.
 
 ## After the cert is live
 
-Set in `.env` (repo root, on the remote host) and rebuild the web image so
-the browser bundle calls the same-origin API through nginx instead of a
-separate host:port:
+Set in `.env` on the remote host and rebuild the web image so the browser bundle calls
+the same-origin API through nginx:
 
 ```
-NEXT_PUBLIC_API_URL=https://aurora.zyvor.dev/api/v1
+NEXT_PUBLIC_API_URL=https://aurora.example.com/api/v1
 ```

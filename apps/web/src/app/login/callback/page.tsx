@@ -3,7 +3,10 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AlertTriangle, Loader2, Sparkles } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { MarketingLayout } from '@/components/layout/MarketingLayout';
+import { Card, CardBody } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { resolvePostLoginRoute, storeAuthSession } from '@/lib/role-routing';
 
 function CallbackInner() {
@@ -39,30 +42,30 @@ function CallbackInner() {
   }, [params, router]);
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: 'linear-gradient(160deg, #21414F 0%, #14161A 100%)' }}
-    >
-      <div className="login-glass rounded-2xl px-8 py-10 w-full max-w-sm text-center">
-        <div className="w-12 h-12 rounded-xl bg-[#0A84FF] flex items-center justify-center mx-auto mb-5 border border-white/15">
-          <Sparkles className="w-6 h-6 text-white" aria-hidden />
-        </div>
-        {error ? (
-          <>
-            <AlertTriangle className="w-6 h-6 text-[#8A5A00] mx-auto mb-3" aria-hidden />
-            <p className="text-[#14161A]/80 text-body-sm mb-5">{error}</p>
-            <Link href="/login" className="login-btn-primary inline-flex">
-              Back to sign in
-            </Link>
-          </>
-        ) : (
-          <>
-            <Loader2 className="w-5 h-5 text-[#14161A]/60 mx-auto mb-3 animate-spin" aria-hidden />
-            <p className="text-[#14161A]/60 text-body-sm">Signing you in…</p>
-          </>
-        )}
+    <MarketingLayout>
+      <div className="max-w-[480px] mx-auto px-5 py-16">
+        <Card elevated>
+          <CardBody className="p-8 text-center">
+            {error ? (
+              <>
+                <AlertTriangle className="w-6 h-6 text-warning mx-auto mb-3" aria-hidden />
+                <h1 className="text-[28px] font-semibold tracking-tight mb-2">Sign-in failed</h1>
+                <p className="text-muted text-body-sm mb-6">{error}</p>
+                <Link href="/login">
+                  <Button type="button">Back to sign in</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Loader2 className="w-5 h-5 text-muted mx-auto mb-3 animate-spin" aria-hidden />
+                <h1 className="text-[28px] font-semibold tracking-tight mb-2">Signing you in</h1>
+                <p className="text-muted text-body-sm">Just a moment…</p>
+              </>
+            )}
+          </CardBody>
+        </Card>
       </div>
-    </div>
+    </MarketingLayout>
   );
 }
 
