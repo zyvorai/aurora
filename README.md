@@ -120,7 +120,7 @@ compose nginx overlay: [infra/nginx/certs/README.md](infra/nginx/certs/README.md
 |---|---|
 | Website | [zyvor.dev/aurora](https://zyvor.dev/aurora) |
 | Distro repo | [`hypersdk/aurora`](https://github.com/hypersdk/aurora) |
-| Current release | [`v0.1.0`](https://github.com/hypersdk/aurora/releases/tag/v0.1.0) (signed `trial.token` in archive) |
+| Current release | [`v0.1.1`](https://github.com/hypersdk/aurora/releases/tag/v0.1.1) (signed `trial.token` in archive) |
 | Package | GitHub Releases on that repo (must include signed `trial.token`) |
 | After trial | Email **sales@zyvor.dev** for a renewed JWT / `trial.token` |
 | How to install the token | [docs/LICENSING.md](docs/LICENSING.md) |
