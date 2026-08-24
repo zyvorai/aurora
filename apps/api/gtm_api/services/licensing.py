@@ -1,42 +1,42 @@
-"""Keyless 30-day trial + signed license-key gating.
+"""Signed trial token enforcement — Ed25519 JWT, no server clock.
 
-With no valid ``AURORA_LICENSE_KEY`` (Helm: ``license.key`` /
-``license.existingSecret``), the deployment runs fully for ``TRIAL_DAYS`` from
-its first database write to ``license_state``. Once that window elapses without
-a key, middleware returns HTTP 402 until a key from sales@zyvor.dev is set.
+Matches Veyron's design (``veyron/src/trial.rs``):
 
-Keys are HMAC-signed payloads (same shape as Forge / IronWolf):
+* Evaluation builds require a cryptographically signed ``trial.token``
+  (or ``AURORA_TRIAL_TOKEN`` / ``AURORA_LICENSE_KEY`` env).
+* The package only embeds the **public** key. Private key lives in
+  ``secrets/`` and is used by ``scripts/trial-tool.py`` (sales / packaging).
+* Expiry is inside the token (``exp`` claim). There is no ``first_seen_at``
+  database clock — deleting local state cannot extend a trial.
+* Product tag ``aurora-trial`` prevents cross-product token reuse.
 
-    <base64url-json>.<base64url-hmac>
-    {"p":"aurora","iss":"YYYY-MM-DD","exp":"YYYY-MM-DD","who":"Acme Corp"}
-
-Generate with ``scripts/gen-trial-key.py`` (keep that script confidential).
+Issue a 30-day evaluation token when building the customer package; after
+expiry customers email sales@zyvor.dev for a renewed signed token.
 """
 
 from __future__ import annotations
 
 import base64
-import hashlib
-import hmac
-import json
+import os
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timezone
+from pathlib import Path
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+import jwt
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-from gtm_api.models import LicenseState
-
-TRIAL_DAYS = 30
-PRODUCT = "aurora"
-# Must match scripts/gen-trial-key.py — confidential to Zyvor sales tooling.
-_HMAC_SECRET = b"zyvor-aurora-trial-v1-7c9e2a4f6b8d0e1f3a5c7d9e"
-
+TRIAL_DAYS_DEFAULT = 30
+PRODUCT_TAG = "aurora-trial"
 SALES_EMAIL = "sales@zyvor.dev"
+
+# Raw Ed25519 public key (32 bytes), standard base64. Rotate via
+# ``python3 scripts/trial-tool.py keygen`` and paste the new value here.
+TRIAL_PUBLIC_KEY_B64 = "yLhGphLG/aJR/7jQNrtAhFCxfekFCiEMe7d5zhixxSo="
+
 EXPIRED_MESSAGE = (
-    "Your 30-day Aurora trial has ended. Set AURORA_LICENSE_KEY "
-    "(or the Helm chart's license.key / license.existingSecret) to continue — "
-    f"email {SALES_EMAIL} for a license key."
+    "Your Aurora evaluation token is missing, invalid, or expired. "
+    f"Email {SALES_EMAIL} for a signed trial.token / license renewal."
 )
 
 
@@ -50,10 +50,10 @@ class LicenseStatus:
     trial_active: bool
     trial_expired: bool
     trial_days_remaining: int
-    first_seen_at: datetime
     licensee: str | None
     key_expires_at: str | None
     contact: str = SALES_EMAIL
+    enforced: bool = True
 
     def as_dict(self) -> dict:
         return {
@@ -61,116 +61,148 @@ class LicenseStatus:
             "trial_active": self.trial_active,
             "trial_expired": self.trial_expired,
             "trial_days_remaining": self.trial_days_remaining,
-            "first_seen_at": self.first_seen_at.isoformat(),
             "licensee": self.licensee,
             "key_expires_at": self.key_expires_at,
             "contact": self.contact,
+            "enforced": self.enforced,
+            "design": "signed-trial-token",
         }
 
 
-def _b64url_decode(data: str) -> bytes:
-    pad = "=" * (-len(data) % 4)
-    return base64.urlsafe_b64decode(data + pad)
+def _public_key() -> Ed25519PublicKey:
+    raw = base64.b64decode(TRIAL_PUBLIC_KEY_B64)
+    if len(raw) != 32:
+        raise LicenseError("embedded trial public key is corrupt")
+    return Ed25519PublicKey.from_public_bytes(raw)
 
 
-def _b64url_encode(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+def locate_token(explicit: str | None = None) -> str | None:
+    for candidate in (
+        explicit,
+        os.environ.get("AURORA_TRIAL_TOKEN"),
+        os.environ.get("AURORA_LICENSE_KEY"),
+    ):
+        if candidate and candidate.strip():
+            return candidate.strip()
+    for path in (
+        Path(os.environ["AURORA_TRIAL_TOKEN_FILE"])
+        if os.environ.get("AURORA_TRIAL_TOKEN_FILE")
+        else None,
+        Path("/app/trial.token"),
+        Path("trial.token"),
+        Path.home() / ".config" / "aurora" / "trial.token",
+    ):
+        if path is not None and path.is_file():
+            text = path.read_text().strip()
+            if text:
+                return text
+    return None
+
+
+def verify_token(token: str) -> dict:
+    """Return JWT claims or raise LicenseError."""
+    try:
+        claims = jwt.decode(
+            token.strip(),
+            _public_key(),
+            algorithms=["EdDSA"],
+            options={"require": ["exp", "iat", "sub", "product"]},
+        )
+    except Exception as exc:  # noqa: BLE001 — surface as license error
+        raise LicenseError(f"invalid or expired trial token ({exc})") from exc
+    if claims.get("product") != PRODUCT_TAG:
+        raise LicenseError("token was not issued for this product")
+    return claims
 
 
 def parse_license_key(raw: str | None) -> tuple[bool, str | None, str | None]:
-    """Return (valid, licensee, key_expires_iso_or_none)."""
-    if not raw or not raw.strip():
-        return False, None, None
-    key = raw.strip()
-    try:
-        payload_b64, sig_b64 = key.split(".", 1)
-    except ValueError:
-        return False, None, None
-    expected = hmac.new(_HMAC_SECRET, payload_b64.encode(), hashlib.sha256).digest()
-    try:
-        got = _b64url_decode(sig_b64)
-    except Exception:
-        return False, None, None
-    if not hmac.compare_digest(expected, got):
+    """Return (ok, who, exp_iso). Used by tests and status helpers."""
+    if not raw or not str(raw).strip():
         return False, None, None
     try:
-        payload = json.loads(_b64url_decode(payload_b64))
-    except Exception:
+        claims = verify_token(raw)
+    except LicenseError:
         return False, None, None
-    if payload.get("p") != PRODUCT:
-        return False, None, None
-    exp_s = payload.get("exp")
-    if not exp_s:
-        return False, None, None
+    exp = claims.get("exp")
+    exp_iso = (
+        datetime.fromtimestamp(int(exp), tz=timezone.utc).date().isoformat()
+        if exp is not None
+        else None
+    )
+    return True, str(claims.get("sub") or "") or None, exp_iso
+
+
+def status_sync(explicit_token: str | None = None, *, enforce: bool = True) -> LicenseStatus:
+    if not enforce:
+        return LicenseStatus(
+            licensed=True,
+            trial_active=False,
+            trial_expired=False,
+            trial_days_remaining=TRIAL_DAYS_DEFAULT,
+            licensee=None,
+            key_expires_at=None,
+            enforced=False,
+        )
+    token = locate_token(explicit_token)
+    if not token:
+        return LicenseStatus(
+            licensed=False,
+            trial_active=False,
+            trial_expired=True,
+            trial_days_remaining=0,
+            licensee=None,
+            key_expires_at=None,
+        )
     try:
-        exp = date.fromisoformat(exp_s)
-    except ValueError:
-        return False, None, None
-    if exp < date.today():
-        return False, None, None
-    return True, str(payload.get("who") or "") or None, exp.isoformat()
-
-
-async def _first_seen_at(db: AsyncSession) -> datetime:
-    row = (
-        await db.execute(select(LicenseState).where(LicenseState.id == 1))
-    ).scalar_one_or_none()
-    if row is not None:
-        ts = row.first_seen_at
-        if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
-        return ts
-
-    now = datetime.now(timezone.utc)
-    db.add(LicenseState(id=1, first_seen_at=now))
-    try:
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        row = (
-            await db.execute(select(LicenseState).where(LicenseState.id == 1))
-        ).scalar_one_or_none()
-        if row is None:
-            raise
-        ts = row.first_seen_at
-        if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
-        return ts
-    return now
-
-
-async def status(db: AsyncSession, license_key: str | None) -> LicenseStatus:
-    valid, licensee, key_exp = parse_license_key(license_key)
-    first_seen = await _first_seen_at(db)
-    elapsed_days = max(0, (datetime.now(timezone.utc) - first_seen).days)
-    remaining = max(0, TRIAL_DAYS - elapsed_days)
-    trial_expired = not valid and elapsed_days >= TRIAL_DAYS
+        claims = verify_token(token)
+    except LicenseError:
+        return LicenseStatus(
+            licensed=False,
+            trial_active=False,
+            trial_expired=True,
+            trial_days_remaining=0,
+            licensee=None,
+            key_expires_at=None,
+        )
+    now = datetime.now(tz=timezone.utc).timestamp()
+    exp = float(claims["exp"])
+    remaining = max(0, int((exp - now) / 86_400))
+    expired = now >= exp
     return LicenseStatus(
-        licensed=valid,
-        trial_active=not valid and not trial_expired,
-        trial_expired=trial_expired,
+        licensed=not expired,
+        trial_active=not expired,
+        trial_expired=expired,
         trial_days_remaining=remaining,
-        first_seen_at=first_seen,
-        licensee=licensee if valid else None,
-        key_expires_at=key_exp if valid else None,
+        licensee=str(claims.get("sub") or "") or None,
+        key_expires_at=datetime.fromtimestamp(exp, tz=timezone.utc).date().isoformat(),
     )
 
 
-async def require_active(db: AsyncSession, license_key: str | None) -> LicenseStatus:
-    st = await status(db, license_key)
-    if st.trial_expired:
+async def status(_db, license_key: str | None = None, *, enforce: bool | None = None) -> LicenseStatus:
+    """DB arg kept for call-site compatibility; unused (no server clock)."""
+    if enforce is None:
+        enforce = os.environ.get("AURORA_LICENSE_ENFORCE", "true").lower() not in (
+            "0",
+            "false",
+            "no",
+        )
+    return status_sync(license_key, enforce=enforce)
+
+
+async def require_active(_db, license_key: str | None = None) -> LicenseStatus:
+    st = status_sync(license_key, enforce=True)
+    if st.trial_expired or not st.licensed:
         raise LicenseError(EXPIRED_MESSAGE)
     return st
 
 
-def mint_key(licensee: str, days: int = 365, issued: date | None = None) -> str:
-    """Sales-side helper (also used by unit tests). Prefer scripts/gen-trial-key.py."""
-    today = issued or date.today()
-    expiry = today + timedelta(days=days)
-    payload = json.dumps(
-        {"p": PRODUCT, "iss": today.isoformat(), "exp": expiry.isoformat(), "who": licensee},
-        separators=(",", ":"),
-    ).encode()
-    payload_b64 = _b64url_encode(payload)
-    sig = hmac.new(_HMAC_SECRET, payload_b64.encode(), hashlib.sha256).digest()
-    return f"{payload_b64}.{_b64url_encode(sig)}"
+def mint_token(licensee: str, days: int, private_pem: bytes) -> str:
+    private = load_pem_private_key(private_pem, password=None)
+    now = datetime.now(tz=timezone.utc)
+    claims = {
+        "sub": licensee,
+        "iat": int(now.timestamp()),
+        "exp": int(now.timestamp()) + int(days) * 86_400,
+        "product": PRODUCT_TAG,
+    }
+    return jwt.encode(claims, private, algorithm="EdDSA")

@@ -86,14 +86,17 @@ is optional — see `SSO.md` only if you already have an OIDC IdP.
 You have succeeded when: you are signed in, at least one source is
 `completed`, and one agent response cites your product.
 
-### 6. Verify license trial clock
+### 6. Verify evaluation token
+
+The package ships a signed `trial.token`. Compose mounts it automatically.
 
 ```bash
+ls -l trial.token
 curl -s http://127.0.0.1:8000/api/v1/license/status
 ```
 
-Keyless for 30 days from first DB contact. After that: email
-**sales@zyvor.dev** → set `AURORA_LICENSE_KEY` (see `AFTER-TRIAL.md`).
+After expiry: email **sales@zyvor.dev** → replace `trial.token` or set
+`AURORA_TRIAL_TOKEN` / `AURORA_LICENSE_KEY` (see `AFTER-TRIAL.md` / `LICENSING.md`).
 
 ## Helm / k3s instead of Compose?
 
@@ -113,4 +116,4 @@ URLs at them.
 | Port 3000 busy | `AURORA_WEB_BIND=0.0.0.0:3001` in `.env` / compose |
 
 More detail: `INSTALL.md` (all install paths), `SSO.md` (OIDC), `AFTER-TRIAL.md`
-(license key). Commercial help: **sales@zyvor.dev** · [zyvor.dev/aurora](https://zyvor.dev/aurora)
+/ `LICENSING.md` (signed `trial.token`). Commercial help: **sales@zyvor.dev** · [zyvor.dev/aurora](https://zyvor.dev/aurora)

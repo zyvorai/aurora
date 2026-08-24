@@ -1,6 +1,6 @@
 apiVersion: v2
 name: aurora
-description: Aurora — AI-powered GTM orchestration (30-day trial, then license key)
+description: Aurora — AI-powered GTM orchestration (signed trial.token evaluation)
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

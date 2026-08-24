@@ -76,7 +76,8 @@ env:
 # Optional: reference an existing Secret instead of inline env above.
 existingSecret: ""
 
-## Licence key (30-day keyless trial runs automatically; set this after trial expires)
+## Licence / evaluation token (signed Ed25519 JWT — required for evaluation)
+# Pass the contents of trial.token from the customer package, or a renewed JWT from sales.
 license:
   key: ""
   existingSecret: ""

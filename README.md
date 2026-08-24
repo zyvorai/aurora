@@ -120,15 +120,13 @@ compose nginx overlay: [infra/nginx/certs/README.md](infra/nginx/certs/README.md
 |---|---|
 | Website | [zyvor.dev/aurora](https://zyvor.dev/aurora) |
 | Distro repo | [`hypersdk/aurora`](https://github.com/hypersdk/aurora) |
-| Latest release | [v0.1.0 — 30-day trial](https://github.com/hypersdk/aurora/releases/tag/v0.1.0) |
-| Package | [`aurora-0.1.0.tar.gz`](https://github.com/hypersdk/aurora/releases/download/v0.1.0/aurora-0.1.0.tar.gz) |
-| Checksum | [`aurora-0.1.0.tar.gz.sha256`](https://github.com/hypersdk/aurora/releases/download/v0.1.0/aurora-0.1.0.tar.gz.sha256) |
-| After trial | Email **sales@zyvor.dev** for `AURORA_LICENSE_KEY` |
-| Licensing notes | [docs/LICENSING.md](docs/LICENSING.md) |
+| Package | GitHub Releases on that repo (must include signed `trial.token`) |
+| After trial | Email **sales@zyvor.dev** for a renewed JWT / `trial.token` |
+| How to install the token | [docs/LICENSING.md](docs/LICENSING.md) |
 
-Extract the archive and follow `INSTALL.md` inside (compose, Helm, or k3s). Build/publish
-new packages from this repo with `./scripts/build-customer-package.sh` +
-`./scripts/publish-trial-release.sh`.
+Extract the archive and follow `GETTING-STARTED.md` → `INSTALL.md`. The package
+ships `trial.token`; Compose mounts it at `/app/trial.token`. Build/publish new
+packages with `./scripts/build-customer-package.sh` + `./scripts/publish-trial-release.sh`.
 
 ## LLM Providers
 
@@ -165,7 +163,7 @@ Multi-agent composition plan (11 specialized agents, **lean hardware / persona-f
 
 **Role-based default landing** (persona routes after login): [docs/role-based-landing.md](docs/role-based-landing.md)
 
-**Licensing** (30-day keyless trial, then `AURORA_LICENSE_KEY` from sales@zyvor.dev): [docs/LICENSING.md](docs/LICENSING.md)
+**Licensing** (signed `trial.token` / Ed25519 JWT — see [docs/LICENSING.md](docs/LICENSING.md)):
 
 **SSO / OIDC / demo logins** (Keycloak `demo`/`demo`, email/password admin, BYO IdP): [docs/sso-oidc.md](docs/sso-oidc.md)
 

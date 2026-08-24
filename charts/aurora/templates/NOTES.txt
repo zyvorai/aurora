@@ -2,8 +2,10 @@ Aurora {{ .Chart.AppVersion }} installed.
 
 1. Ensure backing services (Postgres, Redis, Qdrant, Neo4j, MinIO, Ollama) are reachable
    via the env Secret values you passed.
-2. Check license status:
+2. Provide a signed evaluation token (Ed25519 JWT):
+     --set license.key="<jwt>"   OR   license.existingSecret=<secret with data key license.key>
+     OR mount / set AURORA_TRIAL_TOKEN / place trial.token at /app/trial.token
+3. Check status:
      curl -s http://{{ include "aurora.fullname" . }}-api:{{ .Values.api.service.port }}/api/v1/license/status
-3. Keyless 30-day trial starts on first successful DB contact.
-4. After the trial, email sales@zyvor.dev for a key, then:
-     helm upgrade {{ .Release.Name }} . --reuse-values --set license.key="<key>"
+4. After expiry, email sales@zyvor.dev for a renewed token, then:
+     helm upgrade {{ .Release.Name }} . --reuse-values --set license.key="<jwt>"

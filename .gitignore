@@ -45,3 +45,7 @@ neo4j_data/
 infra/nginx/certs/*
 !infra/nginx/certs/.gitkeep
 !infra/nginx/certs/README.md
+
+# Trial signing private keys (never ship)
+secrets/
+trial.token

@@ -57,7 +57,7 @@ perl -i -pe "s/(tag:\\s*)\"[^\"]+\"/\${1}\"${VERSION}\"/g" "${CHART_BUILD}/value
 cat > "${CHART_BUILD}/Chart.yaml" <<EOF
 apiVersion: v2
 name: aurora
-description: Aurora — AI-powered GTM orchestration (30-day trial, then license key)
+description: Aurora — AI-powered GTM orchestration (signed trial.token evaluation)
 type: application
 version: ${VERSION}
 appVersion: "${VERSION}"
@@ -82,6 +82,17 @@ sed "s/__VERSION__/${VERSION}/g" packaging/INSTALL.md.tmpl > "${PKG_DIR}/INSTALL
 sed "s/__VERSION__/${VERSION}/g" packaging/AFTER-TRIAL.md.tmpl > "${PKG_DIR}/AFTER-TRIAL.md"
 sed "s/__VERSION__/${VERSION}/g" packaging/SSO.md.tmpl > "${PKG_DIR}/SSO.md"
 sed "s/__VERSION__/${VERSION}/g" packaging/GETTING-STARTED.md.tmpl > "${PKG_DIR}/GETTING-STARTED.md"
+
+echo "==> Issuing signed trial.token (Ed25519; private key in secrets/)"
+if [[ ! -f "${REPO_ROOT}/secrets/trial-ed25519-private.pem" ]]; then
+  echo "error: missing secrets/trial-ed25519-private.pem — run: python3 scripts/trial-tool.py keygen" >&2
+  exit 1
+fi
+python3 "${REPO_ROOT}/scripts/trial-tool.py" issue \
+  --who "Aurora evaluation ${VERSION}" \
+  --days 30 \
+  -o "${PKG_DIR}/trial.token"
+cp "${REPO_ROOT}/docs/LICENSING.md" "${PKG_DIR}/LICENSING.md" 2>/dev/null || true
 
 echo "==> Archiving"
 OUT_TAR="${DIST_DIR}/${PKG_NAME}.tar.gz"

@@ -18,15 +18,21 @@ if [ ! -f "${PKG}" ] || [ ! -f "${CHECKSUM_FILE}" ]; then
   exit 1
 fi
 
+if ! tar -tzf "${PKG}" | grep -q 'trial\.token$'; then
+  echo "error: ${PKG} is missing trial.token — re-run build-customer-package.sh" >&2
+  exit 1
+fi
+
 NOTES="$(cat <<EOF
-Self-contained **30-day trial** package for Aurora (AI GTM orchestration).
+Self-contained **evaluation** package for Aurora (AI GTM orchestration).
 
 - Container images (\`docker\`/\`podman\` load), Helm chart, compose file, and install guides
 - **No source code** in this repository or release
-- Keyless for 30 days from first database contact
-- Email **sales@zyvor.dev** for a license key to continue past the trial
+- Ships a signed \`trial.token\` (Ed25519 JWT) — expiry is inside the token
+- Compose mounts \`./trial.token\` at \`/app/trial.token\`; Helm: \`--set license.key=<jwt>\`
+- Email **sales@zyvor.dev** for a renewed token after expiry
 
-See \`INSTALL.md\` and \`AFTER-TRIAL.md\` inside the archive.
+See \`GETTING-STARTED.md\`, \`INSTALL.md\`, \`LICENSING.md\`, and \`AFTER-TRIAL.md\` inside the archive.
 
 SHA256: \`$(cut -d' ' -f1 "${CHECKSUM_FILE}")\`
 EOF
@@ -39,7 +45,7 @@ echo "    Asset: $(basename "${PKG}") ($(du -h "${PKG}" | cut -f1))"
 
 gh release create "${TAG}" \
   --repo "${REPO}" \
-  --title "Aurora ${VERSION} — 30-day trial" \
+  --title "Aurora ${VERSION} — evaluation (signed trial.token)" \
   --notes "${NOTES}" \
   "${PKG}" "${CHECKSUM_FILE}"
 

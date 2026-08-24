@@ -1,26 +1,35 @@
 # After the Aurora Trial
 
-## Get a commercial licence
+## Get a renewed token / commercial licence
 
 Email [sales@zyvor.dev](mailto:sales@zyvor.dev) with your company name and preferred term.
+You will receive a new signed **`trial.token`** (Ed25519 JWT) — not an HMAC string.
 
-## Apply your licence key
+## Apply your token
 
 ### Docker / Podman
 
 ```bash
-# in .env
-AURORA_LICENSE_KEY=<your-key>
+# Option A — file (recommended): replace the shipped token
+cp /path/from/sales/trial.token ./trial.token
+
+# Option B — env
+# in .env:
+AURORA_TRIAL_TOKEN=<jwt from sales>
+# or legacy alias:
+# AURORA_LICENSE_KEY=<jwt from sales>
 
 docker compose -f docker-compose.trial.yml --env-file .env up -d
 # or: podman compose ...
 ```
 
+Compose mounts `./trial.token` into the API/workers at `/app/trial.token`.
+
 ### Helm
 
 ```bash
 kubectl create secret generic aurora-license \
-  --from-literal=license.key="<your-key>" \
+  --from-literal=license.key="<jwt from sales>" \
   -n aurora
 
 helm upgrade aurora ./charts/aurora-*.tgz \
@@ -35,7 +44,7 @@ kubectl -n aurora rollout restart deploy
 
 ```bash
 curl -s https://<your-host>/api/v1/license/status
-# {"licensed": true, "trial_expired": false, ...}
+# {"licensed": true, "trial_expired": false, "design": "signed-trial-token", ...}
 ```
 
 ## Sign-in reminder

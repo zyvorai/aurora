@@ -19,6 +19,8 @@ docker-compose.trial.yml         # Aurora api + workers + web
 .env.trial.example
 k8s/                             # optional raw manifests (k3s / plain kubectl)
 LICENSE
+trial.token                      # signed evaluation token (required)
+LICENSING.md                     # how trial.token / renewals work
 GETTING-STARTED.md               # shortest path for evaluators
 INSTALL.md                       # this file
 SSO.md                           # Keycloak / OIDC + demo logins
@@ -27,11 +29,16 @@ AFTER-TRIAL.md
 
 ## Licensing
 
-- **Days 1–30:** full product, no key required (clock starts on first DB contact).
-- **After day 30:** API returns HTTP 402 until you set `AURORA_LICENSE_KEY`.
-- **Keys:** email **sales@zyvor.dev**.
+- Packages include a signed **`trial.token`** (Ed25519 JWT). Keep it next to the
+  compose files (mounted into the API/workers at `/app/trial.token`) **or** set
+  `AURORA_TRIAL_TOKEN` / `AURORA_LICENSE_KEY` in `.env`.
+- Expiry is inside the token — wiping Postgres does not extend the trial.
+- After expiry, API returns HTTP 402 until you install a renewed token from
+  **sales@zyvor.dev** (see `AFTER-TRIAL.md` / `LICENSING.md`).
 
 ```bash
+# token should already be in the extract; verify:
+ls -l trial.token
 curl -s https://<your-host>/api/v1/license/status | jq
 ```
 

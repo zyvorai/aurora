@@ -25,8 +25,11 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-gtm_minio}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-gtm_minio_dev}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434/v1}
+      AURORA_TRIAL_TOKEN: ${AURORA_TRIAL_TOKEN:-}
       AURORA_LICENSE_KEY: ${AURORA_LICENSE_KEY:-}
       SEED_DEFAULT_ADMIN: ${SEED_DEFAULT_ADMIN:-true}
+    volumes:
+      - ./trial.token:/app/trial.token:ro
     ports:
       - "${AURORA_API_BIND:-127.0.0.1:8000}:8000"
     networks: [aurora-trial]
@@ -47,7 +50,10 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-gtm_minio}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-gtm_minio_dev}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434/v1}
+      AURORA_TRIAL_TOKEN: ${AURORA_TRIAL_TOKEN:-}
       AURORA_LICENSE_KEY: ${AURORA_LICENSE_KEY:-}
+    volumes:
+      - ./trial.token:/app/trial.token:ro
     networks: [aurora-trial]
     restart: unless-stopped
 

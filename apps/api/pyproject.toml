@@ -36,6 +36,7 @@ dependencies = [
     "youtube-transcript-api>=0.6.0",
     "pyyaml>=6.0.0",
     "cryptography>=43.0.0",
+    "PyJWT[crypto]>=2.9.0",
     "arq>=0.26.0",
     "psycopg2-binary>=2.9.0",
     "pymysql>=1.1.0",
