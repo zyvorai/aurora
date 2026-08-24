@@ -50,7 +50,15 @@ Default for production images is `AURORA_LICENSE_ENFORCE=true`.
 Binary packages (images + Helm + compose, **no source**) are published to the
 public GitHub repo [`hypersdk/aurora`](https://github.com/hypersdk/aurora):
 
+| | |
+|---|---|
+| Current trial | [v0.1.0](https://github.com/hypersdk/aurora/releases/tag/v0.1.0) |
+| Download | [aurora-0.1.0.tar.gz](https://github.com/hypersdk/aurora/releases/download/v0.1.0/aurora-0.1.0.tar.gz) |
+
 ```bash
 ./scripts/build-customer-package.sh 0.1.0
 ./scripts/publish-trial-release.sh 0.1.0
 ```
+
+`hypersdk-web` / zyvor.dev does **not** host or proxy Aurora — see that site’s README
+for the same download links (marketing/docs only).

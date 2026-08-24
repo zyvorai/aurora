@@ -82,13 +82,32 @@ real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC
 `.env` must be an address a **visitor's browser** can reach (not `localhost`) —
 `deploy-remote.sh` refuses to build with that left unset.
 
-**TLS / production entrypoint:** Aurora is sold as an independent product and is **not** fronted
-by `hypersdk-web` / `zyvor.dev`. The live path is the K3s stack in [`k8s/`](k8s/README.md) —
-`./scripts/deploy-k8s.sh <host> <user>` → HTTPS on **`https://<host>:30443`** (TLS-terminating
-nginx NodePort, self-signed until a real domain + CA cert are attached). Sync local `apps/web`
-to the remote deploy tree before rebuilding if you changed the frontend (the remote cache alone
-can be stale). Optional docker-compose nginx overlay:
+**TLS / production entrypoint:** Aurora is an **independent product**. It is **not** hosted
+or reverse-proxied by the sibling [`hypersdk-web`](https://github.com/ssahani/hypersdk-web)
+site (`zyvor.dev`) — that repo is the HyperSDK marketing site only. Production for Aurora
+is the K3s stack in [`k8s/`](k8s/README.md): `./scripts/deploy-k8s.sh <host> <user>` →
+HTTPS on **`https://<host>:30443`** (TLS-terminating nginx NodePort, self-signed until a
+real domain + CA cert are attached). Sync local `apps/web` to the remote deploy tree before
+rebuilding if you changed the frontend. Optional compose nginx overlay:
 [infra/nginx/certs/README.md](infra/nginx/certs/README.md).
+
+### Customer trial download (no source)
+
+Binary packages (Docker / Podman / Helm / k3s) publish to the public distribution repo
+**[`hypersdk/aurora`](https://github.com/hypersdk/aurora)** — not this source tree and not
+`hypersdk-web`.
+
+| | |
+|---|---|
+| Latest release | [v0.1.0 — 30-day trial](https://github.com/hypersdk/aurora/releases/tag/v0.1.0) |
+| Package | [`aurora-0.1.0.tar.gz`](https://github.com/hypersdk/aurora/releases/download/v0.1.0/aurora-0.1.0.tar.gz) |
+| Checksum | [`aurora-0.1.0.tar.gz.sha256`](https://github.com/hypersdk/aurora/releases/download/v0.1.0/aurora-0.1.0.tar.gz.sha256) |
+| After trial | Email **sales@zyvor.dev** for `AURORA_LICENSE_KEY` |
+| Licensing notes | [docs/LICENSING.md](docs/LICENSING.md) |
+
+Extract the archive and follow `INSTALL.md` inside (compose, Helm, or k3s). Build/publish
+new packages from this repo with `./scripts/build-customer-package.sh` +
+`./scripts/publish-trial-release.sh`.
 
 ## LLM Providers
 
@@ -126,10 +145,6 @@ Multi-agent composition plan (11 specialized agents, **lean hardware / persona-f
 **Role-based default landing** (persona routes after login): [docs/role-based-landing.md](docs/role-based-landing.md)
 
 **Licensing** (30-day keyless trial, then `AURORA_LICENSE_KEY` from sales@zyvor.dev): [docs/LICENSING.md](docs/LICENSING.md)
-
-Customer binary packages (Docker/Podman/Helm/k3s, **no source**) publish to
-[`hypersdk/aurora`](https://github.com/hypersdk/aurora) via
-`./scripts/build-customer-package.sh` + `./scripts/publish-trial-release.sh`.
 
 Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-guide.md](docs/dev-guide.md)
 
