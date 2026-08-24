@@ -1,0 +1,45 @@
+# Trial / customer compose overlay — images are pre-loaded from the package
+# (docker load / podman load). Does not build from source.
+#
+#   docker compose -f docker-compose.trial.yml --env-file .env up -d
+#   podman compose -f docker-compose.trial.yml --env-file .env up -d
+#
+# Expects backing infra (postgres/redis/qdrant/neo4j/minio/ollama) already
+# running — either your own, or the companion infra stack if you have it.
+
+services:
+  api:
+    image: aurora-api:${AURORA_VERSION:-0.1.0}
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://gtm:gtm_dev@postgres:5432/gtm_platform}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      NEO4J_URI: ${NEO4J_URI:-bolt://neo4j:7687}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434/v1}
+      AURORA_LICENSE_KEY: ${AURORA_LICENSE_KEY:-}
+    ports:
+      - "${AURORA_API_BIND:-127.0.0.1:8000}:8000"
+    restart: unless-stopped
+
+  workers:
+    image: aurora-workers:${AURORA_VERSION:-0.1.0}
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://gtm:gtm_dev@postgres:5432/gtm_platform}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      NEO4J_URI: ${NEO4J_URI:-bolt://neo4j:7687}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434/v1}
+      AURORA_LICENSE_KEY: ${AURORA_LICENSE_KEY:-}
+    restart: unless-stopped
+
+  web:
+    image: aurora-web:${AURORA_VERSION:-0.1.0}
+    ports:
+      - "${AURORA_WEB_BIND:-0.0.0.0:3000}:3000"
+    restart: unless-stopped

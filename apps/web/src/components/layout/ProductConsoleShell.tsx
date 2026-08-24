@@ -18,6 +18,7 @@ import { RunLogDock } from '@/components/workflow/RunLogDock';
 import CommandPalette, { type CommandPaletteItem } from '@/components/CommandPalette';
 import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
 import navStyles from '@/components/layout/GlobalNav/GlobalNav.module.css';
+import { LicenseBanner } from '@/components/LicenseBanner';
 import { cn } from '@/lib/cn';
 
 const STATUS_DOT: Record<ChainStage['status'], string> = {
@@ -186,6 +187,7 @@ export function ProductConsoleShell({
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <LicenseBanner />
       <GlobalNav
         variant="app"
         roleInitial={role?.[0] ?? 'U'}

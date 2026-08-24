@@ -160,6 +160,11 @@ class Settings(BaseSettings):
     # Disable for a real deployment where this default shouldn't be reachable at all.
     seed_default_admin: bool = True
 
+    # Licensing — keyless 30-day trial from first DB boot; set after sales@zyvor.dev issues a key.
+    # See docs/LICENSING.md. Disable enforcement in local test/dev with AURORA_LICENSE_ENFORCE=false.
+    aurora_license_key: str = ""
+    aurora_license_enforce: bool = True
+
     # LLM provider: ollama | openai | "" (auto-detect from OPENAI_API_KEY)
     llm_provider: str = ""
 

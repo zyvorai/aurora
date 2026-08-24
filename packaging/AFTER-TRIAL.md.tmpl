@@ -1,0 +1,39 @@
+# After the Aurora Trial
+
+## Get a commercial licence
+
+Email [sales@zyvor.dev](mailto:sales@zyvor.dev) with your company name and preferred term.
+
+## Apply your licence key
+
+### Docker / Podman
+
+```bash
+# in .env
+AURORA_LICENSE_KEY=<your-key>
+
+docker compose -f docker-compose.trial.yml --env-file .env up -d
+# or: podman compose ...
+```
+
+### Helm
+
+```bash
+kubectl create secret generic aurora-license \
+  --from-literal=license.key="<your-key>" \
+  -n aurora
+
+helm upgrade aurora ./charts/aurora-*.tgz \
+  --namespace aurora \
+  --reuse-values \
+  --set license.existingSecret=aurora-license
+
+kubectl -n aurora rollout restart deploy
+```
+
+### Verify
+
+```bash
+curl -s https://<your-host>/api/v1/license/status
+# {"licensed": true, "trial_expired": false, ...}
+```

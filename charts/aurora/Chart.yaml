@@ -1,0 +1,14 @@
+apiVersion: v2
+name: aurora
+description: Aurora — AI-powered GTM orchestration (30-day trial, then license key)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - aurora
+  - gtm
+  - ai
+maintainers:
+  - name: Zyvor AI Labs
+    email: sales@zyvor.dev
+home: https://github.com/hypersdk/aurora

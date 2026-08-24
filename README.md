@@ -125,6 +125,12 @@ Multi-agent composition plan (11 specialized agents, **lean hardware / persona-f
 
 **Role-based default landing** (persona routes after login): [docs/role-based-landing.md](docs/role-based-landing.md)
 
+**Licensing** (30-day keyless trial, then `AURORA_LICENSE_KEY` from sales@zyvor.dev): [docs/LICENSING.md](docs/LICENSING.md)
+
+Customer binary packages (Docker/Podman/Helm/k3s, **no source**) publish to
+[`hypersdk/aurora`](https://github.com/hypersdk/aurora) via
+`./scripts/build-customer-package.sh` + `./scripts/publish-trial-release.sh`.
+
 Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-guide.md](docs/dev-guide.md)
 
 ## API Endpoints

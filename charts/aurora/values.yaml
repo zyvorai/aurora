@@ -1,0 +1,89 @@
+# Aurora Helm chart — see INSTALL.md in the customer package for a full walkthrough.
+#
+# Fresh installs run a keyless 30-day trial automatically. After that, set
+# license.key (or license.existingSecret) from a key emailed by sales@zyvor.dev.
+
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullPolicy: IfNotPresent
+
+api:
+  image:
+    repository: aurora-api
+    tag: "0.1.0"
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+web:
+  image:
+    repository: aurora-web
+    tag: "0.1.0"
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 3000
+  # Browser-facing API base baked into the Next.js bundle at image build time.
+  # Override only if you rebuild the web image yourself.
+  publicApiUrl: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+workers:
+  image:
+    repository: aurora-workers
+    tag: "0.1.0"
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+# Connection strings for backing services (Postgres, Redis, Qdrant, Neo4j, MinIO, Ollama).
+# These are required — Aurora does not bundle databases in this chart.
+env:
+  DATABASE_URL: ""
+  REDIS_URL: ""
+  QDRANT_URL: ""
+  NEO4J_URI: ""
+  NEO4J_USER: neo4j
+  NEO4J_PASSWORD: ""
+  MINIO_ENDPOINT: ""
+  MINIO_ACCESS_KEY: ""
+  MINIO_SECRET_KEY: ""
+  OLLAMA_BASE_URL: ""
+  SECRET_KEY: ""
+  FRONTEND_URL: ""
+  LLM_PROVIDER: ollama
+
+# Optional: reference an existing Secret instead of inline env above.
+existingSecret: ""
+
+## Licence key (30-day keyless trial runs automatically; set this after trial expires)
+license:
+  key: ""
+  existingSecret: ""
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  tls: false
+  annotations: {}

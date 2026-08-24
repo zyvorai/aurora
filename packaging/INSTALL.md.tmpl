@@ -1,0 +1,104 @@
+# Aurora __VERSION__ — Installation
+
+Self-contained offline package. **No source code** is included — only container
+images, Helm chart, compose files, and install guides.
+
+## What's in the box
+
+```
+images/
+  aurora-api-__VERSION__.tar
+  aurora-web-__VERSION__.tar
+  aurora-workers-__VERSION__.tar
+charts/aurora-__VERSION__.tgz
+docker-compose.trial.yml
+.env.trial.example
+k8s/                    # optional raw manifests (k3s / plain kubectl)
+LICENSE
+INSTALL.md              # this file
+AFTER-TRIAL.md
+```
+
+## Licensing
+
+- **Days 1–30:** full product, no key required (clock starts on first DB contact).
+- **After day 30:** API returns HTTP 402 until you set `AURORA_LICENSE_KEY`.
+- **Keys:** email **sales@zyvor.dev**.
+
+Check status anytime:
+
+```bash
+curl -s https://<your-host>/api/v1/license/status | jq
+```
+
+## Prerequisites
+
+- Docker **or** Podman (for compose / image load)
+- **or** Kubernetes / k3s + Helm 3 (recommended production path)
+- Backing services: Postgres, Redis, Qdrant, Neo4j, MinIO, and an LLM
+  (Ollama local or OpenAI via `LLM_PROVIDER` / `OPENAI_API_KEY`)
+
+## Path A — Docker / Podman Compose (fastest eval)
+
+```bash
+# Load images (Podman: replace docker with podman)
+docker load -i images/aurora-api-__VERSION__.tar
+docker load -i images/aurora-web-__VERSION__.tar
+docker load -i images/aurora-workers-__VERSION__.tar
+
+cp .env.trial.example .env
+# edit .env — especially SECRET_KEY and NEXT_PUBLIC / FRONTEND URLs
+
+docker compose -f docker-compose.trial.yml --env-file .env up -d
+# Podman: podman compose -f docker-compose.trial.yml --env-file .env up -d
+```
+
+Open the URL you set for the web UI. Default admin seed (change immediately):
+`marketing@zyvor.dev` / `Admin@321` (disable with `SEED_DEFAULT_ADMIN=false`).
+
+## Path B — Helm (k3s / Kubernetes)
+
+```bash
+# Load images onto every node (or push to your registry and retag values)
+docker load -i images/aurora-api-__VERSION__.tar
+docker load -i images/aurora-web-__VERSION__.tar
+docker load -i images/aurora-workers-__VERSION__.tar
+# k3s:
+sudo k3s ctr images import images/aurora-api-__VERSION__.tar
+sudo k3s ctr images import images/aurora-web-__VERSION__.tar
+sudo k3s ctr images import images/aurora-workers-__VERSION__.tar
+
+helm install aurora charts/aurora-__VERSION__.tgz \
+  --namespace aurora --create-namespace \
+  --set env.DATABASE_URL='postgresql+asyncpg://…' \
+  --set env.REDIS_URL='redis://…' \
+  --set env.QDRANT_URL='http://…' \
+  --set env.NEO4J_URI='bolt://…' \
+  --set env.NEO4J_PASSWORD='…' \
+  --set env.MINIO_ENDPOINT='…' \
+  --set env.MINIO_ACCESS_KEY='…' \
+  --set env.MINIO_SECRET_KEY='…' \
+  --set env.OLLAMA_BASE_URL='http://…/v1' \
+  --set env.SECRET_KEY="$(openssl rand -hex 32)" \
+  --set env.FRONTEND_URL='https://aurora.example.com'
+```
+
+Optional ingress: `--set ingress.enabled=true --set ingress.host=aurora.example.com`.
+
+After trial:
+
+```bash
+helm upgrade aurora charts/aurora-__VERSION__.tgz --reuse-values \
+  --set license.key='<key-from-sales@zyvor.dev>'
+kubectl -n aurora rollout restart deploy
+```
+
+## Path C — Raw k3s / kubectl manifests
+
+See `k8s/` and apply with `kubectl apply -f k8s/` after loading images and
+creating an `aurora-env` Secret from your `.env`.
+
+## Support
+
+- Sales / license keys: **sales@zyvor.dev**
+- See `AFTER-TRIAL.md`
