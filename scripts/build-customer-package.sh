@@ -21,6 +21,9 @@ PKG_DIR="${BUILD_DIR}/${PKG_NAME}"
 DIST_DIR="${REPO_ROOT}/dist"
 trap 'rm -rf "${BUILD_DIR}"' EXIT
 
+DOCKER="${DOCKER:-docker}"
+HELM="${HELM:-helm}"
+
 echo "==> Building customer package ${PKG_NAME}"
 mkdir -p "${PKG_DIR}/images" "${PKG_DIR}/charts" "${PKG_DIR}/k8s" "${DIST_DIR}"
 
@@ -29,16 +32,23 @@ mkdir -p "${PKG_DIR}/images" "${PKG_DIR}/charts" "${PKG_DIR}/k8s" "${DIST_DIR}"
 WEB_API_URL="${WEB_API_URL:-http://localhost:8000/api/v1}"
 
 echo "==> Building images"
-docker build -t "aurora-api:${VERSION}" -t aurora-api:latest -f apps/api/Dockerfile apps/api
-docker build -t "aurora-workers:${VERSION}" -t aurora-workers:latest -f apps/workers/Dockerfile .
-docker build -t "aurora-web:${VERSION}" -t aurora-web:latest \
+${DOCKER} build -t "aurora-api:${VERSION}" -t aurora-api:latest -f apps/api/Dockerfile apps/api
+${DOCKER} build -t "aurora-workers:${VERSION}" -t aurora-workers:latest -f apps/workers/Dockerfile .
+${DOCKER} build -t "aurora-web:${VERSION}" -t aurora-web:latest \
   --build-arg "NEXT_PUBLIC_API_URL=${WEB_API_URL}" \
   -f apps/web/Dockerfile apps/web
 
 echo "==> Saving image tarballs"
-docker save "aurora-api:${VERSION}" -o "${PKG_DIR}/images/aurora-api-${VERSION}.tar"
-docker save "aurora-workers:${VERSION}" -o "${PKG_DIR}/images/aurora-workers-${VERSION}.tar"
-docker save "aurora-web:${VERSION}" -o "${PKG_DIR}/images/aurora-web-${VERSION}.tar"
+${DOCKER} save "aurora-api:${VERSION}" -o "${PKG_DIR}/images/aurora-api-${VERSION}.tar"
+${DOCKER} save "aurora-workers:${VERSION}" -o "${PKG_DIR}/images/aurora-workers-${VERSION}.tar"
+${DOCKER} save "aurora-web:${VERSION}" -o "${PKG_DIR}/images/aurora-web-${VERSION}.tar"
+# sudo docker save writes root-owned files; make them readable for the packaging user.
+if [ "$(id -u)" -ne 0 ]; then
+  ${DOCKER} run --rm -v "${PKG_DIR}/images:/images" alpine \
+    chown -R "$(id -u):$(id -g)" /images 2>/dev/null \
+    || sudo chown -R "$(id -u):$(id -g)" "${PKG_DIR}/images" 2>/dev/null \
+    || true
+fi
 
 echo "==> Packaging Helm chart (tags pinned to ${VERSION})"
 CHART_BUILD="${BUILD_DIR}/chart"
@@ -60,7 +70,7 @@ maintainers:
     email: sales@zyvor.dev
 home: https://github.com/hypersdk/aurora
 EOF
-helm package "${CHART_BUILD}" --app-version "${VERSION}" --destination "${PKG_DIR}/charts"
+${HELM} package "${CHART_BUILD}" --app-version "${VERSION}" --destination "${PKG_DIR}/charts"
 
 echo "==> Copying compose, k8s, license, guides"
 cp packaging/docker-compose.trial.yml "${PKG_DIR}/"
