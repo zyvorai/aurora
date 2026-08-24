@@ -530,6 +530,8 @@ orchestrator — that's an intentional scope boundary, not a gap being tracked.
 - **SSO** (`services/sso.py`, `GET /auth/sso/login`, `GET /auth/sso/callback`) — generic
   OIDC via discovery metadata, so it works with Auth0, Keycloak, or any OIDC-compliant IdP,
   gated by `SSO_ENABLED`/`SSO_ISSUER`/`SSO_CLIENT_ID`/`SSO_CLIENT_SECRET`/`SSO_REDIRECT_URI`.
+  Operator guide (demo Keycloak user `demo`/`demo`, local admin, BYO IdP):
+  [`docs/sso-oidc.md`](sso-oidc.md).
   Two known, documented (not silent) limitations: (1) users are unique per (tenant, email)
   here, not globally, so a callback whose email matches 0 or >1 tenant's user 404s/409s
   instead of guessing which tenant to log into — real per-tenant SSO config or domain-based

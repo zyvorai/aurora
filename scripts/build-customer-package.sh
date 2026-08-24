@@ -79,6 +79,7 @@ cp -R k8s/*.yaml "${PKG_DIR}/k8s/" 2>/dev/null || true
 cp LICENSE "${PKG_DIR}/" 2>/dev/null || echo "Proprietary — Zyvor AI Labs. Contact sales@zyvor.dev" > "${PKG_DIR}/LICENSE"
 sed "s/__VERSION__/${VERSION}/g" packaging/INSTALL.md.tmpl > "${PKG_DIR}/INSTALL.md"
 sed "s/__VERSION__/${VERSION}/g" packaging/AFTER-TRIAL.md.tmpl > "${PKG_DIR}/AFTER-TRIAL.md"
+sed "s/__VERSION__/${VERSION}/g" packaging/SSO.md.tmpl > "${PKG_DIR}/SSO.md"
 
 echo "==> Archiving"
 OUT_TAR="${DIST_DIR}/${PKG_NAME}.tar.gz"

@@ -58,6 +58,13 @@ real domain + CA-issued (or Let's Encrypt) cert — at that point, swap
 
 ## Known gap
 
-SSO doesn't work through any of these entrypoints yet — the Keycloak
-client's registered redirect URI still points at the docker-compose
-deployment's original address. Email/password signup and login work fully.
+SSO through the K3s HTTPS entrypoint needs the Keycloak (or IdP) client redirect
+URI and the API's `SSO_REDIRECT_URI` updated to:
+
+```text
+https://<host>:30443/api/v1/auth/sso/callback
+```
+
+until those match the TLS NodePort, email/password signup and login work fully
+(`marketing@zyvor.dev` / `Admin@321`). Demo Keycloak user when SSO is wired:
+`demo` / `demo`. Full guide: [`docs/sso-oidc.md`](../docs/sso-oidc.md).

@@ -566,6 +566,7 @@ make stop
 | Document | Contents |
 |----------|----------|
 | [source-management.md](./source-management.md) | Source types, ingest status, workers, troubleshooting |
+| [sso-oidc.md](./sso-oidc.md) | Keycloak / OIDC SSO, demo logins (`demo`/`demo`, `marketing@zyvor.dev`/`Admin@321`) |
 | [role-based-landing.md](./role-based-landing.md) | Persona default routes by RBAC role (login redirect, dashboard CTAs) |
 | [test-cases.md](./test-cases.md) | Full test case document — 223 tests with IDs, preconditions, expected results |
 | [gtm-platform-phases.md](./gtm-platform-phases.md) | 12-phase implementation status + acceptance criteria |

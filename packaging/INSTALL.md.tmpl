@@ -16,6 +16,7 @@ docker-compose.trial.yml
 k8s/                    # optional raw manifests (k3s / plain kubectl)
 LICENSE
 INSTALL.md              # this file
+SSO.md                  # Keycloak / OIDC + demo logins
 AFTER-TRIAL.md
 ```
 
@@ -55,6 +56,18 @@ docker compose -f docker-compose.trial.yml --env-file .env up -d
 
 Open the URL you set for the web UI. Default admin seed (change immediately):
 `marketing@zyvor.dev` / `Admin@321` (disable with `SEED_DEFAULT_ADMIN=false`).
+
+### Demo logins & SSO
+
+| Path | Username / email | Password |
+|------|------------------|----------|
+| Email/password (default) | `marketing@zyvor.dev` | `Admin@321` |
+| Keycloak SSO (when configured) | `demo` | `demo` |
+
+SSO is off by default. To enable OIDC (Keycloak, Auth0, Okta, Azure AD, …),
+set `SSO_ENABLED=true` plus `SSO_ISSUER` / `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` /
+`SSO_REDIRECT_URI` in `.env` (see `SSO.md` in this package). Register
+`<your-api>/api/v1/auth/sso/callback` as the IdP redirect URI.
 
 ## Path B — Helm (k3s / Kubernetes)
 
@@ -102,3 +115,4 @@ creating an `aurora-env` Secret from your `.env`.
 
 - Sales / license keys: **sales@zyvor.dev**
 - See `AFTER-TRIAL.md`
+- SSO / OIDC / demo logins: see `SSO.md`

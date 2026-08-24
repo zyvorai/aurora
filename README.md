@@ -82,6 +82,10 @@ real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC
 `.env` must be an address a **visitor's browser** can reach (not `localhost`) —
 `deploy-remote.sh` refuses to build with that left unset.
 
+**SSO / Keycloak:** optional OIDC via `SSO_ENABLED` + `SSO_*` env vars. Bundled Keycloak
+demo IdP (compose) seeds user **`demo` / `demo`**. Full walkthrough:
+**[docs/sso-oidc.md](docs/sso-oidc.md)** (also shipped as `SSO.md` in the customer package).
+
 **TLS / production entrypoint:** Aurora is an **independent product** (the live app is not
 reverse-proxied by [`hypersdk-web`](https://github.com/ssahani/hypersdk-web) /
 [zyvor.dev](https://zyvor.dev)). Product marketing and trial download live on the website:
@@ -145,6 +149,8 @@ Multi-agent composition plan (11 specialized agents, **lean hardware / persona-f
 **Role-based default landing** (persona routes after login): [docs/role-based-landing.md](docs/role-based-landing.md)
 
 **Licensing** (30-day keyless trial, then `AURORA_LICENSE_KEY` from sales@zyvor.dev): [docs/LICENSING.md](docs/LICENSING.md)
+
+**SSO / OIDC / demo logins** (Keycloak `demo`/`demo`, email/password admin, BYO IdP): [docs/sso-oidc.md](docs/sso-oidc.md)
 
 Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-guide.md](docs/dev-guide.md)
 
