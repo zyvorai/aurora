@@ -32,7 +32,7 @@ SALES_EMAIL = "sales@zyvor.dev"
 
 # Raw Ed25519 public key (32 bytes), standard base64. Rotate via
 # ``python3 scripts/trial-tool.py keygen`` and paste the new value here.
-TRIAL_PUBLIC_KEY_B64 = "yLhGphLG/aJR/7jQNrtAhFCxfekFCiEMe7d5zhixxSo="
+TRIAL_PUBLIC_KEY_B64 = "ankjJniF/KhRsMyF8JEt/FOJhJfKRsUaNaZ3pOASgOU="
 
 EXPIRED_MESSAGE = (
     "Your Aurora evaluation token is missing, invalid, or expired. "
