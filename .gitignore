@@ -49,3 +49,4 @@ infra/nginx/certs/*
 # Trial signing private keys (never ship)
 secrets/
 trial.token
+.docs-tools/

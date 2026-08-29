@@ -1,0 +1,144 @@
+{
+  "routes": [
+    {
+      "label": "Marketing home",
+      "path": "/",
+      "category": "Public"
+    },
+    {
+      "label": "Features",
+      "path": "/features",
+      "category": "Public"
+    },
+    {
+      "label": "Sign in",
+      "path": "/login",
+      "category": "Auth"
+    },
+    {
+      "label": "SSO callback",
+      "path": "/login/callback",
+      "category": "Auth"
+    },
+    {
+      "label": "GTM workspace",
+      "path": "/dashboard",
+      "category": "Workspace"
+    },
+    {
+      "label": "Settings",
+      "path": "/dashboard/settings",
+      "category": "Workspace"
+    },
+    {
+      "label": "Agent Registry",
+      "path": "/dashboard/agents",
+      "category": "Workspace"
+    },
+    {
+      "label": "Audit Log",
+      "path": "/dashboard/audit",
+      "category": "Workspace"
+    },
+    {
+      "label": "Full Forge",
+      "path": "/products/:id",
+      "category": "Product"
+    },
+    {
+      "label": "Executive Brief",
+      "path": "/products/:id/brief",
+      "category": "Product"
+    },
+    {
+      "label": "Sales Action",
+      "path": "/products/:id/sales",
+      "category": "Product"
+    },
+    {
+      "label": "Pipeline",
+      "path": "/products/:id/pipeline",
+      "category": "Product"
+    },
+    {
+      "label": "Marketing Studio",
+      "path": "/products/:id/marketing",
+      "category": "Product"
+    },
+    {
+      "label": "Partner Enablement",
+      "path": "/products/:id/partner",
+      "category": "Product"
+    },
+    {
+      "label": "Portal Accounts",
+      "path": "/dashboard/admin/portal-accounts",
+      "category": "Admin"
+    },
+    {
+      "label": "Sales Activity",
+      "path": "/dashboard/admin/sales-activity",
+      "category": "Admin"
+    },
+    {
+      "label": "Support Tickets",
+      "path": "/dashboard/admin/tickets",
+      "category": "Admin"
+    },
+    {
+      "label": "Workflow Stages",
+      "path": "/dashboard/admin/workflow-stages",
+      "category": "Admin"
+    },
+    {
+      "label": "Danger Zone",
+      "path": "/dashboard/admin/danger",
+      "category": "Admin"
+    },
+    {
+      "label": "Customer portal login",
+      "path": "/portal/customer/login",
+      "category": "Portals"
+    },
+    {
+      "label": "Customer portal signup",
+      "path": "/portal/customer/signup",
+      "category": "Portals"
+    },
+    {
+      "label": "Customer portal",
+      "path": "/portal/customer",
+      "category": "Portals"
+    },
+    {
+      "label": "Reseller portal login",
+      "path": "/portal/reseller/login",
+      "category": "Portals"
+    },
+    {
+      "label": "Reseller portal signup",
+      "path": "/portal/reseller/signup",
+      "category": "Portals"
+    },
+    {
+      "label": "Reseller portal",
+      "path": "/portal/reseller",
+      "category": "Portals"
+    },
+    {
+      "label": "Salesperson portal login",
+      "path": "/portal/salesperson/login",
+      "category": "Portals"
+    },
+    {
+      "label": "Salesperson portal signup",
+      "path": "/portal/salesperson/signup",
+      "category": "Portals"
+    },
+    {
+      "label": "Salesperson portal",
+      "path": "/portal/salesperson",
+      "category": "Portals"
+    }
+  ]
+}

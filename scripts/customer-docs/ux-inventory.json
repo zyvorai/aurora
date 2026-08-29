@@ -1,0 +1,292 @@
+{
+  "/": {
+    "title": "Marketing home",
+    "how": "Open `/`",
+    "actions": "Create workspace \u2192 /login; Sign in",
+    "empty": "Public page",
+    "success": "Landing loads; CTAs work",
+    "related": [
+      "/login",
+      "/features"
+    ]
+  },
+  "/features": {
+    "title": "Features",
+    "how": "Open `/features`",
+    "actions": "Get started / Sign in \u2192 /login",
+    "empty": "\u2014",
+    "success": "Feature content loads",
+    "related": [
+      "/",
+      "/login"
+    ]
+  },
+  "/login": {
+    "title": "Sign in",
+    "how": "Open `/login`",
+    "actions": "Sign in email/password; SSO when enabled; URL-first signup \u2192 create product + ingest",
+    "empty": "Auth failure \u2192 check credentials/SSO",
+    "success": "Signed into /dashboard",
+    "related": [
+      "/dashboard",
+      "/login/callback"
+    ]
+  },
+  "/login/callback": {
+    "title": "SSO callback",
+    "how": "OIDC redirect lands here",
+    "actions": "Complete OIDC redirect; land on dashboard",
+    "empty": "SSO misconfigured \u2192 see Admin SSO docs",
+    "success": "Session established",
+    "related": [
+      "/login",
+      "/dashboard"
+    ]
+  },
+  "/dashboard": {
+    "title": "Your GTM workspace",
+    "how": "Open `/dashboard` after sign-in",
+    "actions": "Create / Onboard product; Open role-default persona; Secondary: Brief or Full Forge",
+    "empty": "No products \u2192 create one with a website/docs URL",
+    "success": "Product card opens Forge/Brief",
+    "related": [
+      "/products/:id",
+      "/dashboard/settings"
+    ]
+  },
+  "/dashboard/settings": {
+    "title": "Settings",
+    "how": "Nav Settings",
+    "actions": "Profile; Appearance; Plan usage; Suppression list; Sign out; deep-links to admin",
+    "empty": "\u2014",
+    "success": "Settings persist",
+    "related": [
+      "/dashboard"
+    ]
+  },
+  "/dashboard/agents": {
+    "title": "Agent Registry",
+    "how": "Nav Agents",
+    "actions": "Browse agent catalog / tiers",
+    "empty": "Empty catalog \u2192 check plan",
+    "success": "Agents listed",
+    "related": [
+      "/dashboard",
+      "/products/:id"
+    ]
+  },
+  "/dashboard/audit": {
+    "title": "Audit Log",
+    "how": "Nav Audit",
+    "actions": "Filter write/approve/publish trail",
+    "empty": "No events yet",
+    "success": "Rows after actions",
+    "related": [
+      "/dashboard"
+    ]
+  },
+  "/products/:id": {
+    "title": "Full Forge",
+    "how": "Open product \u2192 Full Forge (`?tab=`)",
+    "actions": "Add source + Ingest; Run chain stages; Agent tabs (Q&A/Strategy/Content/Sales/Outreach/Architect/Proposal/Publish); Approve \u2192 Publish",
+    "empty": "Source not completed \u2192 wait for workers",
+    "success": "Source completed; brief grounded; publish succeeds",
+    "related": [
+      "/products/:id/brief",
+      "/products/:id/sales",
+      "/dashboard"
+    ]
+  },
+  "/products/:id/brief": {
+    "title": "Executive Brief",
+    "how": "Product \u2192 Brief (approver/viewer default)",
+    "actions": "Read KPIs / GTM readiness; Open Forge if unprovisioned",
+    "empty": "Unprovisioned \u2192 open Forge ingest first",
+    "success": "Brief KPIs populated",
+    "related": [
+      "/products/:id"
+    ]
+  },
+  "/products/:id/sales": {
+    "title": "Sales Action",
+    "how": "Product \u2192 Sales (editor default)",
+    "actions": "Discover leads; Qualify; Outreach (?tab=outreach); Open Pipeline",
+    "empty": "No leads \u2192 run discover after ingest",
+    "success": "Leads listed; outreach drafted",
+    "related": [
+      "/products/:id/pipeline",
+      "/products/:id"
+    ]
+  },
+  "/products/:id/pipeline": {
+    "title": "Pipeline",
+    "how": "Product \u2192 Pipeline",
+    "actions": "Create opportunity; Drag stage; Run technical eval",
+    "empty": "Empty pipeline \u2192 create opportunity",
+    "success": "Stage moves persist",
+    "related": [
+      "/products/:id/sales"
+    ]
+  },
+  "/products/:id/marketing": {
+    "title": "Marketing Studio",
+    "how": "Product \u2192 Marketing",
+    "actions": "Run Outbound Sprint; Campaigns; Strategy/Content deep-links into Forge",
+    "empty": "Needs ingested product",
+    "success": "Sprint/campaign created",
+    "related": [
+      "/products/:id"
+    ]
+  },
+  "/products/:id/partner": {
+    "title": "Partner Enablement",
+    "how": "Product \u2192 Partner",
+    "actions": "Read product profile; Co-branded outreach \u2192 Forge outreach",
+    "empty": "\u2014",
+    "success": "Profile readable; template opens",
+    "related": [
+      "/products/:id"
+    ]
+  },
+  "/dashboard/admin/portal-accounts": {
+    "title": "Portal Accounts",
+    "how": "Admin \u2192 Portal Accounts",
+    "actions": "Approve/reject customer/reseller/salesperson signups",
+    "empty": "No pending requests",
+    "success": "Request approved/rejected",
+    "related": [
+      "/dashboard"
+    ]
+  },
+  "/dashboard/admin/sales-activity": {
+    "title": "Sales Activity",
+    "how": "Admin \u2192 Sales Activity",
+    "actions": "Review rep\u2194client activity",
+    "empty": "No activity",
+    "success": "Activity rows",
+    "related": [
+      "/dashboard"
+    ]
+  },
+  "/dashboard/admin/tickets": {
+    "title": "Support Tickets",
+    "how": "Admin \u2192 Tickets",
+    "actions": "Triage customer tickets",
+    "empty": "No tickets",
+    "success": "Ticket updated",
+    "related": [
+      "/portal/customer"
+    ]
+  },
+  "/dashboard/admin/workflow-stages": {
+    "title": "Workflow Stages",
+    "how": "Admin \u2192 Workflow Stages",
+    "actions": "Add/edit custom Full Forge stages (Enterprise)",
+    "empty": "\u2014",
+    "success": "Stage saved",
+    "related": [
+      "/products/:id"
+    ]
+  },
+  "/dashboard/admin/danger": {
+    "title": "Danger Zone",
+    "how": "Admin \u2192 Danger Zone",
+    "actions": "Export tenant data; Purge ingested data (typed confirm)",
+    "empty": "Admin only",
+    "success": "Export downloads / purge confirmed",
+    "related": [
+      "/dashboard"
+    ]
+  },
+  "/portal/customer/login": {
+    "title": "Customer portal login",
+    "how": "`/portal/customer/login`",
+    "actions": "Sign in; Request access \u2192 signup",
+    "empty": "Pending approval",
+    "success": "Portal home",
+    "related": [
+      "/portal/customer",
+      "/portal/customer/signup"
+    ]
+  },
+  "/portal/customer/signup": {
+    "title": "Customer portal signup",
+    "how": "`/portal/customer/signup`",
+    "actions": "Submit signup request",
+    "empty": "\u2014",
+    "success": "Request pending admin approval",
+    "related": [
+      "/portal/customer/login"
+    ]
+  },
+  "/portal/customer": {
+    "title": "Customer portal",
+    "how": "`/portal/customer`",
+    "actions": "Open support ticket; Edit profile",
+    "empty": "Not approved \u2192 wait",
+    "success": "Ticket created",
+    "related": [
+      "/dashboard/admin/tickets"
+    ]
+  },
+  "/portal/reseller/login": {
+    "title": "Reseller portal login",
+    "how": "`/portal/reseller/login`",
+    "actions": "Sign in; Become a reseller",
+    "empty": "Pending approval",
+    "success": "Portal home",
+    "related": [
+      "/portal/reseller"
+    ]
+  },
+  "/portal/reseller/signup": {
+    "title": "Reseller portal signup",
+    "how": "`/portal/reseller/signup`",
+    "actions": "Submit signup request",
+    "empty": "\u2014",
+    "success": "Request pending",
+    "related": [
+      "/portal/reseller/login"
+    ]
+  },
+  "/portal/reseller": {
+    "title": "Reseller portal",
+    "how": "`/portal/reseller`",
+    "actions": "Register a deal; Edit profile",
+    "empty": "\u2014",
+    "success": "Deal registered",
+    "related": [
+      "/dashboard/admin/portal-accounts"
+    ]
+  },
+  "/portal/salesperson/login": {
+    "title": "Salesperson portal login",
+    "how": "`/portal/salesperson/login`",
+    "actions": "Sign in; Become a sales rep",
+    "empty": "Pending approval",
+    "success": "Portal home",
+    "related": [
+      "/portal/salesperson"
+    ]
+  },
+  "/portal/salesperson/signup": {
+    "title": "Salesperson portal signup",
+    "how": "`/portal/salesperson/signup`",
+    "actions": "Submit signup request",
+    "empty": "\u2014",
+    "success": "Request pending",
+    "related": [
+      "/portal/salesperson/login"
+    ]
+  },
+  "/portal/salesperson": {
+    "title": "Salesperson portal",
+    "how": "`/portal/salesperson`",
+    "actions": "View assigned leads/opportunities; Edit profile",
+    "empty": "No assignments",
+    "success": "Leads visible",
+    "related": [
+      "/dashboard/admin/sales-activity"
+    ]
+  }
+}
