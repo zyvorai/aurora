@@ -57,7 +57,7 @@ LOGIN_RESP=$(curl -sf -X POST "${API_BASE}/auth/login" \
   info "Login failed, attempting to register a new tenant..."
   LOGIN_RESP=$(curl -sf -X POST "${API_BASE}/auth/register" \
     -H "Content-Type: application/json" \
-    -d "{\"tenant_name\":\"Zyvor AI Labs\",\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\",\"full_name\":\"Marketing\"}") \
+    -d "{\"tenant_name\":\"Zyvor\",\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\",\"full_name\":\"Marketing\"}") \
     || error "register also failed — check API_BASE and that 'make start' is running"
 }
 TOKEN=$(echo "$LOGIN_RESP" | jq -r '.access_token')

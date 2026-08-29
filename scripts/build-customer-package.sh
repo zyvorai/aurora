@@ -66,7 +66,7 @@ keywords:
   - gtm
   - ai
 maintainers:
-  - name: Zyvor AI Labs
+  - name: Zyvor
     email: sales@zyvor.dev
 home: https://github.com/hypersdk/aurora
 EOF
@@ -77,7 +77,7 @@ cp packaging/docker-compose.trial.yml "${PKG_DIR}/"
 cp packaging/docker-compose.infra.trial.yml "${PKG_DIR}/"
 cp packaging/env.trial.example "${PKG_DIR}/.env.trial.example"
 cp -R k8s/*.yaml "${PKG_DIR}/k8s/" 2>/dev/null || true
-cp LICENSE "${PKG_DIR}/" 2>/dev/null || echo "Proprietary — Zyvor AI Labs. Contact sales@zyvor.dev" > "${PKG_DIR}/LICENSE"
+cp LICENSE "${PKG_DIR}/" 2>/dev/null || echo "Proprietary — Zyvor. Contact sales@zyvor.dev" > "${PKG_DIR}/LICENSE"
 sed "s/__VERSION__/${VERSION}/g" packaging/INSTALL.md.tmpl > "${PKG_DIR}/INSTALL.md"
 sed "s/__VERSION__/${VERSION}/g" packaging/AFTER-TRIAL.md.tmpl > "${PKG_DIR}/AFTER-TRIAL.md"
 sed "s/__VERSION__/${VERSION}/g" packaging/SSO.md.tmpl > "${PKG_DIR}/SSO.md"
