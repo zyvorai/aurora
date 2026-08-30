@@ -103,7 +103,7 @@ const RUN_GERUND: Partial<Record<ChainStageId, string>> = {
   proposal: 'drafting proposal',
 };
 
-/** Overall product state for the Forge header badge -- "needs sources",
+/** Overall product state for the Workspace header badge -- "needs sources",
  * "ingesting", "ready", etc. -- derived the same way as every other chain
  * label, never hand-set. */
 export function chainStatusLabel(stages: ChainStage[]): string {
@@ -113,7 +113,7 @@ export function chainStatusLabel(stages: ChainStage[]): string {
   return `needs ${next.label.toLowerCase()}`;
 }
 
-/** Where clicking a chain stage (in the rail or the Forge overview stepper)
+/** Where clicking a chain stage (in the rail or the Workspace overview stepper)
  * should navigate. sources/ingest/profile stay on Workspace Overview (which
  * already renders the sources panel); the rest route to the page/tab that
  * already owns that stage's action. */
