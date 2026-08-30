@@ -9,14 +9,12 @@ import { showToast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { dashboardActionsForRole, dashboardSubtitle, defaultProductRoute } from '@/lib/role-routing';
 import { PageHero } from '@/components/layout/PageHero';
-import { Card, CardBody, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import OnboardingChecklist from '@/components/OnboardingChecklist';
-import { SectionTitle, TextSmall } from '@/components/ui/Typography';
-import { cn } from '@/lib/cn';
+import { Text, TextSmall } from '@/components/ui/Typography';
 import { SkeletonHero, SkeletonCard } from '@/components/ui/Skeleton';
 
 export default function DashboardPage() {
@@ -106,19 +104,19 @@ export default function DashboardPage() {
   const isEmpty = productList.length === 0;
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-content mx-auto px-6 py-10 space-y-8">
       <PageHero
-        eyebrow="Products"
-        title={isEmpty ? 'Create your first product' : 'Your GTM workspace'}
+        eyebrow="Aurora"
+        title={isEmpty ? 'Create your first product' : 'Your products'}
         description={
           isEmpty
             ? 'Point Aurora at a website or docs URL. It builds a product profile, then your agents can sell from real knowledge.'
             : dashboardSubtitle(role)
         }
         actions={
-          <Button onClick={() => setShowCreate(true)}>
-            {isEmpty ? 'Create your first product' : '+ Onboard Product'}
-          </Button>
+          isEmpty ? undefined : (
+            <Button onClick={() => setShowCreate(true)}>+ Onboard product</Button>
+          )
         }
       />
 
@@ -129,58 +127,43 @@ export default function DashboardPage() {
       />
 
       {isEmpty ? null : (
-        <div className="grid md:grid-cols-2 gap-4">
-          {productList.map((p, i) => (
-              <Card
-                key={p.id}
-                elevated
-                hover
-                className={cn('animate-fade-up', `stagger-${Math.min(i + 1, 6)}`)}
+        <div className="rounded-[var(--radius-lg)] bg-background divide-y divide-border overflow-hidden animate-fade-up">
+          {productList.map((p) => (
+            <div key={p.id} className="flex items-center gap-4 px-5 py-3.5">
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface font-semibold text-body-sm text-foreground"
+                aria-hidden
               >
-                <CardBody>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-start gap-3">
-                      <span
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface font-semibold text-body-sm text-foreground"
-                        aria-hidden
-                      >
-                        {p.name.charAt(0).toUpperCase()}
-                      </span>
-                      <div>
-                        <SectionTitle as="h3">{p.name}</SectionTitle>
-                        {p.website_url && (
-                          <TextSmall className="mt-1 truncate">{p.website_url}</TextSmall>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant={p.profile_status === 'ready' ? 'success' : 'warning'}>
-                        {p.profile_status}
-                      </Badge>
-                      {canDelete && (
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(p)}
-                          disabled={deletingId === p.id}
-                          aria-label={`Remove ${p.name}`}
-                          title="Remove product"
-                          className="text-muted hover:text-danger transition-colors disabled:opacity-50"
-                        >
-                          {deletingId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </CardBody>
-                <CardFooter className="flex gap-2">
-                  <Link href={actions.primary.href(p.id)} className="flex-1">
-                    <Button className="w-full">{actions.primary.label}</Button>
-                  </Link>
-                  <Link href={actions.secondary.href(p.id)} className="flex-1">
-                    <Button variant="secondary" className="w-full">{actions.secondary.label}</Button>
-                  </Link>
-                </CardFooter>
-              </Card>
+                {p.name.charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <Text className="font-medium">{p.name}</Text>
+                {p.website_url && <TextSmall className="block truncate text-muted">{p.website_url}</TextSmall>}
+              </div>
+              <Badge variant={p.profile_status === 'ready' ? 'success' : 'warning'} className="shrink-0">
+                {p.profile_status}
+              </Badge>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Link href={actions.primary.href(p.id)}>
+                  <Button size="sm">{actions.primary.label}</Button>
+                </Link>
+                <Link href={actions.secondary.href(p.id)}>
+                  <Button size="sm" variant="secondary">{actions.secondary.label}</Button>
+                </Link>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p)}
+                    disabled={deletingId === p.id}
+                    aria-label={`Remove ${p.name}`}
+                    title="Remove product"
+                    className="p-1.5 text-muted hover:text-danger transition-colors disabled:opacity-50"
+                  >
+                    {deletingId === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}

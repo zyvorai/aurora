@@ -8,9 +8,6 @@ import { readStoredRole } from '@/lib/role-routing';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow,
-} from '@/components/ui/Table';
 import { TextMuted, TextSmall } from '@/components/ui/Typography';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -33,9 +30,7 @@ function locationLabel(source: ProductSource): string {
 interface SourcesPanelProps {
   productId: string;
   onIngestComplete?: () => void;
-  /** Lets a parent (e.g. Full Forge's "Import from GitHub" next-action) open the
-   * wizard pre-set to a kind without owning the wizard's own open/closed state --
-   * bump this to a new kind value to trigger it, cleared back to undefined after. */
+  /** Parent can open the wizard to a kind (e.g. GitHub) without owning open state. */
   externalOpenKind?: SourceKind;
   onExternalOpenHandled?: () => void;
 }
@@ -52,19 +47,20 @@ export default function SourcesPanel({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardKind, setWizardKind] = useState<SourceKind | undefined>(undefined);
+  const [message, setMessage] = useState<string | null>(null);
 
   function openWizard(kind?: SourceKind) {
     setWizardKind(kind);
     setWizardOpen(true);
   }
-  const [message, setMessage] = useState<string | null>(null);
 
   const role = readStoredRole();
   const canWrite = role === 'admin' || role === 'editor';
 
   const load = useCallback(() => {
     setLoading(true);
-    products.listSources(productId)
+    products
+      .listSources(productId)
       .then(setSources)
       .catch(() => setSources([]))
       .finally(() => setLoading(false));
@@ -144,16 +140,15 @@ export default function SourcesPanel({
   }
 
   return (
-    <section id="sources" className="space-y-4">
+    <section id="sources" className="space-y-5">
       <SectionHeader
-        label="Knowledge"
         title="Sources"
-        description="Add URLs, files, videos, spreadsheets, GitHub repos, OpenAPI specs, or database exports."
+        description="URLs, files, repos, and specs that ground every agent answer."
         action={
           canWrite ? (
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => openWizard()} disabled={busy}>
-                + Add source
+                Add source
               </Button>
               <Button
                 size="sm"
@@ -169,7 +164,7 @@ export default function SourcesPanel({
       />
 
       {canWrite && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {SOURCE_OPTIONS.map((opt) => (
             <button
               key={opt.kind}
@@ -177,7 +172,7 @@ export default function SourcesPanel({
               disabled={busy}
               onClick={() => openWizard(opt.kind)}
               title={opt.description}
-              className="font-mono text-xs text-muted border border-dashed border-border rounded-[6px] px-2 py-1 hover:border-primary hover:text-primary hover:border-solid transition-colors disabled:opacity-50"
+              className="text-[12px] text-muted px-3 py-1.5 rounded-full bg-surface hover:text-foreground hover:bg-[var(--hs-bg-alt)] transition-colors disabled:opacity-50"
             >
               {opt.label}
             </button>
@@ -185,11 +180,15 @@ export default function SourcesPanel({
         </div>
       )}
 
-      {message && <TextMuted>{message}</TextMuted>}
+      {message && <TextMuted className="text-[15px]">{message}</TextMuted>}
 
       {polling && (
         <ProgressBar
-          percent={sources.length ? (sources.filter((s) => s.status === 'completed').length / sources.length) * 100 : 5}
+          percent={
+            sources.length
+              ? (sources.filter((s) => s.status === 'completed').length / sources.length) * 100
+              : 5
+          }
           label="Ingesting sources…"
         />
       )}
@@ -200,55 +199,39 @@ export default function SourcesPanel({
         <EmptyState
           icon={FolderOpen}
           title="No sources yet"
-          description="Add a website URL, file, video, or other source to start building this product's knowledge base."
-          actions={canWrite ? [{ label: '+ Add source', onClick: () => openWizard() }] : undefined}
+          description="Add a website URL, file, or repo to start building this product's knowledge base."
+          actions={canWrite ? [{ label: 'Add source', onClick: () => openWizard() }] : undefined}
         />
       ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              {canWrite && <TableHeaderCell className="w-8">&nbsp;</TableHeaderCell>}
-              <TableHeaderCell>Name</TableHeaderCell>
-              <TableHeaderCell>Type</TableHeaderCell>
-              <TableHeaderCell>Location</TableHeaderCell>
-              <TableHeaderCell>Status</TableHeaderCell>
-              <TableHeaderCell className="text-right">Pages</TableHeaderCell>
-              {canWrite && <TableHeaderCell className="text-right">Actions</TableHeaderCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sources.map((s) => (
-              <TableRow key={s.id}>
-                {canWrite && (
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(s.id)}
-                      onChange={() => toggleSelect(s.id)}
-                      aria-label={`Select ${s.display_name ?? s.source_type}`}
-                    />
-                  </TableCell>
-                )}
-                <TableCell className="font-medium">
+        <ul className="rounded-[var(--radius-lg)] bg-surface divide-y divide-border overflow-hidden list-none m-0 p-0">
+          {sources.map((s) => (
+            <li key={s.id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4">
+              {canWrite && (
+                <input
+                  type="checkbox"
+                  className="shrink-0 mt-1 sm:mt-0"
+                  checked={selected.has(s.id)}
+                  onChange={() => toggleSelect(s.id)}
+                  aria-label={`Select ${s.display_name ?? s.source_type}`}
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-medium text-foreground truncate">
                   {s.display_name ?? s.source_type}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="default">{s.source_type}</Badge>
-                </TableCell>
-                <TableCell className="max-w-xs truncate text-muted">
-                  {locationLabel(s)}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant(s.status)}>{s.status}</Badge>
-                  {s.error_message && (
-                    <TextSmall className="block mt-1 text-warning">{s.error_message}</TextSmall>
-                  )}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
+                </p>
+                <p className="mt-0.5 text-[12px] text-muted truncate">{locationLabel(s)}</p>
+                {s.error_message && (
+                  <TextSmall className="block mt-1 text-warning">{s.error_message}</TextSmall>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Badge variant="default">{s.source_type}</Badge>
+                <Badge variant={statusVariant(s.status)}>{s.status}</Badge>
+                <span className="text-[12px] tabular-nums text-muted">
                   {s.pages_processed}/{s.pages_discovered}
-                </TableCell>
+                </span>
                 {canWrite && (
-                  <TableCell className="text-right space-x-2">
+                  <>
                     <Button
                       size="sm"
                       variant="secondary"
@@ -257,20 +240,15 @@ export default function SourcesPanel({
                     >
                       Ingest
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={busy}
-                      onClick={() => handleDelete(s.id)}
-                    >
+                    <Button size="sm" variant="ghost" disabled={busy} onClick={() => handleDelete(s.id)}>
                       Delete
                     </Button>
-                  </TableCell>
+                  </>
                 )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       {wizardOpen && (

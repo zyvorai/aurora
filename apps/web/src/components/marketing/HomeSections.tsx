@@ -1,8 +1,10 @@
+'use client';
+
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { Reveal } from '@/components/ui/Reveal';
 import styles from './marketing.module.css';
 
-const STATS = [
+const PROOF = [
   { label: 'Specialized agents', value: '11' },
   { label: 'Implementation phases', value: '12' },
   { label: 'Documented test cases', value: '223' },
@@ -11,22 +13,22 @@ const STATS = [
 
 const PIPELINE_STEPS = [
   {
-    step: 'Step 1',
+    step: '01',
     title: 'Discover',
     description: 'Point at a URL or docs — agents crawl and build a product profile automatically.',
   },
   {
-    step: 'Step 2',
+    step: '02',
     title: 'Extract',
     description: 'A searchable knowledge graph and RAG store ground every downstream answer.',
   },
   {
-    step: 'Step 3',
+    step: '03',
     title: 'Orchestrate',
     description: 'A supervisor routes work across dedicated Marketing, Sales, and Solution agents.',
   },
   {
-    step: 'Step 4',
+    step: '04',
     title: 'Publish & learn',
     description: 'Omnichannel publishing and analytics close the loop, feeding continuous learning.',
   },
@@ -50,46 +52,42 @@ const SHOWCASE = [
 export function HomeHero() {
   return (
     <section className={styles.hero}>
-      <div className={styles.wrap}>
-        <p className={styles.eyebrow}>GTM Orchestration Platform</p>
-        <h1 className={styles.heroHeadline}>
-          Turn your product into
-          <br />
-          an AI-powered GTM engine
-        </h1>
+      <div className={`${styles.wrap} ${styles.heroInner}`}>
+        <p className={styles.brandMark}>Aurora</p>
+        <h1 className={styles.heroHeadline}>Turn your product into an AI salesperson.</h1>
         <p className={styles.lede}>
-          Aurora onboards from a website or docs, builds a grounded knowledge graph, then runs AI
-          marketing, sales, and solution agents — enterprise-grade orchestration built for lean hardware.
+          Onboard from a website or docs. Build a grounded knowledge graph. Run marketing, sales, and
+          solution agents — quietly, in the background.
         </p>
         <div className={styles.heroBtnrow}>
           <Link href="/login" className={styles.btnPrimary}>
-            Get started free
-            <ArrowRight className="h-4 w-4" />
+            Get started
           </Link>
           <Link href="/features" className={styles.linkCta}>
-            Explore features <span aria-hidden>›</span>
+            Learn more <span aria-hidden>›</span>
           </Link>
         </div>
-        <p className={styles.heroNote}>No credit card required — onboard your first product in minutes</p>
       </div>
     </section>
   );
 }
 
-export function HomeStatsBand() {
+export function HomeProofBand() {
   return (
-    <section className={styles.statsBand}>
-      <div className={styles.wrap}>
-        <div className={styles.statsGrid}>
-          {STATS.map((s) => (
-            <div key={s.label}>
-              <div className="text-stat-value">{s.value}</div>
-              <div className="text-stat-label mt-1">{s.label}</div>
-            </div>
-          ))}
+    <Reveal>
+      <section className={styles.proofBand} aria-label="Platform proof points">
+        <div className={styles.wrap}>
+          <div className={styles.proofGrid}>
+            {PROOF.map((s) => (
+              <div key={s.label} className={styles.proofItem}>
+                <div className={styles.proofValue}>{s.value}</div>
+                <div className={styles.proofLabel}>{s.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </Reveal>
   );
 }
 
@@ -97,20 +95,22 @@ export function HomeShowcaseBands() {
   return (
     <>
       {SHOWCASE.map((band) => (
-        <section key={band.title} className={band.tint ? styles.showcaseTint : styles.showcase}>
-          <div className={styles.wrap}>
-            <div className={styles.showcaseInner}>
-              <div className={styles.showcaseCopy}>
-                <h2 className={styles.hSec}>{band.title}</h2>
-                <p className={styles.sectionLede}>{band.lede}</p>
-                <Link href={band.href} className={styles.linkCta}>
-                  Learn more <span aria-hidden>›</span>
-                </Link>
+        <Reveal key={band.title}>
+          <section className={band.tint ? styles.showcaseTint : styles.showcase}>
+            <div className={styles.wrap}>
+              <div className={styles.showcaseInner}>
+                <div className={styles.showcaseCopy}>
+                  <h2 className={styles.hSec}>{band.title}</h2>
+                  <p className={styles.sectionLede}>{band.lede}</p>
+                  <Link href={band.href} className={styles.linkCta}>
+                    Learn more <span aria-hidden>›</span>
+                  </Link>
+                </div>
+                <div className={styles.showcaseVisual} aria-hidden />
               </div>
-              <div className={styles.showcaseVisual} aria-hidden />
             </div>
-          </div>
-        </section>
+          </section>
+        </Reveal>
       ))}
     </>
   );
@@ -118,40 +118,45 @@ export function HomeShowcaseBands() {
 
 export function HomePipelineSection() {
   return (
-    <section className={styles.section}>
-      <div className={styles.wrap}>
-        <div className={styles.sectionHead}>
-          <h2 className={styles.hSec}>How it works</h2>
-          <p className={styles.sectionLede}>
-            Customer sources → discovery → knowledge graph → agents → publishing → analytics
-          </p>
+    <Reveal>
+      <section className={`${styles.section} ${styles.sectionTint}`}>
+        <div className={styles.wrap}>
+          <div className={styles.sectionHead}>
+            <h2 className={styles.hSec}>How it works</h2>
+            <p className={styles.sectionLede}>
+              From a URL to live GTM agents — one continuous chain.
+            </p>
+          </div>
+          <div className={styles.pipelineList}>
+            {PIPELINE_STEPS.map((step) => (
+              <article key={step.title} className={styles.pipelineStep}>
+                <p className={styles.tileStep}>{step.step}</p>
+                <h3 className={styles.tileTitle}>{step.title}</h3>
+                <p className={styles.tileBody}>{step.description}</p>
+              </article>
+            ))}
+          </div>
         </div>
-        <div className={styles.tilesGrid}>
-          {PIPELINE_STEPS.map((step) => (
-            <article key={step.title} className={styles.tile}>
-              <p className={styles.tileStep}>{step.step}</p>
-              <h3 className={styles.tileTitle}>{step.title}</h3>
-              <p className={styles.tileBody}>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
+      </section>
+    </Reveal>
   );
 }
 
 export function HomeInkCta() {
   return (
-    <section className={styles.inkSection}>
-      <div className={styles.wrap}>
-        <h2 className={styles.inkHeadline}>Ready to turn your product into a salesperson?</h2>
-        <p className={styles.inkLede}>Onboard your first product and generate a GTM strategy in minutes.</p>
-        <Link href="/login" className={styles.btnPrimary}>
-          Get started free
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    </section>
+    <Reveal>
+      <section className={styles.inkSection}>
+        <div className={styles.wrap}>
+          <h2 className={styles.inkHeadline}>Ready when you are.</h2>
+          <p className={styles.inkLede}>
+            Onboard your first product and generate a GTM strategy in minutes.
+          </p>
+          <Link href="/login" className={styles.btnPrimary}>
+            Get started
+          </Link>
+        </div>
+      </section>
+    </Reveal>
   );
 }
 
@@ -159,7 +164,7 @@ export function HomeSections() {
   return (
     <>
       <HomeHero />
-      <HomeStatsBand />
+      <HomeProofBand />
       <HomeShowcaseBands />
       <HomePipelineSection />
       <HomeInkCta />

@@ -3,6 +3,19 @@
 import type { ChainStage } from '@/lib/chain';
 import { cn } from '@/lib/cn';
 
+function statusMeta(status: ChainStage['status']): string {
+  switch (status) {
+    case 'idle':
+      return 'Locked';
+    case 'need':
+      return 'Waiting on you';
+    case 'run':
+      return 'Running';
+    case 'done':
+      return 'Done';
+  }
+}
+
 const STATUS_DOT: Record<ChainStage['status'], string> = {
   idle: 'bg-border',
   need: 'bg-warning',
@@ -10,28 +23,12 @@ const STATUS_DOT: Record<ChainStage['status'], string> = {
   done: 'bg-success',
 };
 
-const STATUS_BAR: Record<ChainStage['status'], string> = {
-  idle: 'bg-border',
-  need: 'bg-warning',
-  run: 'bg-primary',
-  done: 'bg-success',
-};
-
-const STATUS_LABEL_CLASS: Record<ChainStage['status'], string> = {
+const TITLE_CLASS: Record<ChainStage['status'], string> = {
   idle: 'text-muted',
-  need: 'text-warning',
-  run: 'text-primary',
+  need: 'text-foreground',
+  run: 'text-foreground',
   done: 'text-foreground',
 };
-
-function statusMeta(status: ChainStage['status']): string {
-  switch (status) {
-    case 'idle': return 'locked';
-    case 'need': return 'waiting on you';
-    case 'run': return 'running';
-    case 'done': return 'done';
-  }
-}
 
 export function StageChain({
   stages,
@@ -43,39 +40,38 @@ export function StageChain({
   onSelect?: (id: ChainStage['id']) => void;
 }) {
   return (
-    <div className="flex overflow-x-auto rounded-[var(--radius-md)] border border-border bg-surface p-0.5">
-      {stages.map((stage, i) => (
-        <button
-          key={stage.id}
-          type="button"
-          onClick={() => onSelect?.(stage.id)}
-          className={cn(
-            'relative flex-1 min-w-[112px] text-left px-3 py-2.5 rounded-[7px] transition-colors',
-            'hover:bg-[var(--surface-elevated)]',
-            activeId === stage.id && 'bg-[var(--surface-elevated)] ring-1 ring-inset ring-border',
-            i > 0 && 'border-l border-border',
-          )}
-        >
-          <div className="font-mono text-[10px] text-muted">{String(i + 1).padStart(2, '0')}</div>
-          <div className={cn('mt-1 text-xs font-medium truncate', STATUS_LABEL_CLASS[stage.status])}>
-            {stage.label}
-          </div>
-          <div className="mt-2 h-[3px] w-full overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-            <div
+    <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 list-none m-0 p-0">
+      {stages.map((stage, i) => {
+        const active = activeId === stage.id;
+        return (
+          <li key={stage.id}>
+            <button
+              type="button"
+              onClick={() => onSelect?.(stage.id)}
               className={cn(
-                'h-full rounded-full transition-all duration-700',
-                STATUS_BAR[stage.status],
-                stage.status === 'run' && 'chain-meter-run',
+                'w-full text-left rounded-[var(--radius-lg)] bg-surface px-4 py-4 transition-colors',
+                'hover:bg-[var(--hs-bg-alt)]',
+                active && 'ring-1 ring-inset ring-border bg-[var(--hs-bg-alt)]',
+                stage.status === 'idle' && 'opacity-55',
               )}
-              style={{ width: stage.status === 'done' ? '100%' : stage.status === 'run' ? '55%' : '0%' }}
-            />
-          </div>
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', STATUS_DOT[stage.status])} aria-hidden />
-            <span className="font-mono text-[10px] text-muted truncate">{statusMeta(stage.status)}</span>
-          </div>
-        </button>
-      ))}
-    </div>
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-[12px] tabular-nums text-muted">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span
+                  className={cn('mt-1 h-2 w-2 rounded-full shrink-0', STATUS_DOT[stage.status])}
+                  aria-hidden
+                />
+              </div>
+              <p className={cn('mt-2 text-[17px] font-semibold tracking-[-0.02em] leading-tight', TITLE_CLASS[stage.status])}>
+                {stage.label}
+              </p>
+              <p className="mt-1.5 text-[12px] text-muted">{statusMeta(stage.status)}</p>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

@@ -114,7 +114,7 @@ export function chainStatusLabel(stages: ChainStage[]): string {
 }
 
 /** Where clicking a chain stage (in the rail or the Forge overview stepper)
- * should navigate. sources/ingest/profile stay on Full Forge's Overview (which
+ * should navigate. sources/ingest/profile stay on Workspace Overview (which
  * already renders the sources panel); the rest route to the page/tab that
  * already owns that stage's action. */
 export function chainStageHref(productId: string, stageId: ChainStageId): string {

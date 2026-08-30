@@ -25,11 +25,11 @@ interface PageHeroProps {
 export function PageHero({ eyebrow, title, description, actions, stats, className }: PageHeroProps) {
   return (
     <section className={cn('tahoe-hero space-y-6', className)}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2 min-w-0 max-w-2xl">
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-          <PageTitle>{title}</PageTitle>
-          {description && <TextLead>{description}</TextLead>}
+          <PageTitle className="tracking-[-0.03em]">{title}</PageTitle>
+          {description && <TextLead className="text-[17px] leading-[1.47]">{description}</TextLead>}
         </div>
         {actions && <div className="flex flex-wrap gap-2 shrink-0">{actions}</div>}
       </div>

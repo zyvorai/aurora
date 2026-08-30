@@ -1,23 +1,24 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Target } from 'lucide-react';
 import { products, type ExecutiveBrief, type PipelineLead } from '@/lib/api';
 import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
-import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge, tierBadgeVariant } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import {
   Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell,
 } from '@/components/ui/Table';
-import { Eyebrow, Stat, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
-import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
+import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 export default function SalesPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [brief, setBrief] = useState<ExecutiveBrief | null>(null);
   const [leads, setLeads] = useState<PipelineLead[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,7 +42,7 @@ export default function SalesPage() {
     setMessage(null);
     try {
       const res = await products.discoverLeads(id, { focus_industries: ['fintech', 'healthtech'], max_leads: 10 });
-      setMessage(`Discovered ${res.discovered_count} accounts (no LLM)`);
+      setMessage(`Discovered ${res.discovered_count} accounts`);
       loadLeads();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Discovery failed');
@@ -65,139 +66,127 @@ export default function SalesPage() {
     }
   }
 
-  const actions = [
-    { label: 'Discover leads', onClick: runDiscover },
-    { label: 'Qualify leads', onClick: runQualify },
-    { label: 'Outreach', href: `/products/${id}?tab=outreach`, primary: true },
-    { label: 'Pipeline', href: `/products/${id}/pipeline` },
-  ];
-
   return (
-    <div className="space-y-8 animate-fade-up">
+    <div className="space-y-10 animate-fade-up">
       <PageHero
         eyebrow="Sales"
-        title="Sales Action"
-        description="Qualified leads, outreach, and proposals — discovery and scoring run on rules, not a model, so the same input always gives the same output."
-        icon={WORKSPACE_ICONS.sales}
-        accent={WORKSPACE_COLORS.sales}
+        title="Sales"
+        description="Discover, qualify, and reach out — rules-based scoring so the same input always gives the same output."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={loading || !profileBuilt}
+              onClick={runDiscover}
+              title={!profileBuilt ? 'Build the product profile in Workspace first' : undefined}
+            >
+              Discover
+            </Button>
+            <Button size="sm" variant="secondary" disabled={loading || !profileBuilt} onClick={runQualify}>
+              Qualify
+            </Button>
+            <Link href={`/products/${id}?tab=outreach`}>
+              <Button size="sm">Outreach</Button>
+            </Link>
+            <Link href={`/products/${id}/pipeline`}>
+              <Button size="sm" variant="secondary">
+                Pipeline
+              </Button>
+            </Link>
+          </div>
+        }
       />
 
       {brief && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-y border-border py-6">
           {[
             { label: 'Accounts found', value: brief.kpis.accounts_found },
             { label: 'Qualified', value: brief.kpis.qualified },
             { label: 'Conversations', value: brief.kpis.conversations },
             { label: 'Agent runs', value: brief.kpis.agent_runs },
           ].map((kpi) => (
-            <Card key={kpi.label} elevated>
-              <CardBody className="py-4">
-                <Stat label={kpi.label} value={kpi.value} />
-              </CardBody>
-            </Card>
+            <div key={kpi.label}>
+              <p className="text-[28px] font-semibold tracking-[-0.03em] tabular-nums text-foreground leading-none">
+                {kpi.value}
+              </p>
+              <p className="mt-2 text-[12px] text-muted">{kpi.label}</p>
+            </div>
           ))}
         </div>
       )}
 
       {brief && !profileBuilt && (
-        <Card elevated className="border-warning/30">
-          <CardBody className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-foreground">Discover needs a product profile</h2>
-              <p className="mt-1 text-body-sm text-muted max-w-[64ch]">
-                Scoring compares each account against what this product actually does. Until the profile is
-                built there is nothing to compare against.
-              </p>
-              <p className="mt-2 font-mono text-xs text-muted">blocked by · ingest → product profile</p>
-            </div>
-            <Link href={`/products/${id}`}>
-              <Button>Go to Forge</Button>
-            </Link>
-          </CardBody>
-        </Card>
+        <div className="rounded-[var(--radius-lg)] bg-surface px-6 py-8 sm:px-8 flex flex-col sm:flex-row sm:items-center gap-5">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-foreground">
+              Discover needs a product profile
+            </h2>
+            <p className="mt-2 text-[15px] leading-[1.47] text-muted max-w-[52ch]">
+              Scoring compares each account against what this product actually does. Build the profile in
+              Workspace first.
+            </p>
+            <p className="mt-3 text-[12px] text-muted">Blocked by ingest → product profile</p>
+          </div>
+          <Link href={`/products/${id}`}>
+            <Button size="lg">Open Workspace</Button>
+          </Link>
+        </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {actions.map((action) => {
-          const disabled = action.label === 'Discover leads' && !profileBuilt;
-          return action.href ? (
-            <Link key={action.label} href={action.href}>
-              <Card elevated className="h-full hover:border-primary/40 transition-colors cursor-pointer">
-                <CardBody className="py-4 text-center">
-                  <Text className="font-medium text-center">{action.label}</Text>
-                </CardBody>
-              </Card>
-            </Link>
-          ) : (
-            <button
-              key={action.label}
-              type="button"
-              disabled={loading || disabled}
-              onClick={action.onClick}
-              title={disabled ? 'Build the product profile in Forge first' : undefined}
-              className="text-left disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Card elevated className="h-full hover:border-primary/40 transition-colors">
-                <CardBody className="py-4 text-center">
-                  <Text className="font-medium text-center">{action.label}</Text>
-                </CardBody>
-              </Card>
-            </button>
-          );
-        })}
-      </div>
-
-      {message && <TextMuted>{message}</TextMuted>}
+      {message && <TextMuted className="text-[15px]">{message}</TextMuted>}
 
       <section>
-        <SectionHeader label="Pipeline" title="Qualified leads" />
+        <SectionHeader title="Qualified leads" />
         {leads.length > 0 ? (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableHeaderCell>Company</TableHeaderCell>
-                <TableHeaderCell>Industry</TableHeaderCell>
-                <TableHeaderCell className="text-right">Score</TableHeaderCell>
-                <TableHeaderCell className="text-center">Tier</TableHeaderCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {leads.map((lead) => (
-                <TableRow
-                  key={lead.account_id}
-                  onClick={() => setSelectedLead(lead)}
-                  className="cursor-pointer hover:bg-gtm-bg/60"
-                >
-                  <TableCell className="font-medium">{lead.company_name}</TableCell>
-                  <TableCell className="text-muted">{lead.industry ?? '—'}</TableCell>
-                  <TableCell className="text-right">
-                    {lead.score ? Math.round(lead.score) : '—'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={tierBadgeVariant(lead.tier)}>{lead.tier}</Badge>
-                  </TableCell>
+          <div className="rounded-[var(--radius-lg)] bg-surface overflow-hidden">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell>Company</TableHeaderCell>
+                  <TableHeaderCell>Industry</TableHeaderCell>
+                  <TableHeaderCell className="text-right">Score</TableHeaderCell>
+                  <TableHeaderCell className="text-center">Tier</TableHeaderCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow
+                    key={lead.account_id}
+                    onClick={() => setSelectedLead(lead)}
+                    className="cursor-pointer hover:bg-background/60"
+                  >
+                    <TableCell className="font-medium">{lead.company_name}</TableCell>
+                    <TableCell className="text-muted">{lead.industry ?? '—'}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {lead.score ? Math.round(lead.score) : '—'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={tierBadgeVariant(lead.tier)}>{lead.tier}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
-          <Card>
-            <CardBody>
-              <TextMuted>
-                {profileBuilt ? (
-                  <>
-                    No leads yet. Run <strong className="text-foreground">Discover leads</strong>, then{' '}
-                    <strong className="text-foreground">Qualify leads</strong>, or start an Outbound Sprint from Marketing.
-                  </>
-                ) : (
-                  <>
-                    No leads yet — Discover and Qualify both run after the product profile exists. Build it in{' '}
-                    <Link href={`/products/${id}`} className="text-primary hover:underline">Forge</Link> first.
-                  </>
-                )}
-              </TextMuted>
-            </CardBody>
-          </Card>
+          <EmptyState
+            icon={Target}
+            title="No leads yet"
+            description={
+              profileBuilt
+                ? 'Run Discover, then Qualify — or start an Outbound Sprint from Marketing.'
+                : 'Discover and Qualify run after the product profile exists. Build it in Workspace first.'
+            }
+            actions={
+              profileBuilt
+                ? [
+                    { label: 'Discover leads', onClick: runDiscover },
+                    { label: 'Qualify leads', onClick: runQualify, primary: false },
+                  ]
+                : [{ label: 'Open Workspace', onClick: () => router.push(`/products/${id}`) }]
+            }
+          />
         )}
       </section>
 
@@ -235,7 +224,10 @@ export default function SalesPage() {
                 <Eyebrow className="mb-2">Scoring factors</Eyebrow>
                 <ul className="space-y-1.5">
                   {Object.entries(selectedLead.factors).map(([factor, weight]) => (
-                    <li key={factor} className="flex justify-between text-sm border-b border-gtm-border/50 pb-1.5">
+                    <li
+                      key={factor}
+                      className="flex justify-between text-sm border-b border-border/50 pb-1.5"
+                    >
                       <span className="text-muted capitalize">{factor.replace(/_/g, ' ')}</span>
                       <span className="font-medium tabular-nums">+{String(weight)}</span>
                     </li>
@@ -247,7 +239,9 @@ export default function SalesPage() {
               <Link href={`/products/${id}?tab=outreach`} className="flex-1">
                 <Button className="w-full">Draft outreach</Button>
               </Link>
-              <Button variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button>
+              <Button variant="secondary" onClick={() => setSelectedLead(null)}>
+                Close
+              </Button>
             </div>
           </div>
         )}

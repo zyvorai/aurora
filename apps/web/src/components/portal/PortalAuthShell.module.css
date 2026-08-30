@@ -1,0 +1,92 @@
+.shell {
+  position: relative;
+  min-height: calc(100vh - var(--nav-h, 44px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2.5rem, 6vw, 4rem) 1.25rem;
+  overflow: hidden;
+}
+
+.atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(204, 66, 10, 0.06), transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
+}
+
+:global(html.dark-theme) .atmosphere {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(240, 88, 58, 0.1), transparent 55%),
+    linear-gradient(180deg, #000000 0%, #1d1d1f 100%);
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 380px);
+  text-align: center;
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.wordmark {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  font-size: clamp(2.5rem, 6vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--hs-accent);
+  text-decoration: none;
+  font-family: var(--font-display);
+}
+
+.wordmark:hover {
+  opacity: 0.85;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted-foreground);
+}
+
+.title {
+  margin: 0 0 1.75rem;
+  font-size: clamp(1.375rem, 3vw, 1.625rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--foreground);
+  font-family: var(--font-display);
+}
+
+.panel {
+  text-align: left;
+}
+
+.panel :global(a) {
+  color: var(--accent-blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inner {
+    animation: none;
+  }
+}

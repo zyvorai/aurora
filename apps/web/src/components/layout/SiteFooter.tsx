@@ -28,23 +28,21 @@ const FOOTER_COLUMNS = [
 export function SiteFooter() {
   return (
     <footer className="bg-[var(--hs-bg-alt)] border-t border-border mt-auto">
-      <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] pt-12 pb-8 grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center text-white text-[10px] font-bold">
-              A
-            </div>
-            <span className="font-semibold text-sm text-foreground">Aurora</span>
-          </div>
-          <p className="text-xs text-muted leading-relaxed">GTM Orchestration Platform</p>
+          <p className="text-[21px] font-semibold tracking-[-0.02em] text-foreground mb-2">Aurora</p>
+          <p className="text-[12px] text-muted leading-relaxed">GTM orchestration</p>
         </div>
         {FOOTER_COLUMNS.map((col) => (
           <div key={col.title}>
-            <p className="text-xs font-semibold text-foreground mb-3">{col.title}</p>
-            <ul className="space-y-2">
+            <p className="text-[12px] font-semibold text-foreground mb-3">{col.title}</p>
+            <ul className="space-y-2.5">
               {col.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-xs text-muted hover:text-foreground transition-colors">
+                <li key={`${col.title}-${link.label}`}>
+                  <Link
+                    href={link.href}
+                    className="text-[12px] text-muted hover:text-foreground transition-colors"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -54,8 +52,10 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-border">
-        <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] py-4 flex flex-wrap gap-x-4 gap-y-1">
-          <span className="text-xs text-muted">Copyright © {new Date().getFullYear()} Aurora. All rights reserved.</span>
+        <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] py-4">
+          <span className="text-[12px] text-muted">
+            Copyright © {new Date().getFullYear()} Aurora. All rights reserved.
+          </span>
         </div>
       </div>
     </footer>

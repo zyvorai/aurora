@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { MarketingLayout } from '@/components/layout/MarketingLayout';
-import { Card, CardBody } from '@/components/ui/Card';
+import { PortalAuthShell } from '@/components/portal/PortalAuthShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { TextSmall } from '@/components/ui/Typography';
@@ -50,95 +50,84 @@ function SignupForm() {
 
   if (submitted) {
     return (
-      <Card elevated>
-        <CardBody className="p-8 text-center">
-          <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-4" aria-hidden />
-          <h1 className="text-xl font-semibold mb-2">Request received</h1>
-          <p className="text-muted text-body-sm">
-            An administrator will review your sales rep application. You&apos;ll be able to sign
-            in once approved.
-          </p>
-          {documentUploadError && (
-            <p className="text-danger text-body-sm mt-3">{documentUploadError}</p>
-          )}
-        </CardBody>
-      </Card>
+      <div className="text-center py-2">
+        <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-4" aria-hidden />
+        <h2 className="text-xl font-semibold mb-2">Request received</h2>
+        <p className="text-muted text-body-sm">
+          An administrator will review your sales rep application. You&apos;ll be able to sign in
+          once approved.
+        </p>
+        {documentUploadError && <p className="text-danger text-body-sm mt-3">{documentUploadError}</p>}
+      </div>
     );
   }
 
   return (
-    <Card elevated>
-      <CardBody className="p-8">
-        <h1 className="text-[28px] font-semibold tracking-tight mb-6">Become a sales rep</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="text"
-            placeholder="Tenant slug"
-            required
-            value={form.tenant_slug}
-            onChange={(e) => setForm({ ...form, tenant_slug: e.target.value })}
-          />
-          <Input
-            type="text"
-            placeholder="Your name"
-            value={form.contact_name}
-            onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
-          />
-          <Input
-            type="text"
-            placeholder="Territory (optional)"
-            value={form.territory}
-            onChange={(e) => setForm({ ...form, territory: e.target.value })}
-          />
-          <Input
-            type="email"
-            placeholder="Email"
-            required
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            required
-            minLength={8}
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-          <div>
-            <label className="text-body-sm text-muted mb-1.5 block">
-              Proof of business (optional)
-            </label>
-            <input
-              type="file"
-              accept=".pdf,.png,.jpg,.jpeg"
-              onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
-              className="w-full text-body-sm text-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--glass-bg)] file:text-foreground hover:file:bg-[var(--glass-bg-elevated)] file:cursor-pointer cursor-pointer"
-            />
-          </div>
-          {error && (
-            <div className="flex items-center gap-2 bg-danger/10 border border-danger/30 rounded-[var(--radius-md)] p-3 login-shake">
-              <AlertCircle className="w-4 h-4 text-danger shrink-0" aria-hidden />
-              <TextSmall className="text-danger">{error}</TextSmall>
-            </div>
-          )}
-          <Button type="submit" disabled={loading} className="w-full" size="lg">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply as Sales Rep'}
-          </Button>
-        </form>
-      </CardBody>
-    </Card>
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Input
+        type="text"
+        placeholder="Tenant slug"
+        required
+        value={form.tenant_slug}
+        onChange={(e) => setForm({ ...form, tenant_slug: e.target.value })}
+      />
+      <Input
+        type="text"
+        placeholder="Your name"
+        value={form.contact_name}
+        onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
+      />
+      <Input
+        type="text"
+        placeholder="Territory (optional)"
+        value={form.territory}
+        onChange={(e) => setForm({ ...form, territory: e.target.value })}
+      />
+      <Input
+        type="email"
+        placeholder="Email"
+        required
+        value={form.email}
+        onChange={(e) => setForm({ ...form, email: e.target.value })}
+      />
+      <Input
+        type="password"
+        placeholder="Password"
+        required
+        minLength={8}
+        value={form.password}
+        onChange={(e) => setForm({ ...form, password: e.target.value })}
+      />
+      <div>
+        <label className="text-body-sm text-muted mb-1.5 block">Proof of business (optional)</label>
+        <input
+          type="file"
+          accept=".pdf,.png,.jpg,.jpeg"
+          onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
+          className="w-full text-body-sm text-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--glass-bg)] file:text-foreground hover:file:bg-[var(--glass-bg-elevated)] file:cursor-pointer cursor-pointer"
+        />
+      </div>
+      {error && (
+        <div className="flex items-center gap-2 bg-danger/10 rounded-[var(--radius-md)] p-3 login-shake">
+          <AlertCircle className="w-4 h-4 text-danger shrink-0" aria-hidden />
+          <TextSmall className="text-danger">{error}</TextSmall>
+        </div>
+      )}
+      <Button type="submit" disabled={loading} className="w-full" size="lg">
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply as sales rep'}
+      </Button>
+    </form>
   );
 }
 
 export default function SalesPersonSignupPage() {
   return (
     <MarketingLayout>
-      <div className="max-w-[480px] mx-auto px-5 py-12">
+      <PortalAuthShell eyebrow="Sales portal" title="Become a sales rep">
         <Suspense fallback={null}>
           <SignupForm />
         </Suspense>
-      </div>
+      </PortalAuthShell>
     </MarketingLayout>
   );
 }

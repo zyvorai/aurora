@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Moon, Sun } from 'lucide-react';
 import { admin, auth, type AdminPlanInfo, type SuppressionEntry } from '@/lib/api';
@@ -9,14 +9,14 @@ import { readStoredRole } from '@/lib/role-routing';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHero } from '@/components/layout/PageHero';
-import { SectionHeader } from '@/components/layout/SectionHeader';
-import { Card, CardBody } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 import { SkeletonText } from '@/components/ui/Skeleton';
+import { cn } from '@/lib/cn';
 
 interface CurrentUser {
   id: string;
@@ -24,6 +24,44 @@ interface CurrentUser {
   full_name: string;
   role: string;
   tenant_id: string;
+}
+
+function SettingsGroup({ label, danger, children }: { label: string; danger?: boolean; children: ReactNode }) {
+  return (
+    <section>
+      <Eyebrow className="mb-2 px-1">{label}</Eyebrow>
+      <div
+        className={cn(
+          'rounded-[var(--radius-lg)] bg-background divide-y divide-border overflow-hidden',
+          danger && 'ring-1 ring-danger/30',
+        )}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function SettingsRow({
+  title,
+  description,
+  value,
+  action,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  value?: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+      <div className="min-w-0">
+        <Text>{title}</Text>
+        {description && <TextSmall className="mt-0.5 block text-muted">{description}</TextSmall>}
+      </div>
+      {(value || action) && <div className="shrink-0">{value ?? action}</div>}
+    </div>
+  );
 }
 
 export default function SettingsPage() {
@@ -64,184 +102,125 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
+    <div className="max-w-2xl mx-auto px-6 py-10 space-y-8 animate-fade-up">
       <PageHero eyebrow="Account" title="Settings" description="Manage your account and workspace preferences." />
 
-      <section>
-        <SectionHeader label="Account" title="Your profile" />
-        <Card elevated>
-          <CardBody className="space-y-3">
-            {user ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <TextMuted>Name</TextMuted>
-                  <Text>{user.full_name || '—'}</Text>
-                </div>
-                <div className="flex items-center justify-between">
-                  <TextMuted>Email</TextMuted>
-                  <Text>{user.email}</Text>
-                </div>
-                <div className="flex items-center justify-between">
-                  <TextMuted>Role</TextMuted>
-                  <Badge variant="default" className="capitalize">{user.role}</Badge>
-                </div>
-              </>
-            ) : (
-              <SkeletonText lines={2} />
-            )}
-          </CardBody>
-        </Card>
-      </section>
+      <SettingsGroup label="Account">
+        {user ? (
+          <>
+            <SettingsRow title="Name" value={<TextMuted>{user.full_name || '—'}</TextMuted>} />
+            <SettingsRow title="Email" value={<TextMuted>{user.email}</TextMuted>} />
+            <SettingsRow title="Role" value={<Badge variant="default" className="capitalize">{user.role}</Badge>} />
+          </>
+        ) : (
+          <div className="px-5 py-4"><SkeletonText lines={2} /></div>
+        )}
+      </SettingsGroup>
 
-      <section>
-        <SectionHeader label="Preferences" title="Appearance" />
-        <Card elevated>
-          <CardBody className="flex items-center justify-between">
-            <div>
-              <Text>Theme</Text>
-              <TextSmall className="text-muted">Switch between dark and light mode.</TextSmall>
-            </div>
-            <Button variant="secondary" onClick={toggleTheme}>
+      <SettingsGroup label="Preferences">
+        <SettingsRow
+          title="Appearance"
+          description="Switch between dark and light mode."
+          action={
+            <Button variant="secondary" size="sm" onClick={toggleTheme}>
               {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
               {theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
             </Button>
-          </CardBody>
-        </Card>
-      </section>
+          }
+        />
+      </SettingsGroup>
 
-      <section>
-        <SectionHeader label="Account" title="Plan usage" />
-        <Card elevated>
-          <CardBody className="space-y-3">
-            {plan?.features && plan?.usage ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <TextMuted>Plan</TextMuted>
-                  <Badge variant="default" className="capitalize">{plan.plan}</Badge>
-                </div>
-                <ProgressBar
-                  percent={plan.features.products > 0 ? (plan.usage.products_used / plan.features.products) * 100 : 0}
-                  label={`Products (${plan.usage.products_used}/${plan.features.products})`}
-                />
-              </>
-            ) : (
-              <SkeletonText lines={2} />
-            )}
-          </CardBody>
-        </Card>
-      </section>
+      <SettingsGroup label="Plan">
+        {plan?.features && plan?.usage ? (
+          <>
+            <SettingsRow title="Plan" value={<Badge variant="default" className="capitalize">{plan.plan}</Badge>} />
+            <div className="px-5 py-4">
+              <ProgressBar
+                percent={plan.features.products > 0 ? (plan.usage.products_used / plan.features.products) * 100 : 0}
+                label={`Products (${plan.usage.products_used}/${plan.features.products})`}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="px-5 py-4"><SkeletonText lines={2} /></div>
+        )}
+      </SettingsGroup>
 
-      <section>
-        <SectionHeader label="Compliance" title="Suppression list" description="Emails opted out of outreach — checked before every send." />
-        <Card elevated>
-          <CardBody className="space-y-4">
-            {isAdmin || readStoredRole() === 'editor' ? (
-              <form onSubmit={handleAddSuppression} className="flex gap-2">
-                <Input
-                  type="email"
-                  value={suppressEmail}
-                  onChange={(e) => setSuppressEmail(e.target.value)}
-                  placeholder="prospect@example.com"
-                  className="flex-1"
-                />
-                <Button type="submit" size="sm" disabled={addingSuppression}>
-                  {addingSuppression ? 'Adding…' : 'Add'}
-                </Button>
-              </form>
-            ) : null}
-            {suppressions.length === 0 ? (
-              <TextMuted>No suppressed addresses.</TextMuted>
-            ) : (
-              <ul className="space-y-1">
-                {suppressions.map((s) => (
-                  <li key={s.id} className="flex items-center justify-between text-body-sm">
-                    <span>{s.email}</span>
-                    <TextSmall className="text-muted">{s.reason}</TextSmall>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardBody>
-        </Card>
-      </section>
+      <SettingsGroup label="Compliance">
+        <div className="px-5 py-4 space-y-3">
+          <div>
+            <Text>Suppression list</Text>
+            <TextSmall className="text-muted">Emails opted out of outreach — checked before every send.</TextSmall>
+          </div>
+          {isAdmin || readStoredRole() === 'editor' ? (
+            <form onSubmit={handleAddSuppression} className="flex gap-2">
+              <Input
+                type="email"
+                value={suppressEmail}
+                onChange={(e) => setSuppressEmail(e.target.value)}
+                placeholder="prospect@example.com"
+                className="flex-1"
+              />
+              <Button type="submit" size="sm" disabled={addingSuppression}>
+                {addingSuppression ? 'Adding…' : 'Add'}
+              </Button>
+            </form>
+          ) : null}
+          {suppressions.length === 0 ? (
+            <TextMuted>No suppressed addresses.</TextMuted>
+          ) : (
+            <ul className="space-y-1">
+              {suppressions.map((s) => (
+                <li key={s.id} className="flex items-center justify-between text-body-sm">
+                  <span>{s.email}</span>
+                  <TextSmall className="text-muted">{s.reason}</TextSmall>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </SettingsGroup>
 
       {isAdmin && (
-        <section>
-          <SectionHeader label="Portals" title="Customer portal accounts" />
-          <Card elevated>
-            <CardBody className="flex items-center justify-between">
-              <TextMuted>Review and approve customer portal signup requests.</TextMuted>
-              <Link href="/dashboard/admin/portal-accounts">
-                <Button variant="secondary">Review requests</Button>
-              </Link>
-            </CardBody>
-          </Card>
-        </section>
+        <SettingsGroup label="Manage">
+          <SettingsRow
+            title="Customer portal accounts"
+            description="Review and approve customer portal signup requests."
+            action={<Link href="/dashboard/admin/portal-accounts"><Button variant="secondary" size="sm">Review</Button></Link>}
+          />
+          <SettingsRow
+            title="Workflow stages"
+            description="Tenant-defined stages on every product's Workspace sidebar."
+            action={<Link href="/dashboard/admin/workflow-stages"><Button variant="secondary" size="sm">Manage</Button></Link>}
+          />
+          <SettingsRow
+            title="Agent registry"
+            description="Every agent, its compute tier, and implementation status."
+            action={<Link href="/dashboard/agents"><Button variant="secondary" size="sm">View</Button></Link>}
+          />
+          <SettingsRow
+            title="Audit log"
+            description="Write, approve, and publish actions across your tenant."
+            action={<Link href="/dashboard/audit"><Button variant="secondary" size="sm">View</Button></Link>}
+          />
+        </SettingsGroup>
       )}
 
       {isAdmin && (
-        <section>
-          <SectionHeader label="Full Forge" title="Workflow stages" />
-          <Card elevated>
-            <CardBody className="flex items-center justify-between">
-              <TextMuted>Add tenant-defined stages to every product&apos;s Full Forge sidebar. Enterprise plan only.</TextMuted>
-              <Link href="/dashboard/admin/workflow-stages">
-                <Button variant="secondary">Manage stages</Button>
-              </Link>
-            </CardBody>
-          </Card>
-        </section>
+        <SettingsGroup label="Danger zone" danger>
+          <SettingsRow
+            title="Data export & purge"
+            description="Export or permanently delete this tenant's ingested data."
+            action={<Link href="/dashboard/admin/danger"><Button variant="danger" size="sm">Open</Button></Link>}
+          />
+        </SettingsGroup>
       )}
 
-      {isAdmin && (
-        <section>
-          <SectionHeader label="Danger zone" title="Data export & purge" />
-          <Card elevated className="border-danger/30">
-            <CardBody className="flex items-center justify-between">
-              <TextMuted>Export or permanently delete this tenant&apos;s ingested data.</TextMuted>
-              <Link href="/dashboard/admin/danger">
-                <Button variant="danger">Open danger zone</Button>
-              </Link>
-            </CardBody>
-          </Card>
-        </section>
-      )}
+      <SettingsGroup label="Session">
+        <SettingsRow title="Sign out" description="End your session on this device." action={<Button variant="danger" size="sm" onClick={signOut}>Sign out</Button>} />
+      </SettingsGroup>
 
-      <section>
-        <SectionHeader label="Platform" title="Agent registry" />
-        <Card elevated>
-          <CardBody className="flex items-center justify-between">
-            <TextMuted>Browse every agent, its compute tier, and implementation status.</TextMuted>
-            <Link href="/dashboard/agents">
-              <Button variant="secondary">View agent registry</Button>
-            </Link>
-          </CardBody>
-        </Card>
-      </section>
-
-      <section>
-        <SectionHeader label="Compliance" title="Audit log" />
-        <Card elevated>
-          <CardBody className="flex items-center justify-between">
-            <TextMuted>Review write, approve, and publish actions across your tenant.</TextMuted>
-            <Link href="/dashboard/audit">
-              <Button variant="secondary">View audit log</Button>
-            </Link>
-          </CardBody>
-        </Card>
-      </section>
-
-      <section>
-        <SectionHeader label="Session" title="Sign out" />
-        <Card elevated>
-          <CardBody className="flex items-center justify-between">
-            <TextMuted>End your session on this device.</TextMuted>
-            <Button variant="danger" onClick={signOut}>Sign out</Button>
-          </CardBody>
-        </Card>
-      </section>
-
-      <TextSmall className="text-muted">
+      <TextSmall className="block px-1 text-muted">
         User and role management isn&apos;t available in this UI yet — roles are assigned when a
         tenant is created and updated directly in the database. Contact your admin to change a
         teammate&apos;s role.

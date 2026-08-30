@@ -8,10 +8,10 @@
 import {
   Activity,
   Building2,
-  Hammer,
   Handshake,
   Kanban,
   LayoutDashboard,
+  LayoutGrid,
   LifeBuoy,
   Megaphone,
   Settings,
@@ -55,13 +55,10 @@ export const WORKSPACE_ICONS: Record<PersonaPath, LucideIcon> = {
   pipeline: Kanban,
   marketing: Megaphone,
   partner: Handshake,
-  forge: Hammer,
+  forge: LayoutGrid,
 };
 
-/** iPhone-colorway accent per persona -- orange/rust was retired as a brand color (the
- * app's own --primary is now the same Apple blue as 'sky'), so 'forge' (the default/
- * full workspace) gets 'amber', the one tone not already claimed by another persona,
- * keeping all six workspace tabs visually distinct. */
+/** Accent tone per persona for workspace chrome. */
 export const WORKSPACE_COLORS: Record<PersonaPath, Tone> = {
   brief: 'sky',
   sales: 'emerald',

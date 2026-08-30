@@ -12,18 +12,16 @@ import {
 } from '@/lib/api';
 import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
-import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Kanban } from 'lucide-react';
-import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
 import { showToast } from '@/lib/toast';
 import { workflowProgressPercent } from '@/lib/workflow-progress';
 import AccountHealthPanel from '@/components/success/AccountHealthPanel';
 import OpportunityDetailModal from '@/components/pipeline/OpportunityDetailModal';
-import { Stat, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 
 const STAGE_LABELS: Record<string, string> = {
   discovery: 'Discovery',
@@ -83,9 +81,10 @@ export default function PipelinePage() {
           setTimeout(poll, 3000);
         } else {
           load();
-          const doneMessage = run.status === 'completed'
-            ? 'Technical eval complete — opportunity at Proposal stage'
-            : (run.error_message ?? 'Workflow failed');
+          const doneMessage =
+            run.status === 'completed'
+              ? 'Technical eval complete — opportunity at Proposal stage'
+              : (run.error_message ?? 'Workflow failed');
           setMessage(doneMessage);
           showToast(run.status === 'completed' ? 'success' : 'error', doneMessage);
           setLoading(false);
@@ -130,13 +129,11 @@ export default function PipelinePage() {
     }, null);
 
   return (
-    <div className="space-y-8 animate-fade-up">
+    <div className="space-y-10 animate-fade-up">
       <PageHero
-        eyebrow="Revenue"
+        eyebrow="Pipeline"
         title="Pipeline"
-        description="Drag a card to move a stage. Technical evals run in the background and post their verdict back to the card."
-        icon={WORKSPACE_ICONS.pipeline}
-        accent={WORKSPACE_COLORS.pipeline}
+        description="Move deals by stage. Technical evals run in the background and post back to the card."
         actions={
           <>
             <Button variant="secondary" disabled={loading} onClick={createManualOpp}>
@@ -150,81 +147,77 @@ export default function PipelinePage() {
       />
 
       {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 border-y border-border py-6">
           {[
             { label: 'Open deals', value: summary.total },
             { label: 'Weighted pipeline', value: `$${summary.weighted_pipeline.toLocaleString()}` },
             { label: 'At proposal', value: summary.by_stage.proposal ?? 0 },
             { label: 'Oldest', value: openOldestDays === null ? '—' : `${openOldestDays}d` },
           ].map((s) => (
-            <Card key={s.label} elevated>
-              <CardBody className="py-4">
-                <Stat label={s.label} value={s.value} />
-              </CardBody>
-            </Card>
+            <div key={s.label}>
+              <p className="text-[28px] font-semibold tracking-[-0.03em] tabular-nums text-foreground leading-none">
+                {s.value}
+              </p>
+              <p className="mt-2 text-[12px] text-muted">{s.label}</p>
+            </div>
           ))}
         </div>
       )}
 
-      {message && <TextMuted>{message}</TextMuted>}
+      {message && <TextMuted className="text-[15px]">{message}</TextMuted>}
 
       {workflowStatus && workflowStatus.status !== 'completed' && (
-        <Card>
-          <CardBody className="space-y-3">
-            <ProgressBar percent={workflowProgressPercent(workflowStatus)} label={`Workflow: ${workflowStatus.status}`} />
-            <ul className="space-y-1">
-              {workflowStatus.steps.map((step) => (
-                <li key={step.name} className="flex items-center justify-between">
-                  <TextSmall>
-                    {step.name}
-                    {step.error ? ` — ${step.error}` : ''}
-                  </TextSmall>
-                  <Badge variant={step.status === 'failed' ? 'danger' : step.status === 'completed' ? 'success' : 'default'}>
-                    {step.status}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          </CardBody>
-        </Card>
+        <div className="rounded-[var(--radius-lg)] bg-surface px-5 py-4 space-y-3">
+          <ProgressBar percent={workflowProgressPercent(workflowStatus)} label={`Workflow: ${workflowStatus.status}`} />
+          <ul className="space-y-1">
+            {workflowStatus.steps.map((step) => (
+              <li key={step.name} className="flex items-center justify-between">
+                <TextSmall>
+                  {step.name}
+                  {step.error ? ` — ${step.error}` : ''}
+                </TextSmall>
+                <Badge variant={step.status === 'failed' ? 'danger' : step.status === 'completed' ? 'success' : 'default'}>
+                  {step.status}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <section>
         <SectionHeader
-          label="Kanban"
-          title="Opportunities by stage"
+          title="Opportunities"
           action={
-            <Link href={`/products/${id}/sales`} className="text-body-sm text-primary hover:underline">
-              ← Leads
+            <Link href={`/products/${id}/sales`} className="text-[15px] text-[var(--accent-blue)] hover:underline">
+              Leads
             </Link>
           }
         />
         <div className="overflow-x-auto pb-4 -mx-2 px-2">
           <div className="flex gap-3 min-w-max">
             {OPPORTUNITY_STAGES.map((stage) => (
-              <Card key={stage} className="w-52 shrink-0">
-                <CardHeader className="py-2">
-                  <TextSmall className="font-medium text-muted">
-                    {STAGE_LABELS[stage] ?? stage}
-                    <span className="ml-1 opacity-60">({byStage[stage]?.length ?? 0})</span>
-                  </TextSmall>
-                </CardHeader>
-                <CardBody className="p-2 space-y-2 min-h-[120px]">
+              <div key={stage} className="w-52 shrink-0 rounded-[var(--radius-lg)] bg-surface p-3">
+                <p className="text-[12px] font-medium text-muted mb-3 px-1">
+                  {STAGE_LABELS[stage] ?? stage}
+                  <span className="ml-1 opacity-60">({byStage[stage]?.length ?? 0})</span>
+                </p>
+                <div className="space-y-2 min-h-[120px]">
                   {(byStage[stage] ?? []).map((opp) => (
                     <div
                       key={opp.id}
                       role="button"
                       tabIndex={0}
                       onClick={() => setSelectedOppId(opp.id)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') setSelectedOppId(opp.id); }}
-                      className="rounded-[var(--radius-liquid)] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-2 text-body-sm cursor-pointer hover:border-[var(--glass-border-strong)] transition-colors"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') setSelectedOppId(opp.id);
+                      }}
+                      className="rounded-[var(--radius-md)] bg-background p-2.5 text-[13px] cursor-pointer hover:ring-1 hover:ring-border transition-shadow"
                     >
-                      <Text className="font-medium truncate">{opp.name}</Text>
-                      {opp.company && (
-                  <TextSmall className="truncate">{opp.company}</TextSmall>
-                      )}
+                      <Text className="font-medium truncate text-[13px]">{opp.name}</Text>
+                      {opp.company && <TextSmall className="truncate">{opp.company}</TextSmall>}
                       <select
-                        className="mt-2 w-full text-body-sm bg-transparent border border-border rounded px-1 py-0.5 focus-ring"
+                        className="mt-2 w-full text-[12px] bg-transparent border border-border rounded-md px-1.5 py-1 focus-ring"
                         value={opp.stage}
                         onChange={(e) => handleStageChange(opp.id, e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -238,8 +231,8 @@ export default function PipelinePage() {
                       </select>
                     </div>
                   ))}
-                </CardBody>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -247,12 +240,12 @@ export default function PipelinePage() {
           <EmptyState
             icon={Kanban}
             title="No opportunities yet"
-            description="Create one manually, or run a technical eval workflow to generate one from a qualified lead."
+            description="Create one manually, or run a technical eval to generate one from a qualified lead."
             actions={[
               { label: 'New opportunity', onClick: createManualOpp, primary: false },
               { label: 'Run technical eval', onClick: runTechnicalEval },
             ]}
-            className="mt-4"
+            className="mt-2"
           />
         )}
       </section>

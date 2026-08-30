@@ -19,12 +19,12 @@ export const ROLE_DEFAULT_PERSONA: Record<AppRole, PersonaPath> = {
 };
 
 const PERSONA_LABELS: Record<PersonaPath, string> = {
-  brief: 'Executive Brief',
-  sales: 'Sales Workspace',
+  brief: 'Brief',
+  sales: 'Sales',
   pipeline: 'Pipeline',
-  marketing: 'Marketing Hub',
-  partner: 'Partner Enablement',
-  forge: 'Full Forge',
+  marketing: 'Marketing',
+  partner: 'Partners',
+  forge: 'Workspace',
 };
 
 const PERSONA_DESCRIPTIONS: Record<PersonaPath, string> = {
@@ -33,7 +33,7 @@ const PERSONA_DESCRIPTIONS: Record<PersonaPath, string> = {
   pipeline: 'Kanban-style opportunity board and account health.',
   marketing: 'ICP, campaigns, and content workflows.',
   partner: 'Product facts, templates, and deal registration.',
-  forge: 'Ingest, agents, and all workflow tabs.',
+  forge: 'Sources, ingest, agents, and workflow tools.',
 };
 
 export function normalizeRole(role: string | null | undefined): AppRole {

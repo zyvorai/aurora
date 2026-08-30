@@ -1,9 +1,7 @@
 'use client';
 
-import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import type { ChainStage, ChainStageId } from '@/lib/chain';
-import { cn } from '@/lib/cn';
 
 interface NextActionContent {
   title: string;
@@ -15,14 +13,14 @@ interface NextActionContent {
 const CONTENT: Record<ChainStageId, NextActionContent> = {
   sources: {
     title: 'Add your first source',
-    body: 'Paste a website URL, a docs site, or a repo. Ingest unlocks the other eight stages once it finishes.',
+    body: 'Paste a website URL, docs site, or repo. Ingest unlocks the rest once it finishes.',
     actLabel: 'Add source',
     altLabel: 'Import from GitHub',
   },
   ingest: {
     title: 'Ingest your sources',
-    body: 'Crawls and indexes what you added. Product profile starts on its own once ingest finishes — nothing else to click.',
-    actLabel: 'Crawl & Ingest',
+    body: 'Crawls and indexes what you added. The product profile can start after ingest finishes.',
+    actLabel: 'Crawl & ingest',
     altLabel: 'Add another source',
   },
   profile: {
@@ -38,12 +36,12 @@ const CONTENT: Record<ChainStageId, NextActionContent> = {
   },
   discover: {
     title: 'Discover accounts',
-    body: 'Finds accounts that match the ICP from the strategy — rules-based, same input, same output every time.',
+    body: 'Finds accounts that match the ICP — rules-based, same input, same output every time.',
     actLabel: 'Go to Sales',
   },
   qualify: {
     title: 'Qualify discovered accounts',
-    body: 'Scores each discovered account on fit and intent so outreach targets the right ones first.',
+    body: 'Scores each account on fit and intent so outreach targets the right ones first.',
     actLabel: 'Go to Sales',
   },
   outreach: {
@@ -76,12 +74,10 @@ export function NextAction({
 }) {
   if (!stage) {
     return (
-      <Card elevated className="border-success/30">
-        <CardBody>
-          <p className="font-semibold text-foreground">Every stage is done</p>
-          <p className="mt-1 text-body-sm text-muted">Nothing is waiting on you right now.</p>
-        </CardBody>
-      </Card>
+      <div className="rounded-[var(--radius-lg)] bg-surface px-6 py-7">
+        <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-foreground">Every stage is done</h2>
+        <p className="mt-2 text-[15px] text-muted leading-[1.47]">Nothing is waiting on you right now.</p>
+      </div>
     );
   }
 
@@ -89,26 +85,21 @@ export function NextAction({
   const isRunning = stage.status === 'run';
 
   return (
-    <Card
-      elevated
-      className={cn('overflow-hidden', isRunning ? 'border-primary/30' : 'border-warning/30')}
-    >
-      <CardBody className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-semibold text-foreground">{content.title}</h2>
-          <p className="mt-1 text-body-sm text-muted max-w-[64ch]">{content.body}</p>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          {!isRunning && content.altLabel && onAlt && (
-            <Button variant="secondary" onClick={onAlt} disabled={loading}>
-              {content.altLabel}
-            </Button>
-          )}
-          <Button onClick={onAct} disabled={loading}>
-            {isRunning ? 'Watch run log' : content.actLabel}
+    <div className="rounded-[var(--radius-lg)] bg-surface px-6 py-7 flex flex-col sm:flex-row sm:items-center gap-5">
+      <div className="flex-1 min-w-0">
+        <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-foreground">{content.title}</h2>
+        <p className="mt-2 text-[15px] text-muted leading-[1.47] max-w-[48ch]">{content.body}</p>
+      </div>
+      <div className="flex flex-wrap gap-2 shrink-0">
+        {!isRunning && content.altLabel && onAlt && (
+          <Button variant="secondary" onClick={onAlt} disabled={loading}>
+            {content.altLabel}
           </Button>
-        </div>
-      </CardBody>
-    </Card>
+        )}
+        <Button onClick={onAct} disabled={loading} size="lg">
+          {isRunning ? 'Watch run log' : content.actLabel}
+        </Button>
+      </div>
+    </div>
   );
 }

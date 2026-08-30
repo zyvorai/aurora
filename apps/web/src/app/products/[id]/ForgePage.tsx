@@ -28,7 +28,6 @@ import AgentTaskProgress from '@/components/AgentTaskProgress';
 import { taskButtonLabel, type AgentTaskId } from '@/lib/agent-tasks';
 import { cn } from '@/lib/cn';
 import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
-import { WORKSPACE_ICONS, WORKSPACE_COLORS } from '@/lib/nav-data';
 import { SkeletonHero } from '@/components/ui/Skeleton';
 import type { Tone } from '@/components/layout/PageHero';
 import {
@@ -348,13 +347,11 @@ export default function ProductForgePageInner() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-10 animate-fade-up">
       <PageHero
-        eyebrow="Full Forge"
+        eyebrow="Workspace"
         title={product.name}
-        description={product.website_url ?? 'All agent tools in one workspace'}
-        icon={WORKSPACE_ICONS.forge}
-        accent={WORKSPACE_COLORS.forge}
+        description={product.website_url ?? 'Sources, agents, and workflow tools'}
         actions={
           <Badge variant={nextStage === null ? 'success' : nextStage.status === 'run' ? 'default' : 'warning'}>
             {chainStatusLabel(chainStages)}
@@ -362,15 +359,11 @@ export default function ProductForgePageInner() {
         }
       />
 
-      <div className="space-y-6">
+      <div className="space-y-10">
           {tab === 'overview' && (
-            <div className="space-y-6">
+            <div className="space-y-10">
               <OnboardingChecklist hasProduct firstProductId={id} />
-              <TextMuted className="max-w-[64ch]">
-                Everything below runs off one knowledge base — the chain shows where {product.name} stands
-                and what it&apos;s waiting on. Nothing here needs a decision from you until it&apos;s ready.
-              </TextMuted>
-              <StageChain stages={chainStages} activeId={runningStageId ?? undefined} onSelect={(stageId) => router.push(chainStageHref(id, stageId))} />
+
               <NextAction
                 stage={nextStage}
                 loading={loading || ingestPolling}
@@ -389,8 +382,6 @@ export default function ProductForgePageInner() {
                     return;
                   }
                   if (nextStage.id === 'strategy') {
-                    // No required inputs (unlike outreach/proposal, which need a form
-                    // filled in first) -- safe to trigger directly like ingest/profile.
                     runAction('strategy');
                     selectTab('strategy');
                     return;
@@ -410,6 +401,19 @@ export default function ProductForgePageInner() {
                         : undefined
                 }
               />
+
+              <section>
+                <SectionHeader
+                  title="Pipeline"
+                  description={`Where ${product.name} stands — tap a stage to jump in.`}
+                />
+                <StageChain
+                  stages={chainStages}
+                  activeId={runningStageId ?? undefined}
+                  onSelect={(stageId) => router.push(chainStageHref(id, stageId))}
+                />
+              </section>
+
               <div id="sources-panel">
                 <SourcesPanel
                   productId={id}
@@ -417,98 +421,40 @@ export default function ProductForgePageInner() {
                   onExternalOpenHandled={() => setSourceOpenKind(undefined)}
                 />
               </div>
-              <div className="flex flex-wrap gap-3">
-                <Button disabled={loading || ingestPolling} onClick={() => runAction('ingest')}>
-                  {ingestPolling ? 'Ingesting…' : taskButtonLabel(loadingAction, loading, 'Crawl & Ingest', 'ingest')}
-                </Button>
-                <Button variant="secondary" disabled={loading} onClick={() => runAction('understand')}>
-                  {taskButtonLabel(loadingAction, loading, 'Build Product Profile', 'understand')}
-                </Button>
-                <Button variant="secondary" disabled={loading || refreshingKnowledge || ingestPolling} onClick={handleRefreshKnowledge}>
-                  {refreshingKnowledge ? 'Refreshing…' : 'Refresh Knowledge'}
-                </Button>
-              </div>
+
               {product.profile && Object.keys(product.profile).length > 0 && (
-                <Card elevated>
-                  <CardBody>
-                    <SectionHeader title="Product Profile" />
+                <section>
+                  <SectionHeader title="Product profile" />
+                  <div className="rounded-[var(--radius-lg)] bg-surface px-5 py-5">
                     <ProductProfileView profile={product.profile} />
-                  </CardBody>
-                </Card>
+                  </div>
+                </section>
               )}
+
               {artifacts.length > 0 && (
                 <section>
                   <SectionHeader
-                    title="Recent Artifacts"
+                    title="Recent artifacts"
                     action={
                       <button
                         type="button"
                         onClick={() => selectTab('publish')}
-                        className="text-body-sm text-primary hover:underline"
+                        className="text-[15px] text-[var(--accent-blue)] hover:underline"
                       >
-                        View all →
+                        View all ›
                       </button>
                     }
                   />
-                  <div className="space-y-2">
+                  <div className="rounded-[var(--radius-lg)] bg-surface divide-y divide-border overflow-hidden">
                     {artifacts.slice(0, 5).map((a) => (
-                      <Card key={a.id}>
-                        <CardBody className="py-3 flex justify-between text-body-sm">
-                          <Text>{a.title}</Text>
-                          <TextSmall>{a.type} · {a.status}</TextSmall>
-                        </CardBody>
-                      </Card>
+                      <div key={a.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                        <Text className="font-medium truncate">{a.title}</Text>
+                        <TextSmall className="shrink-0">
+                          {a.type} · {a.status}
+                        </TextSmall>
+                      </div>
                     ))}
                   </div>
-                </section>
-              )}
-              {chainStages.some((s) => s.status === 'idle') && (
-                <section>
-                  <SectionHeader
-                    label="Waiting on knowledge"
-                    title="Locked until ingest finishes"
-                    description="These unlock automatically once ingest finishes."
-                  />
-                  <Card>
-                    <CardBody>
-                      <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
-                        {chainStages
-                          .filter((s) => s.status !== 'idle' || s.id === 'sources' || s.id === 'ingest')
-                          .map((s, i) => (
-                            <span key={s.id} className="flex items-center gap-1.5">
-                              {i > 0 && <span className="text-muted">→</span>}
-                              <span
-                                className={cn(
-                                  'px-2 py-0.5 rounded-[5px] border',
-                                  s.status === 'done'
-                                    ? 'border-success/30 bg-success/10 text-success'
-                                    : s.status === 'need' || s.status === 'run'
-                                      ? 'border-warning/30 bg-warning/10 text-warning'
-                                      : 'border-border bg-background text-muted',
-                                )}
-                              >
-                                {s.label.toLowerCase()}
-                              </span>
-                            </span>
-                          ))}
-                        {chainStages
-                          .filter((s) => s.status === 'idle')
-                          .map((s) => (
-                            <span key={s.id} className="flex items-center gap-1.5">
-                              <span className="text-muted">·</span>
-                              <span className="px-2 py-0.5 rounded-[5px] border border-border bg-background text-muted">
-                                {s.label.toLowerCase()}
-                              </span>
-                            </span>
-                          ))}
-                      </div>
-                      <TextMuted className="mt-3 max-w-[64ch]">
-                        {chainStages.filter((s) => s.status === 'idle').length} stages are dark because they
-                        read from the knowledge base. None of them need a decision from you — they start
-                        themselves in order.
-                      </TextMuted>
-                    </CardBody>
-                  </Card>
                 </section>
               )}
             </div>

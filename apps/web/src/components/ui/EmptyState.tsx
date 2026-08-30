@@ -2,7 +2,6 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Button } from './Button';
-import { SectionTitle, TextMuted } from './Typography';
 import { cn } from '@/lib/cn';
 import { TONE_CLASSES } from '@/lib/tone';
 import type { Tone } from '@/components/layout/PageHero';
@@ -18,8 +17,6 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   actions?: EmptyStateAction[];
-  /** Defaults to the brand primary (blue); pass one of the iPhone-colorway tones to
-   * match the surrounding page/tab (e.g. the admin portal-accounts tab's own tone). */
   tone?: Tone;
   className?: string;
 }
@@ -27,17 +24,23 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon, title, description, actions, tone, className }: EmptyStateProps) {
   const toneClasses = tone ? TONE_CLASSES[tone] : null;
   return (
-    <div className={cn('tahoe-empty animate-fade-up py-16 px-6 text-center', className)}>
-      <div className="tahoe-empty-orb" aria-hidden />
-      <div className="relative">
+    <div className={cn('tahoe-empty animate-fade-up py-20 px-6 text-center', className)}>
+      <div className="relative mx-auto max-w-lg">
         {Icon && (
-          <div className={cn('tahoe-empty-icon mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full', toneClasses ? toneClasses.text : 'text-primary')}>
-            <Icon className="h-6 w-6" />
+          <div
+            className={cn(
+              'tahoe-empty-icon mx-auto mb-5 flex h-11 w-11 items-center justify-center rounded-full',
+              toneClasses ? toneClasses.text : 'text-primary',
+            )}
+          >
+            <Icon className="h-5 w-5" />
           </div>
         )}
-        <SectionTitle className="mb-2">{title}</SectionTitle>
+        <h2 className="text-[28px] sm:text-[32px] font-semibold tracking-[-0.03em] text-foreground leading-tight mb-3">
+          {title}
+        </h2>
         {description && (
-          <TextMuted className="mx-auto mb-6 max-w-md">{description}</TextMuted>
+          <p className="mx-auto mb-8 max-w-md text-[17px] leading-[1.47] text-muted">{description}</p>
         )}
         {actions && actions.length > 0 && (
           <div className="flex flex-wrap justify-center gap-3">

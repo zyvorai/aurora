@@ -250,7 +250,7 @@ export default function WorkflowStagesAdminPage() {
         icon={Workflow}
         eyebrow="Admin"
         title="Workflow Stages"
-        description="Custom stages your tenant sees in every product's Full Forge sidebar, alongside the built-in ones. Enterprise plan only."
+        description="Custom stages your tenant sees in every product's Workspace sidebar, alongside the built-in ones. Enterprise plan only."
         actions={<Button onClick={openCreate}><Plus className="w-4 h-4 mr-1.5" /> New stage</Button>}
       />
 
@@ -261,42 +261,40 @@ export default function WorkflowStagesAdminPage() {
           icon={Workflow}
           tone="sky"
           title="No custom stages yet"
-          description="Add a stage to show tenant-specific content or a preset agent action in Full Forge."
+          description="Add a stage to show tenant-specific content or a preset agent action in Workspace."
           actions={[{ label: 'New stage', onClick: openCreate }]}
         />
       ) : (
         Object.entries(grouped).map(([groupLabel, groupStages]) => (
           <section key={groupLabel}>
             <SectionHeader label="Group" title={groupLabel} />
-            <div className="grid sm:grid-cols-2 gap-3">
+            <Card elevated className="divide-y divide-border overflow-hidden">
               {groupStages
                 .sort((a, b) => a.position - b.position)
                 .map((stage) => {
                   const tone = TONE_CLASSES[stage.tone as Tone] ?? TONE_CLASSES.sky;
                   const Icon = ALLOWED_STAGE_ICONS[stage.icon] ?? ALLOWED_STAGE_ICONS.sparkles;
                   return (
-                    <Card key={stage.id}>
-                      <CardBody className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span className={cn('w-8 h-8 flex items-center justify-center rounded-[7px] shrink-0', tone.bg, tone.text)}>
-                            <Icon className="w-4 h-4" aria-hidden />
-                          </span>
-                          <div className="min-w-0">
-                            <p className="font-medium text-foreground truncate">{stage.label}</p>
-                            <TextSmall className="text-muted">{stage.content_blocks.length} block{stage.content_blocks.length === 1 ? '' : 's'}</TextSmall>
-                          </div>
+                    <div key={stage.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={cn('w-8 h-8 flex items-center justify-center rounded-[7px] shrink-0', tone.bg, tone.text)}>
+                          <Icon className="w-4 h-4" aria-hidden />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">{stage.label}</p>
+                          <TextSmall className="text-muted">{stage.content_blocks.length} block{stage.content_blocks.length === 1 ? '' : 's'}</TextSmall>
                         </div>
-                        <div className="flex gap-2 shrink-0">
-                          <Button size="sm" variant="secondary" onClick={() => openEdit(stage)}>Edit</Button>
-                          <Button size="sm" variant="danger" onClick={() => handleDelete(stage)}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </CardBody>
-                    </Card>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <Button size="sm" variant="secondary" onClick={() => openEdit(stage)}>Edit</Button>
+                        <Button size="sm" variant="danger" onClick={() => handleDelete(stage)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   );
                 })}
-            </div>
+            </Card>
           </section>
         ))
       )}

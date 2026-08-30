@@ -137,7 +137,7 @@ export function ProductConsoleShell({
             key={item.id}
             href={href}
             className={cn(
-              'px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
+              'px-3 py-2 text-[13px] font-normal whitespace-nowrap border-b-[1.5px] transition-colors',
               active ? 'border-primary text-foreground' : 'border-transparent text-muted hover:text-foreground',
             )}
           >
@@ -186,7 +186,7 @@ export function ProductConsoleShell({
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-surface">
       <LicenseBanner />
       <GlobalNav
         variant="app"
@@ -205,15 +205,17 @@ export function ProductConsoleShell({
         <Link
           href="/dashboard"
           title={product?.name ?? undefined}
-          className="flex items-center gap-2.5 p-2 rounded-[var(--radius-sm)] border border-border hover:border-[var(--glass-border-strong)] transition-colors shrink-0"
+          className="flex items-center gap-2.5 p-2 rounded-[var(--radius-md)] hover:bg-background transition-colors shrink-0"
         >
-          <span className="w-[26px] h-[26px] shrink-0 flex items-center justify-center rounded-[7px] bg-foreground text-background font-mono text-xs font-semibold">
+          <span className="w-[28px] h-[28px] shrink-0 flex items-center justify-center rounded-full bg-foreground text-background text-[12px] font-semibold">
             {product?.name?.charAt(0)?.toUpperCase() ?? '?'}
           </span>
           {!rail.collapsed && (
             <span className="min-w-0 hidden sm:block">
-              <span className="block text-body-sm font-semibold truncate max-w-[140px]">{product?.name ?? 'Loading…'}</span>
-              <span className="block font-mono text-[10px] text-muted">product</span>
+              <span className="block text-[13px] font-semibold tracking-[-0.01em] truncate max-w-[140px] text-foreground">
+                {product?.name ?? 'Loading…'}
+              </span>
+              <span className="block text-[11px] text-muted">Product</span>
             </span>
           )}
         </Link>
@@ -228,9 +230,9 @@ export function ProductConsoleShell({
         </button>
 
         {!rail.collapsed && (
-          <div className="hidden lg:block mt-4 mb-1.5 px-2 font-mono text-[9.5px] uppercase tracking-widest text-muted">Pipeline</div>
+          <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-medium text-muted">Pipeline</div>
         )}
-        <nav className="flex flex-row lg:flex-col gap-1 lg:gap-px shrink-0">
+        <nav className="flex flex-row lg:flex-col gap-0.5 shrink-0">
           {stages.map((stage, i) => {
             const Icon = CHAIN_ICONS[stage.id];
             return (
@@ -239,14 +241,16 @@ export function ProductConsoleShell({
                 href={chainStageHref(productId, stage.id)}
                 title={stage.label}
                 className={cn(
-                  'flex items-center gap-2 lg:gap-2.5 px-2 py-1.5 rounded-[var(--radius-sm)] text-body-sm text-foreground/80 hover:bg-surface-elevated transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 lg:gap-2.5 px-2 py-[7px] rounded-[var(--radius-sm)] text-[13px] text-foreground/75 hover:bg-background hover:text-foreground transition-colors whitespace-nowrap',
                   rail.collapsed && 'lg:justify-center',
                 )}
               >
                 {rail.collapsed ? (
                   <Icon className="w-4 h-4 shrink-0 hidden lg:block" />
                 ) : (
-                  <span className="font-mono text-[10px] text-muted w-[13px] shrink-0 hidden lg:inline">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="text-[11px] text-muted w-[16px] shrink-0 hidden lg:inline tabular-nums">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                 )}
                 <span className={cn('min-w-0 truncate', rail.collapsed && 'lg:hidden')}>{stage.label}</span>
                 <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', STATUS_DOT[stage.status])} aria-hidden />
@@ -256,9 +260,9 @@ export function ProductConsoleShell({
         </nav>
 
         {!rail.collapsed && (
-          <div className="hidden lg:block mt-4 mb-1.5 px-2 font-mono text-[9.5px] uppercase tracking-widest text-muted">Surfaces</div>
+          <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-medium text-muted">Surfaces</div>
         )}
-        <nav className="flex flex-row lg:flex-col gap-1 lg:gap-px shrink-0">
+        <nav className="flex flex-row lg:flex-col gap-0.5 shrink-0">
           {SURFACES.map((s) => {
             const Icon = s.icon;
             return (
@@ -267,11 +271,11 @@ export function ProductConsoleShell({
                 href={`/products/${productId}?tab=${s.key}`}
                 title={s.label}
                 className={cn(
-                  'flex items-center gap-2 px-2 py-1.5 rounded-[var(--radius-sm)] text-body-sm text-foreground/80 hover:bg-background transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 px-2 py-[7px] rounded-[var(--radius-sm)] text-[13px] text-foreground/75 hover:bg-background hover:text-foreground transition-colors whitespace-nowrap',
                   rail.collapsed && 'lg:justify-center',
                 )}
               >
-                <Icon className="w-4 h-4 shrink-0 hidden lg:block" />
+                <Icon className="w-3.5 h-3.5 shrink-0 hidden lg:block text-muted" />
                 <span className={cn(rail.collapsed && 'lg:hidden')}>{s.label}</span>
               </Link>
             );
@@ -281,21 +285,21 @@ export function ProductConsoleShell({
         {customGroups.map((group) => (
           <div key={group.label} className="shrink-0 contents lg:block">
             {!rail.collapsed && (
-              <div className="hidden lg:block mt-4 mb-1.5 px-2 font-mono text-[9.5px] uppercase tracking-widest text-muted">{group.label}</div>
+              <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-medium text-muted">{group.label}</div>
             )}
-            <nav className="flex flex-row lg:flex-col gap-1 lg:gap-px shrink-0">
+            <nav className="flex flex-row lg:flex-col gap-0.5 shrink-0">
               {group.stages.map((stage) => (
                 <Link
                   key={stage.id}
                   href={`/products/${productId}?tab=custom:${stage.id}`}
                   title={stage.label}
                   className={cn(
-                    'flex items-center gap-2 px-2 py-1.5 rounded-[var(--radius-sm)] text-body-sm text-foreground/80 hover:bg-background transition-colors whitespace-nowrap lg:truncate',
+                    'flex items-center gap-2 px-2 py-[7px] rounded-[var(--radius-sm)] text-[13px] text-foreground/75 hover:bg-background hover:text-foreground transition-colors whitespace-nowrap lg:truncate',
                     rail.collapsed && 'lg:justify-center',
                   )}
                 >
                   {rail.collapsed && (
-                    <span className="hidden lg:flex w-4 h-4 shrink-0 items-center justify-center rounded-full bg-background text-[9px] font-mono">
+                    <span className="hidden lg:flex w-4 h-4 shrink-0 items-center justify-center rounded-full bg-background text-[9px]">
                       {stage.label.charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -307,18 +311,16 @@ export function ProductConsoleShell({
         ))}
 
         {!rail.collapsed && (
-          <div className="hidden lg:block mt-auto pt-2.5 border-t border-border font-mono text-[10.5px] text-muted leading-relaxed">
+          <div className="hidden lg:block mt-auto pt-3 border-t border-border text-[11px] text-muted leading-relaxed px-2">
             {workerStatus?.healthy ? (
               <>
-                workers {workerStatus.idle} idle
+                {workerStatus.idle} workers idle
                 <br />
-                queue {workerStatus.queued === 0 ? 'empty' : `${workerStatus.queued} queued`}
+                {workerStatus.queued === 0 ? 'Queue empty' : `${workerStatus.queued} queued`}
               </>
             ) : (
-              'workers —'
+              'Workers unavailable'
             )}
-            <br />
-            aurora
           </div>
         )}
 
@@ -333,7 +335,9 @@ export function ProductConsoleShell({
 
       <div className="flex-1 min-w-0 flex flex-col min-h-0">
         <div className="flex flex-1 min-w-0 min-h-0">
-          <main className="flex-1 min-w-0 bg-background">{children}</main>
+          <main className="flex-1 min-w-0 bg-background overflow-y-auto">
+            <div className="max-w-content mx-auto px-6 py-8 lg:px-8 lg:py-10">{children}</div>
+          </main>
           <RunLogDock productId={productId} />
         </div>
       </div>

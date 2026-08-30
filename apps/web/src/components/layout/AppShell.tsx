@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               key={item.id}
               href={href}
               className={cn(
-                'px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
+                'px-3 py-2 text-[13px] font-normal whitespace-nowrap border-b-[1.5px] transition-colors',
                 active ? 'border-primary text-foreground' : 'border-transparent text-muted hover:text-foreground',
               )}
             >
@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-surface">
       <LicenseBanner />
       <GlobalNav
         variant="app"
@@ -122,7 +122,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         subnav={workspaceSubnav}
       />
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-surface">{children}</main>
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} items={paletteItems} />
     </div>

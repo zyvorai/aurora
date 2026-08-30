@@ -15,11 +15,11 @@ const variants: Record<Variant, string> = {
     'rounded-[var(--radius-pill)] text-white bg-primary border border-primary ' +
     'hover:bg-[var(--primary-hover)] transition-colors',
   secondary:
-    'rounded-[var(--radius-pill)] text-primary border border-primary bg-transparent ' +
-    'hover:bg-[var(--accent-tint)] transition-colors',
+    'rounded-[var(--radius-pill)] text-foreground border border-[var(--border)] bg-transparent ' +
+    'hover:bg-[var(--nav-hover-bg)] transition-colors',
   ghost: 'rounded-[var(--radius-sm)] text-muted hover:text-foreground hover:bg-[var(--nav-hover-bg)] transition-colors',
   danger: 'rounded-[var(--radius-pill)] bg-danger/10 text-danger hover:bg-danger/15 transition-colors',
-  link: 'text-primary hover:underline p-0 h-auto font-normal',
+  link: 'text-[var(--accent-blue)] hover:underline p-0 h-auto font-normal',
 };
 
 const sizes = {

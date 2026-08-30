@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, ChevronDown, ChevronUp, Lock, X } from 'lucide-react';
 import { products } from '@/lib/api';
-import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
 import { cn } from '@/lib/cn';
@@ -107,17 +106,17 @@ export default function OnboardingChecklist({
   if (dismissed) return null;
 
   return (
-    <Card elevated className="animate-fade-up border-primary/25">
-      <CardBody className="space-y-5">
+    <div className="animate-fade-up rounded-[var(--radius-lg)] bg-background px-5 py-5 sm:px-6 sm:py-6">
+      <div className="space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <Text className="font-semibold text-[17px]">
-              {hasProduct ? 'Getting started' : 'Start here — 3 quick steps'}
+            <Text className="font-semibold text-[21px] tracking-[-0.02em]">
+              {hasProduct ? 'Getting started' : 'Start here'}
             </Text>
             <TextMuted className="mt-1 text-body-sm">
               {hasProduct
                 ? `${completedCount} of ${steps.length} complete`
-                : 'New here? Create a product first. Everything else unlocks after that.'}
+                : 'Create a product first. Everything else unlocks after that.'}
             </TextMuted>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -133,7 +132,7 @@ export default function OnboardingChecklist({
         </div>
 
         {!collapsed && nextStep && !nextStep.done ? (
-          <div className="rounded-2xl bg-surface px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+          <div className="rounded-[var(--radius-md)] bg-surface px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
             <div className="min-w-0">
               <TextSmall className="text-primary font-medium">Next up</TextSmall>
               <p className="text-[17px] font-semibold tracking-tight mt-0.5">{nextStep.title}</p>
@@ -183,7 +182,7 @@ export default function OnboardingChecklist({
                     )}
                   </div>
                   {interactive ? (
-                    <span className="text-body-sm text-primary font-medium shrink-0 inline-flex items-center gap-1">
+                    <span className="text-body-sm text-[var(--accent-blue)] font-medium shrink-0 inline-flex items-center gap-1">
                       {step.actionLabel}
                       <ArrowRight className="h-3.5 w-3.5" />
                     </span>
@@ -226,7 +225,7 @@ export default function OnboardingChecklist({
             })}
           </ol>
         )}
-      </CardBody>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -39,14 +39,26 @@ module.exports = {
         content: 'var(--content-max-width)',
       },
       fontFamily: {
-        sans: ['IBM Plex Sans', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'SF Pro Text',
+          'SF Pro Display',
+          'system-ui',
+          'sans-serif',
+        ],
+        display: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'SF Pro Display',
+          'SF Pro Text',
+          'system-ui',
+          'sans-serif',
+        ],
+        mono: ['SF Mono', 'ui-monospace', 'Menlo', 'Monaco', 'monospace'],
       },
       fontSize: {
-        // Trims Tailwind's default numeric scale (text-sm/lg/2xl/4xl/etc, used directly
-        // all over the app -- these don't reference the --font-size-* vars above at
-        // all) down to match: IBM Plex Sans has a notably large x-height and reads
-        // bigger than most UI fonts at the same px size.
+        // Trims Tailwind's default numeric scale to Apple/SF density.
         xs: ['0.6875rem', { lineHeight: '1rem' }],
         sm: ['0.8125rem', { lineHeight: '1.2rem' }],
         base: ['0.9375rem', { lineHeight: '1.45rem' }],
