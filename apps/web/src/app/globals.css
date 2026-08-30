@@ -88,8 +88,8 @@
   --hs-e2: 0 6px 20px rgba(0, 0, 0, 0.08);
   --hs-fast: 0.16s;
   --hs-font-mono: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
-  --hs-accent: var(--primary);
-  --hs-accent-deep: var(--primary-hover);
+  --hs-accent: #cc420a;
+  --hs-accent-deep: #b23705;
   --hs-text-heading: var(--foreground);
   --hs-text-muted: var(--muted-foreground);
   --hs-text-subtle: #86868b;
@@ -130,6 +130,8 @@ html.dark-theme {
   --hs-text-subtle: #a1a1a6;
   --hs-bg-alt: #1d1d1f;
   --hs-e2: 0 6px 20px rgba(0, 0, 0, 0.35);
+  --hs-accent: #f0583a;
+  --hs-accent-deep: #d94b32;
 }
 
 html {

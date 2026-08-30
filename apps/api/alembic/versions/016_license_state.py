@@ -10,11 +10,8 @@ import sqlalchemy as sa
 
 
 def upgrade() -> None:
-    op.create_table(
-        "license_state",
-        sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("first_seen_at", sa.DateTime(timezone=True), nullable=False),
-    )
+    # No-op: 001_initial creates the full current schema via Base.metadata.create_all().
+    pass
 
 
 def downgrade() -> None:

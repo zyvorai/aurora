@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 def upgrade() -> None:
-    op.add_column("channel_posts", sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("channel_posts", sa.Column("next_retry_at", sa.DateTime(timezone=True), nullable=True))
+    # No-op: 001_initial creates the full current schema via Base.metadata.create_all().
+    pass
 
 
 def downgrade() -> None:

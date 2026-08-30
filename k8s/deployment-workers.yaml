@@ -37,8 +37,6 @@ spec:
               value: bolt://175.110.122.71:7687
             - name: MINIO_ENDPOINT
               value: 175.110.122.71:9000
-            - name: OLLAMA_BASE_URL
-              value: http://175.110.122.71:11434/v1
           resources:
             requests:
               cpu: 250m

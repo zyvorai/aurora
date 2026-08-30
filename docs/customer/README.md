@@ -23,7 +23,10 @@ Output lands in [`pdf/`](pdf/).
 ## Product at a glance
 
 ```text
-  Web UI   →  http://<host>:3000
-  API      →  http://<host>:8000  (/health, /docs)
-  Agents   →  Marketing / Sales / Solution (Full Forge)
+  Web + API (K3s lab)  →  https://<host>:30443
+  Web (compose)        →  http://<host>:3000
+  API (compose)        →  http://<host>:8000  (/health, /docs)
+  Agents               →  Marketing / Sales / Solution
 ```
+
+Default login (source / lab seed): see [Getting Started](getting-started.md). Zyvor-owned labs use Groq chat (`LLM_PROVIDER=openai`) and `AURORA_LICENSE_ENFORCE=false`.

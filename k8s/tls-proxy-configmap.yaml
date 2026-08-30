@@ -12,10 +12,6 @@ data:
         ssl_certificate     /etc/aurora-tls/tls.crt;
         ssl_certificate_key /etc/aurora-tls/tls.key;
 
-        # Same-origin routing so the web client's API calls stay on this
-        # HTTPS endpoint instead of a separate host:port -- avoids mixed-
-        # content blocking and CORS entirely, same pattern hypersdk-web's
-        # proxy used for aurora.zyvor.dev before that dependency was dropped.
         location /health {
           proxy_pass http://aurora-api.aurora.svc.cluster.local:8000;
           proxy_set_header Host $host;

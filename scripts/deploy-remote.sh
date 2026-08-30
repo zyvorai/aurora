@@ -168,14 +168,30 @@ if ! $SKIP_BUILD; then
     fi
 fi
 
-# ── Step 4: bring the stack up ──
+# ── Step 4: if K8s aurora already owns the app, infra-only (avoid dual migrators) ──
+K8S_AURORA=false
+if _ssh "sudo k3s kubectl get ns aurora >/dev/null 2>&1"; then
+    K8S_AURORA=true
+    info "K8s namespace 'aurora' present — starting backing infra only (no compose api/web/workers)."
+    info "App + HTTPS: ./scripts/deploy-k8s.sh ${HOST} ${DEPLOY_USER}  (Cilium Gateway)"
+    _ssh "cd \"\$HOME/${REMOTE_DIR}\" && sudo docker compose --project-directory . -f infra/docker-compose.yml up -d"
+    info "Infra started."
+    _ssh "cd \"\$HOME/${REMOTE_DIR}\" && sudo docker compose --project-directory . -f infra/docker-compose.yml ps"
+    echo ""
+    echo "  Infra only (postgres/redis/…). App lives in K8s namespace aurora."
+    echo "  Deploy/refresh app: ./scripts/deploy-k8s.sh ${HOST} ${DEPLOY_USER}"
+    echo ""
+    exit 0
+fi
+
+# ── Step 5: full compose stack (no K8s aurora) ──
 BUILD_FLAG="--build"
 $SKIP_BUILD && BUILD_FLAG=""
 info "Starting stack (docker compose up -d ${BUILD_FLAG})..."
 _ssh "cd \"\$HOME/${REMOTE_DIR}\" && ${DC} up -d ${BUILD_FLAG}"
 info "Stack started."
 
-# ── Step 5: wait for health ──
+# ── Step 6: wait for health ──
 info "Waiting up to ${HEALTH_TIMEOUT}s for API health check..."
 if _ssh "
     end=\$((SECONDS + ${HEALTH_TIMEOUT}))

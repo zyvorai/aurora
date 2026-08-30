@@ -22,11 +22,8 @@ spec:
         - name: web
           # NEXT_PUBLIC_API_URL is baked in at build time (Next.js), so this
           # image is built separately from the docker-compose one -- see
-          # scripts/deploy-k8s.sh. It points at the HTTPS TLS-proxy entrypoint
-          # (k8s/tls-proxy-deployment.yaml, NodePort 30443), not the plain-HTTP
-          # api NodePort directly -- serving the page over HTTPS but calling
-          # a plain-HTTP API would get the request mixed-content-blocked by
-          # the browser.
+          # scripts/deploy-k8s.sh. It must be the HTTPS tls-proxy origin
+          # (https://<host>:30443/api/v1) so browsers never hit mixed-content.
           image: docker.io/library/aurora-web:k8s-tls
           imagePullPolicy: Never
           ports:

@@ -115,14 +115,23 @@ class OllamaEmbeddingBackend:
 
 class OpenAIEmbeddingBackend:
     def __init__(self, settings) -> None:
-        self._client = OpenAIEmbeddings(
-            model=settings.embedding_model,
-            api_key=settings.llm_api_key,
-            base_url=settings.llm_base_url,
-            dimensions=settings.embedding_dimensions,
-        )
+        kwargs: dict = {
+            "model": settings.embedding_model,
+            "api_key": settings.llm_api_key,
+            "base_url": settings.llm_base_url,
+        }
+        # Groq (and some OpenAI-compatible gateways) reject `dimensions`.
+        base = (settings.llm_base_url or "").lower()
+        if "groq.com" not in base:
+            kwargs["dimensions"] = settings.embedding_dimensions
+        self._client = OpenAIEmbeddings(**kwargs)
+        self._base = base
 
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        if "groq.com" in self._base:
+            # Groq is chat-only — use a deterministic local embedder so ingest
+            # still works when chat is wired to Groq (same as zyvor-web).
+            return [_hash_embed(t, get_settings().embedding_dimensions) for t in texts]
         try:
             return await self._client.aembed_documents(texts)
         except Exception as exc:
@@ -132,6 +141,8 @@ class OpenAIEmbeddingBackend:
             ) from exc
 
     async def embed_query(self, query: str) -> list[float]:
+        if "groq.com" in self._base:
+            return _hash_embed(query, get_settings().embedding_dimensions)
         try:
             return await self._client.aembed_query(query)
         except Exception as exc:
@@ -139,6 +150,25 @@ class OpenAIEmbeddingBackend:
                 f"OpenAI embedding failed. Check OPENAI_API_KEY. Detail: {exc}",
                 provider="openai",
             ) from exc
+
+
+def _hash_embed(text: str, dims: int) -> list[float]:
+    """Deterministic bag-of-tokens embedding for labs without an embed API."""
+    import hashlib
+    import math
+    import re
+
+    vec = [0.0] * max(dims, 1)
+    tokens = re.findall(r"[a-z0-9]+", (text or "").lower())
+    if not tokens:
+        tokens = ["empty"]
+    for tok in tokens:
+        digest = hashlib.sha256(tok.encode()).digest()
+        idx = int.from_bytes(digest[:4], "big") % dims
+        sign = 1.0 if digest[4] % 2 == 0 else -1.0
+        vec[idx] += sign
+    norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+    return [v / norm for v in vec]
 
 
 class EmbeddingService:

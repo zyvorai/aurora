@@ -12,13 +12,8 @@ import sqlalchemy as sa
 
 
 def upgrade() -> None:
-    op.alter_column("users", "hashed_password", existing_type=sa.String(255), nullable=True)
-    op.add_column("users", sa.Column("oauth_provider", sa.String(50), nullable=True))
-    op.add_column("users", sa.Column("oauth_subject", sa.String(255), nullable=True))
-    op.create_index(
-        "uq_user_oauth_identity", "users", ["oauth_provider", "oauth_subject"],
-        unique=True, postgresql_where=sa.text("oauth_provider IS NOT NULL"),
-    )
+    # No-op: 001_initial creates the full current schema via Base.metadata.create_all().
+    pass
 
 
 def downgrade() -> None:

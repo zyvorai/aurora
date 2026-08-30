@@ -23,7 +23,6 @@ services:
       QDRANT_URL: http://qdrant:6333
       NEO4J_URI: bolt://neo4j:7687
       MINIO_ENDPOINT: minio:9000
-      OLLAMA_BASE_URL: http://ollama:11434/v1
     depends_on:
       postgres:
         condition: service_healthy
@@ -35,11 +34,8 @@ services:
         condition: service_started
       minio:
         condition: service_started
-      ollama:
-        condition: service_started
     ports:
-      # Bound to localhost only — public HTTPS is the K3s TLS proxy (k8s/),
-      # not a reverse proxy in hypersdk-web.
+      # Bound to localhost only — public HTTPS is Cilium Gateway / break-glass NodePort.
       - "127.0.0.1:8000:8000"
     restart: unless-stopped
 
@@ -55,7 +51,6 @@ services:
       QDRANT_URL: http://qdrant:6333
       NEO4J_URI: bolt://neo4j:7687
       MINIO_ENDPOINT: minio:9000
-      OLLAMA_BASE_URL: http://ollama:11434/v1
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,8 +61,6 @@ services:
       neo4j:
         condition: service_started
       minio:
-        condition: service_started
-      ollama:
         condition: service_started
     restart: unless-stopped
 

@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 def upgrade() -> None:
-    op.add_column("reseller_accounts", sa.Column("proof_document_key", sa.String(1024), nullable=True))
-    op.add_column("sales_person_accounts", sa.Column("proof_document_key", sa.String(1024), nullable=True))
+    # No-op: 001_initial creates the full current schema via Base.metadata.create_all().
+    pass
 
 
 def downgrade() -> None:

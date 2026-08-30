@@ -1,6 +1,6 @@
 # Ollama / Open-Weight LLM Integration
 
-Dual-provider LLM layer supporting **Ollama** (local, free, default for dev) and **OpenAI** (production / premium). Switching providers is env-only; both remain first-class.
+Dual-provider LLM layer supporting **Ollama** (local, free, default for bare-metal dev) and **OpenAI-compatible** APIs (OpenAI, Groq, vLLM, …). Switching providers is env-only; both remain first-class. Compose does **not** start Ollama unless you pass `--profile ollama`.
 
 ---
 
@@ -9,9 +9,13 @@ Dual-provider LLM layer supporting **Ollama** (local, free, default for dev) and
 | Provider | Use case | Cost |
 |----------|----------|------|
 | **Ollama** | Local dev, MVP, CI without API keys | Free (local compute) |
-| **OpenAI** | Production, Growth/Enterprise tiers | Pay-per-token |
+| **OpenAI / compatible** | Production, Zyvor labs (e.g. Groq), Growth/Enterprise | Pay-per-token |
 
-The app routes all chat and embedding calls through a single factory. **OpenAI is not removed or deprecated** — existing `OPENAI_API_KEY` / `OPENAI_MODEL` env vars remain supported.
+The app routes all chat and embedding calls through a single factory. **OpenAI is not removed or deprecated** — existing `OPENAI_API_KEY` / `OPENAI_MODEL` / `OPENAI_BASE_URL` env vars remain supported.
+
+### Groq (and similar chat-only gateways)
+
+Set `LLM_PROVIDER=openai`, `OPENAI_BASE_URL=https://api.groq.com/openai/v1`, and your key. Groq rejects embedding `dimensions` and has no embed API — Aurora uses a **local hash embedding** when the base URL contains `groq.com` so ingest still works for RAG indexing.
 
 ---
 

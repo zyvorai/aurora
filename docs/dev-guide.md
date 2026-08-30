@@ -8,10 +8,10 @@ How to install, start, stop, and troubleshoot the platform on your machine.
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| **Docker Desktop** | Latest | Required for Postgres, Qdrant, Neo4j, Redis, MinIO, Ollama (Docker) |
+| **Docker Desktop** | Latest | Required for Postgres, Qdrant, Neo4j, Redis, MinIO; Ollama via `--profile ollama` |
 | **Python** | 3.12+ | Used via `apps/api/.venv` — do not use system Python 3.9 |
 | **Node.js** | 18+ | For Next.js frontend |
-| **Ollama** (optional) | Latest | Recommended on macOS via `brew install ollama` (faster than Docker Ollama) |
+| **LLM** | Ollama **or** OpenAI-compatible | Ollama optional (`brew` / compose profile). Labs often use Groq via `LLM_PROVIDER=openai` + `OPENAI_BASE_URL` |
 
 ---
 
@@ -82,10 +82,11 @@ Use this if you prefer step-by-step control, or if `make start` fails partway th
 # 1. Environment file
 make env                 # cp .env.example → .env
 
-# 2. LLM (optional — Ollama is default)
-brew install ollama
-ollama serve             # separate terminal
-make ollama-pull         # download MVP models
+# 2. LLM — pick one
+# A) OpenAI-compatible (Groq, etc.): set LLM_PROVIDER=openai + OPENAI_* in .env
+# B) Local Ollama:
+brew install ollama && ollama serve && make ollama-pull
+#    (compose: docker compose -f infra/docker-compose.yml --profile ollama up -d)
 
 # 3. Infrastructure
 make infra-up            # Docker Compose up + wait for Postgres

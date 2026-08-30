@@ -76,7 +76,10 @@ services:
       timeout: 5s
       retries: 5
 
+  # Optional local LLM — lab/prod use OpenAI-compatible APIs (e.g. Groq, same
+  # as zyvor-web chat). Start only when needed: docker compose --profile ollama up -d
   ollama:
+    profiles: ["ollama"]
     image: ollama/ollama:latest
     ports:
       - "11434:11434"

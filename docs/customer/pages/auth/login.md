@@ -2,29 +2,33 @@
 
 ## Purpose
 
-Sign in / Create workspace — email/password or SSO; URL-first signup.
+Two-step Apple-style sign-in (email → password) or create-account flow; optional SSO.
 
 ## When to use it
 
-- Operate **Sign in** when your job matches this page
-- Admin lands on Full Forge by default; editors on Sales; approvers/viewers on Brief
-- Confirm auth and that workers are up if ingest never completes
+- Sign in to the GTM workspace
+- Create a workspace from a product URL (signup)
+- Use SSO when `SSO_ENABLED` is configured
 
 ## How to get there
 
 - Route: `/login`
-- Nav: **Auth → Sign in**
+- Production / lab K3s: `https://<host>:30443/login`
 
 ## Operate from the console (UX)
 
-1. Open `/login`.
-2. Sign in email/password.
-3. SSO when enabled.
-4. URL-first signup → create product + ingest.
-5. **Empty / fail:** Auth failure → check credentials/SSO.
-6. **Success:** Signed into /dashboard.
+1. Open `/login` — full-bleed white hero with **Aurora** wordmark.
+2. **Sign in (2 steps):**
+   1. Enter email → **Continue**
+   2. Enter password → **Sign in** (chip shows email; **Edit** returns to step 1)
+3. **Create account (2 steps):** product URL → account details.
+4. **SSO:** “Continue with SSO” when enabled.
+5. **Empty / fail:** wrong credentials → error under the field; stay on step.
+6. **Success:** role-based landing (`/dashboard` or product console).
 
-Use `http://<host>:3000` for the web UI and `http://<host>:8000/health` for the API. Never publish lab IPs in customer docs.
+Seeded lab admin: `marketing@zyvor.dev` / `Admin@321` (change immediately outside labs).
+
+Use `https://<host>:30443` for the TLS entrypoint (or `http://<host>:3000` for plain compose). Never hardcode lab IPs in published customer docs.
 
 ## Related pages
 

@@ -45,13 +45,15 @@ python3 scripts/trial-tool.py issue --who "Acme Corp" --days 30 -o trial.token
 
 Product claim: `aurora-trial` (tokens for Veyron / Ragnarok / Argus will not unlock Aurora).
 
-## Local development
+## Local development & Zyvor-owned labs
 
 ```bash
-AURORA_LICENSE_ENFORCE=false   # skip middleware (tests / local hack)
+AURORA_LICENSE_ENFORCE=false   # no trial gate; /license/status reports licensed=true
 ```
 
-Default for production images is `AURORA_LICENSE_ENFORCE=true`.
+`.env.prod.example` defaults to **`false`** for Zyvor-owned / lab installs. Customer
+evaluation packages should set `AURORA_LICENSE_ENFORCE=true` and ship a signed
+`trial.token`.
 
 ## Customer distribution
 

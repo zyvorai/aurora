@@ -28,13 +28,13 @@
   border-bottom-color: transparent;
 }
 
-:global(.marketing-theme) .gnav,
-:global(.marketing-theme) .gnav[data-open='true'] {
+:global(html:not(.dark-theme) .marketing-theme) .gnav,
+:global(html:not(.dark-theme) .marketing-theme) .gnav[data-open='true'] {
   background: rgba(255, 255, 255, 0.96);
   border-bottom-color: transparent;
 }
 
-:global(.marketing-theme) .gnav:not([data-open='true']) {
+:global(html:not(.dark-theme) .marketing-theme) .gnav:not([data-open='true']) {
   background: rgba(255, 255, 255, 0.72);
   border-bottom-color: rgba(20, 22, 26, 0.08);
 }

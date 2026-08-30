@@ -33,8 +33,9 @@ Customer Sources → Product Discovery → Knowledge Extraction → AI Knowledge
 | Frontend | Next.js, React, Tailwind CSS, shadcn/ui |
 | Backend | FastAPI (Python) |
 | Agents | LangChain, LangGraph |
-| LLM (dev) | Ollama (Llama, Qwen, DeepSeek, Gemma) |
-| LLM (prod) | OpenAI (GPT-4o / GPT-4o-mini) |
+| LLM (dev) | Ollama (`--profile ollama`) or OpenAI-compatible |
+| LLM (lab / Zyvor-owned) | OpenAI-compatible chat (e.g. Groq) via `LLM_PROVIDER=openai` |
+| LLM (customer prod) | OpenAI or your compatible gateway |
 | Vector DB | Qdrant |
 | Knowledge Graph | Neo4j |
 | Relational DB | PostgreSQL |
@@ -50,7 +51,7 @@ Customer Sources → Product Discovery → Knowledge Extraction → AI Knowledge
 make start    # infra + DB + API + web (background)
 # → http://localhost:3000  (web)
 # → http://localhost:8000  (api)
-# Sign in: marketing@zyvor.dev / Admin@321
+# Sign in (2-step): marketing@zyvor.dev → Continue → Admin@321
 make stop     # when done
 ```
 
@@ -60,25 +61,35 @@ guide: [docs/sso-oidc.md](docs/sso-oidc.md). Full local setup:
 [docs/dev-guide.md](docs/dev-guide.md).
 
 ```bash
-# Optional: Ollama (free local LLM, default provider)
-brew install ollama && ollama serve && make ollama-pull
+# Optional local LLM (not required when OPENAI_* / Groq is configured)
+docker compose -f infra/docker-compose.yml --profile ollama up -d
+# Or: brew install ollama && ollama serve && make ollama-pull
 
-# Or OpenAI: set LLM_PROVIDER=openai and OPENAI_API_KEY in .env
+# Lab / owned: LLM_PROVIDER=openai + OPENAI_BASE_URL + OPENAI_API_KEY in .env
+# (Groq works for chat; embeddings fall back locally when base URL is groq.com)
 ```
 
 ### Containerized / production
 
 ```bash
-cp .env.prod.example .env   # then edit secrets
+cp .env.prod.example .env   # then edit secrets; set AURORA_LICENSE_ENFORCE=false for Zyvor-owned labs
 docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
-Deploy to a remote Docker host over SSH (syncs the repo, installs the Compose plugin if
-missing, brings the stack up, polls `/health`):
+Deploy to a remote Docker host over SSH. If K8s namespace `aurora` already exists,
+this starts **infra only** (postgres/redis/…) — app pods stay in Kubernetes:
 
 ```bash
 ./scripts/deploy-remote.sh <host> <user>
-./scripts/test-deploy-remote-e2e.sh <host> <user> --skip-deploy   # smoke test only
+./scripts/deploy-k8s.sh <host> <user>          # api/web/workers + TLS :30443
+./scripts/seed-zyvor-suite.sh                   # seed zyvor.dev suite products + CRM + mail follow-ups
+./scripts/test-deploy-remote-e2e.sh <host> <user> --skip-deploy   # compose smoke only
+```
+
+Seed suite (Axiom, Aurora, Forge, Ragnarok, Haven) against the TLS entrypoint:
+
+```bash
+API_BASE=https://<host>:30443/api/v1 CURL_OPTS=-k ./scripts/seed-zyvor-suite.sh
 ```
 
 ### Sales CRM (`apps/sales-crm`)

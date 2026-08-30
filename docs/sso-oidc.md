@@ -11,8 +11,8 @@ IdP, or **your own OIDC provider** (Auth0, Okta, Azure AD, existing Keycloak, �
 | Keycloak SSO (bundled demo IdP) | `demo` | `demo` | User in `infra/keycloak/aurora-realm.json` (`demo-sso@zyvor.dev`). Smoke-test only — not a production account. |
 | Keycloak admin console | `admin` | `keycloak_admin_dev` | Dev-only bootstrap for the Keycloak container itself (`infra/docker-compose.yml`). |
 
-Open the web UI → **Sign in**. For SSO, use the SSO button (when `SSO_ENABLED=true`);
-for local auth, use the email/password form.
+Open the web UI → **Sign in** (two-step: email → **Continue** → password). For SSO, use
+**Continue with SSO** (when `SSO_ENABLED=true`); for local auth, use the email/password form.
 
 ## Option A — Email/password only (default trial / compose)
 
@@ -42,12 +42,14 @@ Aurora's `infra/docker-compose.yml` ships `keycloak` + `keycloak-db` and imports
    SSO_CLIENT_ID=aurora
    SSO_CLIENT_SECRET=<same secret as the Keycloak client>
    SSO_REDIRECT_URI=http://<host>:8000/api/v1/auth/sso/callback
+   # K3s TLS entrypoint instead:
+   # SSO_REDIRECT_URI=https://<host>:30443/api/v1/auth/sso/callback
    # Browser-reachable URLs — not docker-internal hostnames.
    ```
 
 4. Ensure the Keycloak client's **Valid redirect URIs** and **Web origins**
    include your API callback and web origin (the realm JSON already lists
-   localhost and a lab IP — add your real host/HTTPS entrypoint).
+   localhost — add your real host / `https://<host>:30443` entrypoint).
 5. Restart the API so it picks up the env vars.
 6. Sign in via **SSO** with `demo` / `demo`.
 
