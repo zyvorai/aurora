@@ -14,7 +14,7 @@
   padding: var(--hs-s9) 0 var(--hs-s8);
   text-align: center;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(204, 66, 10, 0.06), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(247, 126, 45, 0.08), transparent 55%),
     linear-gradient(180deg, #ffffff 0%, var(--hs-bg-alt) 100%);
 }
 
@@ -208,13 +208,13 @@
   min-height: 280px;
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(145deg, rgba(204, 66, 10, 0.08) 0%, transparent 50%),
+    linear-gradient(145deg, rgba(247, 126, 45, 0.1) 0%, transparent 50%),
     linear-gradient(180deg, #ffffff 0%, #e8e8ed 100%);
 }
 
 .showcaseTint .showcaseVisual {
   background:
-    linear-gradient(145deg, rgba(0, 113, 227, 0.06) 0%, transparent 50%),
+    linear-gradient(145deg, rgba(150, 174, 209, 0.2) 0%, transparent 50%),
     linear-gradient(180deg, #ffffff 0%, #d2d2d7 100%);
 }
 

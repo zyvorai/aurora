@@ -23,6 +23,11 @@ module.exports = {
         'accent-pink': 'var(--accent-pink)',
         'accent-teal': 'var(--accent-teal)',
         'accent-purple': 'var(--accent-purple)',
+        'accent-mist': 'var(--accent-mist)',
+        'accent-sage': 'var(--accent-sage)',
+        'accent-lavender': 'var(--accent-lavender)',
+        'accent-deep-blue': 'var(--accent-deep-blue)',
+        cosmic: 'var(--primary)',
         gtm: {
           bg: 'var(--background)',
           card: 'var(--surface-elevated)',

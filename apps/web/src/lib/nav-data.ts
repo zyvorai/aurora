@@ -58,7 +58,7 @@ export const WORKSPACE_ICONS: Record<PersonaPath, LucideIcon> = {
   forge: LayoutGrid,
 };
 
-/** Accent tone per persona for workspace chrome. */
+/** iPhone 17 colorway accents per persona (Mist Blue / Sage / Lavender / Cosmic Orange / Deep Blue). */
 export const WORKSPACE_COLORS: Record<PersonaPath, Tone> = {
   brief: 'sky',
   sales: 'emerald',

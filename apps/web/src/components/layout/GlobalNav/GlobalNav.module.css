@@ -14,8 +14,8 @@
 }
 
 :global(html.dark-theme) .gnav {
-  background: rgba(29, 29, 31, 0.72);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: rgba(5, 5, 5, 0.72);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 .gnav[data-open='true'] {
@@ -24,7 +24,7 @@
 }
 
 :global(html.dark-theme) .gnav[data-open='true'] {
-  background: rgba(29, 29, 31, 0.96);
+  background: rgba(5, 5, 5, 0.96);
   border-bottom-color: transparent;
 }
 
@@ -351,7 +351,7 @@
 }
 
 :global(html.dark-theme) .fly {
-  background: rgba(29, 29, 31, 0.97);
+  background: rgba(5, 5, 5, 0.97);
 }
 
 :global(.marketing-theme) .fly {
@@ -542,7 +542,7 @@
   }
 
   :global(html.dark-theme) .sheet {
-    background: rgba(29, 29, 31, 0.97);
+    background: rgba(5, 5, 5, 0.97);
   }
 
   :global(.marketing-theme) .sheet {

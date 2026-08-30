@@ -211,11 +211,12 @@ Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-gu
 
 ## Design system
 
-Light-first **Apple.com-style** system: flat surfaces, SF/system typography tokens, pill
-primary buttons, and a Zyvor rust accent (`--primary` `#cc420a`) defined in
-`apps/web/src/app/globals.css`. Informational text links may use `--accent-blue`.
-Dark mode is opt-in via `html.dark-theme` (`ThemeContext`). Legacy `.glass*` /
-`.tahoe-*` class names still exist as aliases to the flat Apple styles for older call sites.
+Light-first **Apple.com-style** system keyed to **iPhone 17** finishes: Cosmic Orange
+primary (`--primary` `#f77e2d`), Mist Blue / Sage / Lavender / Deep Blue accents, SF/system
+typography, and pill CTAs in `apps/web/src/app/globals.css`. Informational text links use
+Mist Blue (`--accent-blue`). Dark mode is opt-in via `html.dark-theme` (`ThemeContext`).
+Legacy `.glass*` / `.tahoe-*` class names still exist as aliases to the flat Apple styles
+for older call sites.
 
 **Chrome:** `GlobalNav` (mega-menu flyouts) sits on marketing (`MarketingLayout`), app
 (`AppShell`), product console (`ProductConsoleShell`), and portal auth pages. Marketing
