@@ -4,15 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { audit, type AuditLogEntry } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
-import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow,
-} from '@/components/ui/Table';
-import { TextMuted } from '@/components/ui/Typography';
 import { SkeletonTable } from '@/components/ui/Skeleton';
 import { ClipboardList } from 'lucide-react';
 
@@ -34,7 +29,8 @@ export default function AuditLogPage() {
   useEffect(() => {
     let cancelled = false;
     function load() {
-      audit.list()
+      audit
+        .list()
         .then((list) => {
           if (!cancelled) setEntries(list);
         })
@@ -71,8 +67,12 @@ export default function AuditLogPage() {
   }, [entries, actionFilter, search]);
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-6 animate-fade-up">
-      <PageHero eyebrow="Compliance" title="Audit Log" description="Immutable trail of write/approve/publish actions across your tenant." />
+    <div className="max-w-content mx-auto px-6 py-10 space-y-8 animate-fade-up">
+      <PageHero
+        eyebrow="Compliance"
+        title="Audit log"
+        description="Immutable trail of write, approve, and publish actions across your tenant."
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         {actionTypes.map((type) => (
@@ -96,37 +96,30 @@ export default function AuditLogPage() {
       {loading ? (
         <SkeletonTable />
       ) : filtered.length === 0 ? (
-        <EmptyState icon={ClipboardList} title="No audit entries found" description="Actions will appear here as your team works." />
+        <EmptyState
+          icon={ClipboardList}
+          title="No audit entries found"
+          description="Actions will appear here as your team works."
+        />
       ) : (
-        <Card elevated>
-          <CardBody className="p-0">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeaderCell>Time</TableHeaderCell>
-                  <TableHeaderCell>Action</TableHeaderCell>
-                  <TableHeaderCell>Resource</TableHeaderCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filtered.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="whitespace-nowrap text-muted">
-                      {new Date(entry.created_at).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={actionVariant(entry.action)}>{entry.action}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted">
-                      {entry.resource_type}
-                      {entry.resource_id && <span className="ml-1 font-mono text-xs">{entry.resource_id}</span>}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardBody>
-        </Card>
+        <ul className="rounded-[var(--radius-lg)] bg-background divide-y divide-border overflow-hidden list-none m-0 p-0">
+          {filtered.map((entry) => (
+            <li key={entry.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-5 py-3.5">
+              <span className="text-[12px] text-muted whitespace-nowrap sm:w-44 shrink-0">
+                {new Date(entry.created_at).toLocaleString()}
+              </span>
+              <Badge variant={actionVariant(entry.action)} className="w-fit">
+                {entry.action}
+              </Badge>
+              <span className="text-[13px] text-muted min-w-0 truncate">
+                {entry.resource_type}
+                {entry.resource_id && (
+                  <span className="ml-1.5 text-[12px] opacity-70">{entry.resource_id}</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -6,7 +6,6 @@ import { showToast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { PageHero } from '@/components/layout/PageHero';
 import { SectionHeader } from '@/components/layout/SectionHeader';
-import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -24,7 +23,10 @@ export default function AdminDangerZonePage() {
 
   useEffect(() => {
     if (role === 'admin') {
-      admin.plan().then(setPlan).catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load plan info'));
+      admin
+        .plan()
+        .then(setPlan)
+        .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load plan info'));
     }
   }, [role]);
 
@@ -56,19 +58,16 @@ export default function AdminDangerZonePage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-content mx-auto px-6 py-10 space-y-8">
         <SkeletonHero />
         <SkeletonText lines={3} />
       </div>
     );
   }
 
-  // First client-side route guard in this app: this page is destructive enough
-  // (irreversible data purge) that a non-admin should never see the form render
-  // at all, rather than seeing it and only failing on submit with a 403.
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-6 py-8">
+      <div className="max-w-content mx-auto px-6 py-10">
         <EmptyState
           icon={ShieldAlert}
           title="Admin access required"
@@ -79,67 +78,63 @@ export default function AdminDangerZonePage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
+    <div className="max-w-content mx-auto px-6 py-10 space-y-10 animate-fade-up">
       <PageHero
         eyebrow="Admin"
-        title="Danger Zone"
+        title="Danger zone"
         description="Export or permanently delete this tenant's ingested data. These actions are logged to the audit trail."
       />
 
       <section>
-        <SectionHeader label="Export" title="Download tenant data" />
-        <Card elevated>
-          <CardBody className="flex items-center justify-between">
-            <TextMuted>
-              Exports product metadata and user accounts as JSON. Does not include ingested
-              documents, embeddings, or generated artifacts.
-            </TextMuted>
-            <Button variant="secondary" disabled={exporting} onClick={handleExport}>
-              {exporting ? 'Exporting…' : 'Export data'}
-            </Button>
-          </CardBody>
-        </Card>
+        <SectionHeader title="Download tenant data" />
+        <div className="rounded-[var(--radius-lg)] bg-background px-5 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <p className="flex-1 text-[15px] text-muted leading-[1.47]">
+            Exports product metadata and user accounts as JSON. Does not include ingested documents,
+            embeddings, or generated artifacts.
+          </p>
+          <Button variant="secondary" disabled={exporting} onClick={handleExport} className="shrink-0">
+            {exporting ? 'Exporting…' : 'Export data'}
+          </Button>
+        </div>
       </section>
 
       <section>
-        <SectionHeader label="Irreversible" title="Purge ingested data" />
-        <Card elevated className="border-danger/40">
-          <CardBody className="space-y-4">
-            <TextMuted>
-              Permanently deletes this tenant&apos;s ingested documents, embeddings, and
-              knowledge-graph data from the vector store and knowledge graph. Products, users,
-              and generated artifacts (proposals, content, etc.) are <strong>not</strong>{' '}
-              affected — only source knowledge is wiped. This cannot be undone.
-            </TextMuted>
+        <SectionHeader title="Purge ingested data" />
+        <div className="rounded-[var(--radius-lg)] bg-background ring-1 ring-danger/30 px-5 py-5 space-y-4">
+          <p className="text-[15px] text-muted leading-[1.47]">
+            Permanently deletes this tenant&apos;s ingested documents, embeddings, and knowledge-graph
+            data. Products, users, and generated artifacts are{' '}
+            <strong className="text-foreground">not</strong> affected — only source knowledge is wiped.
+            This cannot be undone.
+          </p>
 
-            {purged ? (
-              <TextSmall className="text-success">Tenant data has been purged.</TextSmall>
-            ) : !plan ? (
-              <TextMuted>Loading tenant info…</TextMuted>
-            ) : (
-              <div className="space-y-2">
-                <TextSmall className="text-muted">
-                  Type <span className="font-mono text-foreground">{plan.tenant_slug}</span> to confirm.
-                </TextSmall>
-                <div className="flex gap-2">
-                  <Input
-                    value={purgeConfirm}
-                    onChange={(e) => setPurgeConfirm(e.target.value)}
-                    placeholder={plan.tenant_slug}
-                    className="flex-1 font-mono"
-                  />
-                  <Button
-                    variant="danger"
-                    disabled={purging || purgeConfirm !== plan.tenant_slug}
-                    onClick={handlePurge}
-                  >
-                    {purging ? 'Purging…' : 'Purge data'}
-                  </Button>
-                </div>
+          {purged ? (
+            <TextSmall className="text-success">Tenant data has been purged.</TextSmall>
+          ) : !plan ? (
+            <TextMuted>Loading tenant info…</TextMuted>
+          ) : (
+            <div className="space-y-2">
+              <TextSmall className="text-muted">
+                Type <span className="text-foreground">{plan.tenant_slug}</span> to confirm.
+              </TextSmall>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  value={purgeConfirm}
+                  onChange={(e) => setPurgeConfirm(e.target.value)}
+                  placeholder={plan.tenant_slug}
+                  className="flex-1"
+                />
+                <Button
+                  variant="danger"
+                  disabled={purging || purgeConfirm !== plan.tenant_slug}
+                  onClick={handlePurge}
+                >
+                  {purging ? 'Purging…' : 'Purge data'}
+                </Button>
               </div>
-            )}
-          </CardBody>
-        </Card>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

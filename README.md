@@ -201,13 +201,13 @@ Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-gu
 - `GET /api/v1/products/{id}/opportunities/{opp_id}` — Opportunity detail
 - `GET /api/v1/products/{id}/account-health` — Customer success account health
 - `GET /api/v1/products/{id}/brief` — Executive brief incl. `gtm_readiness` (9 derived, no-LLM status booleans — sources/ingest/profile/strategy/discover/qualify/outreach/proposal/publish)
-- `GET /api/v1/products/{id}/workflow-runs` — Recent/active `WorkflowRun`s for a product (powers the Full Forge run-log dock)
+- `GET /api/v1/products/{id}/workflow-runs` — Recent/active `WorkflowRun`s for a product (powers the Workspace run-log dock)
 - `GET /api/v1/agents/registry` — Agent registry catalog
 - `GET /api/v1/admin/plan` — Plan + usage
 - `GET/POST /api/v1/admin/suppression` — Suppression list
 - `GET /api/v1/admin/export` — Tenant data export (admin only)
 - `POST /api/v1/admin/purge` — Tenant knowledge purge, typed-slug confirmation (admin only)
-- `GET/POST/PUT/DELETE /api/v1/admin/workflow-stages` — Tenant-defined custom Full Forge stages (Enterprise plan only)
+- `GET/POST/PUT/DELETE /api/v1/admin/workflow-stages` — Tenant-defined custom Workspace stages (Enterprise plan only)
 
 ## Design system
 
@@ -220,7 +220,7 @@ Dark mode is opt-in via `html.dark-theme` (`ThemeContext`). Legacy `.glass*` /
 **Chrome:** `GlobalNav` (mega-menu flyouts) sits on marketing (`MarketingLayout`), app
 (`AppShell`), product console (`ProductConsoleShell`), and portal auth pages. Marketing
 home is `/` (`HomeSections`); sign-up/sign-in live at `/login`. New tenants get an
-`OnboardingChecklist` on `/dashboard` and Full Forge until sources are ingested and an
+`OnboardingChecklist` on `/dashboard` and Workspace until sources are ingested and an
 agent has run.
 
 The product workspace (`/products/[id]/*`) keeps a left rail + top tab bar under that same
