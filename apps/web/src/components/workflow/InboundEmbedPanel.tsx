@@ -90,13 +90,17 @@ export function InboundEmbedPanel({ productId }: { productId: string }) {
         <div className="space-y-3">
           <p className="text-[13px] text-muted">Live preview (styling matches the public embed)</p>
           <div className={forgeStyles.spotlight}>
-            <form onSubmit={previewSubmit} className="space-y-3">
-              <h3 className={forgeStyles.spotlightTitle}>Contact {config.product_name}</h3>
-              <Input name="email" type="email" placeholder="Work email" required />
-              <Input name="name" placeholder="Full name" />
-              <Input name="company" placeholder="Company" />
-              <Input name="title" placeholder="Title" />
-              <Button type="submit" className="w-full">Request demo</Button>
+            <form onSubmit={previewSubmit}>
+              <h3 className={forgeStyles.formCardTitle}>Contact {config.product_name}</h3>
+              <div className={forgeStyles.formFields}>
+                <Input name="email" type="email" placeholder="Work email" required />
+                <Input name="name" placeholder="Full name" />
+                <Input name="company" placeholder="Company" />
+                <Input name="title" placeholder="Title" />
+              </div>
+              <div className={forgeStyles.formActions}>
+                <Button type="submit">Request demo</Button>
+              </div>
             </form>
           </div>
         </div>

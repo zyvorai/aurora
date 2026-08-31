@@ -14,7 +14,7 @@
   padding: var(--hs-s9) 0 var(--hs-s8);
   text-align: center;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(247, 126, 45, 0.08), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.06), transparent 55%),
     linear-gradient(180deg, #ffffff 0%, var(--hs-bg-alt) 100%);
 }
 
@@ -432,7 +432,7 @@
   padding: var(--hs-s9) 0 var(--hs-s8);
   text-align: center;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(247, 126, 45, 0.06), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.05), transparent 55%),
     linear-gradient(180deg, #ffffff 0%, var(--hs-bg-alt) 100%);
 }
 

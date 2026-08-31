@@ -1,11 +1,11 @@
 'use client';
 
-import { FormEvent, useId, useState } from 'react';
+import { FormEvent, useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { auth, products } from '@/lib/api';
 import { resolveApiBase } from '@/lib/api-base';
-import { resolvePostLoginRoute, storeAuthSession } from '@/lib/role-routing';
+import { readStoredRole, resolvePostLoginRoute, storeAuthSession } from '@/lib/role-routing';
 import styles from './login.module.css';
 
 type Mode = 'signin' | 'signup';
@@ -36,6 +36,14 @@ export default function LoginPage() {
 
   const host = url.trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
   const avatarLetter = (email || signup.email || 'A').trim().charAt(0).toUpperCase() || 'A';
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!localStorage.getItem('token')) return;
+    void resolvePostLoginRoute(readStoredRole() ?? 'admin').then((route) => {
+      router.replace(route);
+    });
+  }, [router]);
 
   function resetErrors() {
     setError('');

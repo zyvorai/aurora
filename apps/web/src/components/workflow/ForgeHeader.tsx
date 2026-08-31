@@ -2,7 +2,7 @@
 
 import type { ChainStage } from '@/lib/chain';
 import { chainStatusLabel } from '@/lib/chain';
-import { formatSourcePath } from '@/lib/source-display';
+import { SourceLink } from '@/components/sources/SourceLink';
 import forgeStyles from './forge.module.css';
 
 export function ForgeHeader({
@@ -17,15 +17,14 @@ export function ForgeHeader({
   const doneCount = stages.filter((s) => s.status === 'done').length;
   const pct = stages.length ? Math.round((doneCount / stages.length) * 100) : 0;
   const label = chainStatusLabel(stages);
-  const domain = websiteUrl ? formatSourcePath(websiteUrl) : null;
 
   return (
     <header className={forgeStyles.workspaceHero}>
       <div className="min-w-0 flex-1">
         <p className={forgeStyles.workspaceEyebrow}>Workspace</p>
         <h1 className={forgeStyles.workspaceTitle}>{name}</h1>
-        {domain ? (
-          <p className={forgeStyles.workspaceMeta}>{domain}</p>
+        {websiteUrl ? (
+          <SourceLink urlOrKey={websiteUrl} variant="header" />
         ) : (
           <p className={forgeStyles.workspaceMeta}>{label}</p>
         )}

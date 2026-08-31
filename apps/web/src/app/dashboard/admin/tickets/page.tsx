@@ -155,7 +155,7 @@ export default function TicketsAdminPage() {
                       value={ticket.status}
                       disabled={busyId === ticket.id}
                       onChange={(e) => handleStatusChange(ticket.id, e.target.value as TicketStatus)}
-                      className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md px-2 py-1 text-body-sm text-foreground focus-ring"
+                      className="apple-select apple-select-compact"
                     >
                       <option value="open">Open</option>
                       <option value="in_progress">In Progress</option>
@@ -197,7 +197,7 @@ export default function TicketsAdminPage() {
                 value={detailTicket.status}
                 disabled={busyId === detailTicket.id}
                 onChange={(e) => handleStatusChange(detailTicket.id, e.target.value as TicketStatus)}
-                className="w-full bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-md px-3 py-2 text-body-sm text-foreground focus-ring"
+                className="apple-select"
               >
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>

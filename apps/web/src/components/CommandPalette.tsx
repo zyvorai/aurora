@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDelayedUnmount } from '@/hooks/useDelayedUnmount';
@@ -34,6 +35,7 @@ function matches(item: CommandPaletteItem, query: string): boolean {
 export default function CommandPalette({ open, onClose, items, title = 'Jump toâ€¦' }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const rendered = useDelayedUnmount(open, 150);
 
@@ -92,11 +94,24 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, filtered, activeIndex, onClose]);
 
-  if (!rendered) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!mounted || !rendered) return null;
 
   let flatIndex = -1;
 
-  return (
+  return createPortal(
     <div
       className={cn(
         'fixed inset-0 z-[100] flex items-start justify-center p-4 pt-[15vh] bg-black/60 backdrop-blur-sm',
@@ -174,6 +189,7 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

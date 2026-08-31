@@ -5,7 +5,8 @@ import { products, type ProductSource } from '@/lib/api';
 import { useIngestPolling } from '@/lib/useIngestPolling';
 import { showToast } from '@/lib/toast';
 import { readStoredRole } from '@/lib/role-routing';
-import { formatSourcePath, groupSources } from '@/lib/source-display';
+import { groupSources } from '@/lib/source-display';
+import { SourceLink } from '@/components/sources/SourceLink';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { TextMuted } from '@/components/ui/Typography';
@@ -265,7 +266,7 @@ export default function SourcesPanel({
               const s = group.primary;
               const ids = groupIds(group);
               const { Icon, className: iconClass } = sourceIconMeta(s.source_type);
-              const path = formatSourcePath(s.url ?? s.storage_key ?? s.display_name);
+              const path = s.url ?? s.storage_key ?? s.display_name;
               const groupSelected = ids.some((id) => selected.has(id));
 
               return (
@@ -290,7 +291,11 @@ export default function SourcesPanel({
                       <span className={forgeStyles.duplicateBadge}>+{group.duplicates.length} duplicate</span>
                     ) : null}
                   </p>
-                  {path ? <p className={forgeStyles.sourceMeta}>{path}</p> : null}
+                  {path ? (
+                    <div className={forgeStyles.sourceMeta}>
+                      <SourceLink urlOrKey={path} />
+                    </div>
+                  ) : null}
                   {s.error_message ? (
                     <p className="mt-1 text-[11px] text-warning">{s.error_message}</p>
                   ) : null}

@@ -9,8 +9,9 @@ from gtm_api.agents.solution_architect import ARCHITECT_PROMPT
 
 class TestAgentPrompts:
     def test_extraction_prompt_formats(self):
-        result = EXTRACTION_PROMPT.format(context="sample docs")
+        result = EXTRACTION_PROMPT.format(product_name="Aurora", context="sample docs")
         assert "sample docs" in result
+        assert "Aurora" in result
         assert "{question, answer}" in result
 
     def test_strategy_prompt_formats(self):

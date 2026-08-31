@@ -33,7 +33,7 @@ export default function OnboardingChecklist({
   firstProductId,
   onCreateProduct,
 }: OnboardingChecklistProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => hasProduct);
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(STORAGE_KEY) === '1';

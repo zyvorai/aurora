@@ -101,7 +101,7 @@ export function NextAction({
         <h2 className={forgeStyles.spotlightTitle}>{content.title}</h2>
         <p className={forgeStyles.spotlightBody}>{content.body}</p>
       </div>
-      <div className="flex flex-wrap gap-2 shrink-0">
+      <div className="flex flex-wrap gap-2 shrink-0 items-center">
         {!isRunning && content.altLabel && onAlt && (
           <Button variant="secondary" onClick={onAlt} disabled={loading}>
             {content.altLabel}

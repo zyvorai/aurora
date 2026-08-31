@@ -120,7 +120,7 @@ function SignupForm() {
           <TextSmall className="text-danger">{error}</TextSmall>
         </div>
       )}
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type="submit" disabled={loading}>
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply as reseller'}
       </Button>
     </form>

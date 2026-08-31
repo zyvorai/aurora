@@ -5,6 +5,7 @@ import { Plus, ShieldAlert, Trash2, Workflow } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
+import { WorkspacePage } from '@/components/layout/WorkspacePanel';
 import { Card, CardBody } from '@/components/ui/Card';
 import { SkeletonHero, SkeletonTable } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
@@ -108,7 +109,7 @@ function BlockEditor({ blocks, onChange }: { blocks: StageBlock[]; onChange: (bl
                   <select
                     value={block.action}
                     onChange={(e) => update(i, { ...block, action: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-background border border-border rounded-md text-body text-foreground focus-ring"
+                    className="apple-select"
                   >
                     {ALLOWED_STAGE_ACTIONS.map((a) => (
                       <option key={a} value={a}>{STAGE_ACTION_LABELS[a]}</option>
@@ -246,6 +247,7 @@ export default function WorkflowStagesAdminPage() {
 
   return (
     <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8 animate-fade-up">
+      <WorkspacePage>
       <PageHero
         icon={Workflow}
         eyebrow="Admin"
@@ -375,6 +377,7 @@ export default function WorkflowStagesAdminPage() {
           </div>
         </form>
       </Modal>
+      </WorkspacePage>
     </div>
   );
 }

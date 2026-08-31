@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { MarketingLayout } from '@/components/layout/MarketingLayout';
+import { MarketingBottomCta, MarketingHeroActions } from '@/components/marketing/MarketingHeroActions';
 import { Reveal } from '@/components/ui/Reveal';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import styles from '@/components/marketing/marketing.module.css';
@@ -99,14 +99,7 @@ export default function FeaturesPage() {
             Auto-discovery, a grounded knowledge graph, and background agents — enterprise
             orchestration on lean hardware.
           </p>
-          <div className={styles.heroBtnrow}>
-            <Link href="/login" className={styles.btnPrimary}>
-              Get started
-            </Link>
-            <Link href="/login" className={styles.linkCta}>
-              Sign in <span aria-hidden>›</span>
-            </Link>
-          </div>
+          <MarketingHeroActions variant="features" />
         </div>
       </section>
 
@@ -182,7 +175,7 @@ export default function FeaturesPage() {
                   }}
                 >
                   Enterprise includes SSO, multi-tenant workspaces, and priority support.
-                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--hs-accent)' }}>
+                  <div className="mt-2 text-xs text-primary">
                     pricing.md · docs/enterprise
                   </div>
                 </div>
@@ -305,9 +298,7 @@ export default function FeaturesPage() {
             <p className={styles.inkLede}>
               Onboard your first product and generate a GTM strategy in minutes.
             </p>
-            <Link href="/login" className={styles.btnPrimary}>
-              Get started
-            </Link>
+            <MarketingBottomCta />
           </div>
         </section>
       </Reveal>

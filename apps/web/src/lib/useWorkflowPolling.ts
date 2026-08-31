@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { products, type WorkflowRunStatus } from '@/lib/api';
+import { sanitizeWorkflowError } from '@/lib/workflow-errors';
 
 const MAX_ATTEMPTS = 240;
 const POLL_INTERVAL_MS = 3000;
@@ -42,7 +43,7 @@ export function useWorkflowPolling({ onComplete, onError }: UseWorkflowPollingOp
         if (status.status === 'completed' || status.status === 'failed') {
           setPolling(false);
           if (status.status === 'failed') {
-            onError?.(status.error_message || 'Workflow failed');
+            onError?.(sanitizeWorkflowError(status.error_message));
           } else {
             onComplete?.(status);
           }

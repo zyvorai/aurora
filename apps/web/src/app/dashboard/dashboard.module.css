@@ -113,18 +113,30 @@
 }
 
 .linkPrimary {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--accent-blue);
+  color: #fff;
+  background: var(--accent-blue);
+  border-radius: 980px;
   text-decoration: none;
+  transition: background 0.16s ease;
 }
 
 .linkPrimary:hover {
-  text-decoration: underline;
+  background: var(--accent-blue-hover);
+  text-decoration: none;
 }
 
 .linkSecondary {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 14px;
   color: var(--muted-foreground);
   text-decoration: none;
 }

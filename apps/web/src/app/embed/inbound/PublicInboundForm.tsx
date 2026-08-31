@@ -62,8 +62,8 @@ export default function PublicInboundFormPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--app-canvas)] p-6">
         <div className={`${forgeStyles.spotlight} max-w-md w-full text-center`}>
-          <h1 className={forgeStyles.spotlightTitle}>Thanks — we&apos;ll be in touch</h1>
-          <p className={forgeStyles.spotlightBody}>Your request was received.</p>
+          <h1 className={forgeStyles.formCardTitle}>Thanks — we&apos;ll be in touch</h1>
+          <p className={forgeStyles.formCardBody}>Your request was received.</p>
         </div>
       </div>
     );
@@ -72,18 +72,22 @@ export default function PublicInboundFormPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--app-canvas)] p-6">
       <div className={`${forgeStyles.spotlight} max-w-md w-full`}>
-        <h1 className={forgeStyles.spotlightTitle}>Get in touch</h1>
-        <p className={`${forgeStyles.spotlightBody} mb-5`}>Tell us about your team and we&apos;ll follow up shortly.</p>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Work email" required disabled={loading} />
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" disabled={loading} />
-          <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company" disabled={loading} />
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" disabled={loading} />
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (optional)" disabled={loading} />
-          {error ? <p className="text-[13px] text-warning">{error}</p> : null}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Sending…' : 'Submit'}
-          </Button>
+        <h1 className={forgeStyles.formCardTitle}>Get in touch</h1>
+        <p className={forgeStyles.formCardBody}>Tell us about your team and we&apos;ll follow up shortly.</p>
+        <form onSubmit={handleSubmit}>
+          <div className={forgeStyles.formFields}>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Work email" required disabled={loading} />
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" disabled={loading} />
+            <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company" disabled={loading} />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" disabled={loading} />
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (optional)" disabled={loading} />
+          </div>
+          {error ? <p className="mt-2 text-[12px] text-warning">{error}</p> : null}
+          <div className={forgeStyles.formActions}>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Sending…' : 'Submit'}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

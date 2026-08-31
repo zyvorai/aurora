@@ -10,6 +10,7 @@ import {
   type PipelineSummary,
   type WorkflowRunStatus,
 } from '@/lib/api';
+import { sanitizeWorkflowError } from '@/lib/workflow-errors';
 import { PageHero } from '@/components/layout/PageHero';
 import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { Button } from '@/components/ui/Button';
@@ -85,7 +86,7 @@ export default function PipelinePage() {
           const doneMessage =
             run.status === 'completed'
               ? 'Technical eval complete — opportunity at Proposal stage'
-              : (run.error_message ?? 'Workflow failed');
+              : sanitizeWorkflowError(run.error_message);
           setMessage(doneMessage);
           showToast(run.status === 'completed' ? 'success' : 'error', doneMessage);
           setLoading(false);

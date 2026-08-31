@@ -17,6 +17,7 @@ import { Modal } from '@/components/ui/Modal';
 import OnboardingChecklist from '@/components/OnboardingChecklist';
 import { TextSmall } from '@/components/ui/Typography';
 import { SkeletonHero, SkeletonCard } from '@/components/ui/Skeleton';
+import { SourceLink } from '@/components/sources/SourceLink';
 import { TONE_CLASSES, TONE_ROTATION } from '@/lib/tone';
 import type { Tone } from '@/components/layout/PageHero';
 import { cn } from '@/lib/cn';
@@ -65,6 +66,7 @@ export default function DashboardPage() {
   const [createError, setCreateError] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ProductFilter>('all');
+  const [search, setSearch] = useState('');
 
   const actions = dashboardActionsForRole(role);
   const canDelete = role === 'admin' || role === 'editor';
@@ -88,6 +90,11 @@ export default function DashboardPage() {
       .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load products'))
       .finally(() => setLoading(false));
   }, []);
+
+  function openCreateModal() {
+    setShowCreate(true);
+    setCreateError('');
+  }
 
   function closeCreateModal() {
     setShowCreate(false);
@@ -143,8 +150,13 @@ export default function DashboardPage() {
   const setupCount = productList.length - readyCount;
 
   const filteredProducts = productList.filter((p) => {
-    if (filter === 'ready') return p.profile_status === 'ready';
-    if (filter === 'setup') return p.profile_status !== 'ready';
+    if (filter === 'ready' && p.profile_status !== 'ready') return false;
+    if (filter === 'setup' && p.profile_status === 'ready') return false;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const haystack = `${p.name} ${p.description ?? ''} ${p.website_url ?? ''}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
     return true;
   });
 
@@ -168,7 +180,7 @@ export default function DashboardPage() {
           }
           actions={
             isEmpty ? undefined : (
-              <Button onClick={() => setShowCreate(true)}>+ Onboard product</Button>
+              <Button onClick={openCreateModal}>+ Onboard product</Button>
             )
           }
         />
@@ -176,7 +188,7 @@ export default function DashboardPage() {
         <OnboardingChecklist
           hasProduct={!isEmpty}
           firstProductId={productList[0]?.id}
-          onCreateProduct={() => setShowCreate(true)}
+          onCreateProduct={openCreateModal}
         />
 
         {!isEmpty && (
@@ -197,7 +209,17 @@ export default function DashboardPage() {
             </div>
 
             <div className={styles.toolbar}>
-              <div className="apple-segments" role="tablist" aria-label="Filter products">
+              {productList.length > 6 ? (
+                <Input
+                  type="search"
+                  placeholder="Search products…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full sm:w-64"
+                  aria-label="Search products"
+                />
+              ) : null}
+              <div className="apple-segments ml-auto" role="tablist" aria-label="Filter products">
                 {filterLabels.map((f) => (
                   <button
                     key={f.key}
@@ -218,10 +240,13 @@ export default function DashboardPage() {
             <div className={styles.grid}>
               {filteredProducts.length === 0 ? (
                 <p className="col-span-full text-center text-[15px] text-muted py-16">
-                  No products match this filter.{' '}
-                  <button type="button" className="apple-link" onClick={() => setFilter('all')}>
-                    Show all
-                  </button>
+                  {search.trim()
+                    ? <>No products match &ldquo;{search.trim()}&rdquo;.{' '}
+                      <button type="button" className="apple-link" onClick={() => setSearch('')}>Clear search</button>
+                    </>
+                    : <>No products match this filter.{' '}
+                      <button type="button" className="apple-link" onClick={() => setFilter('all')}>Show all</button>
+                    </>}
                 </p>
               ) : null}
               {filteredProducts.map((p, index) => {
@@ -256,6 +281,11 @@ export default function DashboardPage() {
                           </Badge>
                         </div>
                         <p className={styles.subline}>{productSubline(p)}</p>
+                        {p.website_url ? (
+                          <div className="mt-1">
+                            <SourceLink urlOrKey={p.website_url} variant="compact" stopPropagation />
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 
@@ -290,7 +320,11 @@ export default function DashboardPage() {
           </section>
         )}
 
-        <Modal open={showCreate} onClose={closeCreateModal} title="Create your first product">
+        <Modal
+          open={showCreate}
+          onClose={closeCreateModal}
+          title={isEmpty ? 'Create your first product' : 'Onboard product'}
+        >
           <form onSubmit={handleCreate} className="space-y-4">
             {createError && <TextSmall className="text-danger">{createError}</TextSmall>}
             <Input
@@ -315,11 +349,11 @@ export default function DashboardPage() {
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="secondary" className="flex-1" disabled={submitting} onClick={closeCreateModal}>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="secondary" disabled={submitting} onClick={closeCreateModal}>
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={submitting}>
+              <Button type="submit" disabled={submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create product'}
               </Button>
             </div>

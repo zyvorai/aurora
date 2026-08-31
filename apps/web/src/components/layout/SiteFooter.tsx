@@ -1,6 +1,9 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-const FOOTER_COLUMNS = [
+const FOOTER_COLUMNS_PUBLIC = [
   {
     title: 'Product',
     links: [
@@ -20,12 +23,44 @@ const FOOTER_COLUMNS = [
     title: 'Account',
     links: [
       { label: 'Sign in', href: '/login' },
-      { label: 'Create workspace', href: '/login' },
+    ],
+  },
+];
+
+const FOOTER_COLUMNS_AUTHED = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '/features' },
+      { label: 'Dashboard', href: '/dashboard' },
+    ],
+  },
+  {
+    title: 'Portals',
+    links: [
+      { label: 'Customer', href: '/portal/customer/login' },
+      { label: 'Reseller', href: '/portal/reseller/login' },
+      { label: 'Sales', href: '/portal/salesperson/login' },
+    ],
+  },
+  {
+    title: 'Account',
+    links: [
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Settings', href: '/dashboard/settings' },
     ],
   },
 ];
 
 export function SiteFooter() {
+  const [authed, setAuthed] = useState(false);
+
+  useEffect(() => {
+    setAuthed(!!localStorage.getItem('token'));
+  }, []);
+
+  const columns = authed ? FOOTER_COLUMNS_AUTHED : FOOTER_COLUMNS_PUBLIC;
+
   return (
     <footer className="bg-[var(--hs-bg-alt)] border-t border-border mt-auto">
       <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] pt-14 pb-10 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10">
@@ -35,7 +70,7 @@ export function SiteFooter() {
             Turn your product into an AI salesperson.
           </p>
         </div>
-        {FOOTER_COLUMNS.map((col) => (
+        {columns.map((col) => (
           <div key={col.title}>
             <p className="text-[12px] font-semibold text-foreground mb-3.5 tracking-[-0.01em]">{col.title}</p>
             <ul className="space-y-2">

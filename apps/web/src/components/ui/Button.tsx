@@ -22,11 +22,11 @@ const variants: Record<Variant, string> = {
   link: 'text-[var(--accent-blue)] hover:underline underline-offset-2 p-0 h-auto font-normal',
 };
 
-/** Apple.com density: compact height, 12–14px type, pill shape on primary/secondary. */
+/** Comfortable tap targets — default md (40px). */
 const sizes = {
-  sm: 'h-7 min-h-7 px-3 text-[12px] leading-none',
-  md: 'h-8 min-h-8 px-3.5 text-[13px] leading-none',
-  lg: 'h-9 min-h-9 px-4 text-[14px] leading-none',
+  sm: 'h-9 min-h-9 px-4 text-[14px] leading-none',
+  md: 'h-10 min-h-10 px-5 text-[15px] leading-none',
+  lg: 'h-11 min-h-11 px-6 text-[16px] leading-none',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

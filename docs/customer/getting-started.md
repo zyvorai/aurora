@@ -32,11 +32,13 @@ Never publish lab host IPs in customer-facing docs — use `localhost` or your `
 
 ## 3. First useful workflow
 
-1. Open **GTM workspace** (`/dashboard`) → create/onboard a product (website or docs URL).
+1. Open **GTM workspace** (`/dashboard`) → **+ Onboard product** (modal opens centered in the viewport).
 2. **Add a source** → **Ingest** — wait until status is **completed** (workers must be up).
-3. Open **Full Forge** (`/products/:id`) or **Executive Brief**.
-4. Run one agent action (Q&A / Strategy / Outreach) → **Approve** → **Publish** when ready.
-5. **Pipeline** (`/products/:id/pipeline`) for CRM opportunities; outreach drafts include a 3-step mail follow-up sequence.
+3. Open **Workspace** (`/products/:id`) → **Build profile** (runs async; pipeline rail updates when done).
+4. Run **Generate strategy** or **Q&A** to verify grounded answers cite your docs.
+5. **Approve** → **Publish** when ready; **Pipeline** (`/products/:id/pipeline`) for CRM opportunities.
+
+**Dashboard tips:** With 6+ products, use **Search** and **All / Ready / Setup** filters. Product cards show compact source links (e.g. `zyvor.dev/aurora`), not raw URLs.
 
 ## Next steps
 

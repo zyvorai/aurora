@@ -21,6 +21,7 @@ import ResultPanel from '@/components/ResultPanel';
 import { Markdown } from '@/components/ui/Markdown';
 import ChatWidget from '@/components/ChatWidget';
 import SourcesPanel from '@/components/sources/SourcesPanel';
+import { SourceLink } from '@/components/sources/SourceLink';
 import type { SourceKind } from '@/components/sources/AddSourceWizard';
 import ArtifactList from '@/components/artifacts/ArtifactList';
 import AgentTaskProgress from '@/components/AgentTaskProgress';
@@ -180,6 +181,7 @@ export default function ProductForgePageInner() {
       setLoading(false);
       setLoadingAction(null);
       setTaskDetail(undefined);
+      products.brief(id).then(setBrief).catch(() => {});
       products.artifacts(id).then(setArtifacts).catch(() => {});
     },
     onError: (message) => {
@@ -379,7 +381,13 @@ export default function ProductForgePageInner() {
         <PageHero
           eyebrow="Workspace"
           title={product.name}
-          description={product.website_url ?? 'Agents and workflow tools'}
+          description={
+            product.website_url ? (
+              <SourceLink urlOrKey={product.website_url} variant="header" />
+            ) : (
+              'Agents and workflow tools'
+            )
+          }
         />
       )}
 

@@ -14,7 +14,7 @@ interface HeroStat {
 interface PageHeroProps {
   eyebrow?: string;
   title: string;
-  description?: string;
+  description?: ReactNode;
   actions?: ReactNode;
   icon?: LucideIcon;
   accent?: Tone;

@@ -25,6 +25,9 @@ Two-step Apple-style sign-in (email → password) or create-account flow; option
 4. **SSO:** “Continue with SSO” when enabled.
 5. **Empty / fail:** wrong credentials → error under the field; stay on step.
 6. **Success:** role-based landing (`/dashboard` or product console).
+7. **Already signed in:** `/login` redirects to dashboard automatically.
+
+Sign-in panel is ~440px wide with 48px fields; labels hide on focus when typing.
 
 Seeded lab admin: `marketing@zyvor.dev` / `Admin@321` (change immediately outside labs).
 

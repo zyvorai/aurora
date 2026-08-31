@@ -84,7 +84,6 @@ export const NAV_FLYOUT_PANELS: FlyPanel[] = [
         heading: 'Get started',
         links: [
           { label: 'Create workspace', to: '/login', sub: 'Onboard from a URL in minutes' },
-          { label: 'Sign in', to: '/login' },
         ],
       },
     ],
@@ -93,7 +92,6 @@ export const NAV_FLYOUT_PANELS: FlyPanel[] = [
 
 export const NAV_FLYOUT_DIRECT_LINKS: FlyLink[] = [
   { label: 'Features', to: '/features' },
-  { label: 'Sign in', to: '/login' },
 ];
 
 export const NAV_FLYOUT_TRIGGER_LABELS: Record<string, string> = {

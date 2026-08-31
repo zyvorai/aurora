@@ -22,7 +22,11 @@ Admins and editors can add **knowledge sources** for a product in **Full Forge �
 3. In **Knowledge → Sources**, click **+ Add source**.
 4. Pick a type, fill in URL / upload / DB credentials.
 5. Enable **Start ingest after adding** (recommended).
-6. After ingest completes, run **Build Product Profile** and use **Q&A** to verify citations.
+6. After ingest completes, run **Build profile** (Workspace **Next up** card) and use **Q&A** to verify citations.
+
+### Build profile and LLM limits
+
+Profile extraction retrieves a capped slice of ingested chunks (per-chunk and total token budgets) so requests stay within provider limits (e.g. Groq on-demand ~8k TPM). The agent scopes extraction to the **product name** so shared pages like “Get started” do not bleed in other products. If build fails, the run log shows a user-safe message (not raw provider JSON).
 
 ## How to tell if ingest is running
 
@@ -35,7 +39,7 @@ The **Sources** table shows live status. After you trigger ingest, the UI polls 
 | Status **`crawling`** | Loader is running (fetch URL, captions, repo files, etc.). |
 | Status **`processing`** | Chunking and embedding in progress. |
 | Pages **`N/M`** increasing | Active progress (common on website crawls). |
-| Status **`completed`** | Done — run **Build Product Profile**. |
+| Status **`completed`** | Done — run **Build profile** in Workspace. |
 | Status **`failed`** + yellow error | Stopped — read the error under the badge. |
 
 ### Two ways to ingest

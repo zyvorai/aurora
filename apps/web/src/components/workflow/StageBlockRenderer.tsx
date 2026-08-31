@@ -1,5 +1,6 @@
 import { ArrowUpRight, Loader2, Play } from 'lucide-react';
 import type { StageBlock } from '@/lib/api';
+import { formatSourceDisplay, resolveSourceHref } from '@/lib/source-display';
 import { Markdown } from '@/components/ui/Markdown';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -32,22 +33,34 @@ export function StageBlockRenderer({
                 </CardBody>
               </Card>
             );
-          case 'link':
+          case 'link': {
+            const externalHref = resolveSourceHref(block.href);
+            const display = externalHref ? formatSourceDisplay(block.href) : null;
+            const isInternal = block.href.startsWith('/');
             return (
               <a
                 key={i}
-                href={block.href}
-                target={block.href.startsWith('/') ? undefined : '_blank'}
-                rel={block.href.startsWith('/') ? undefined : 'noopener noreferrer'}
+                href={isInternal ? block.href : externalHref ?? block.href}
+                target={isInternal ? undefined : '_blank'}
+                rel={isInternal ? undefined : 'noopener noreferrer'}
                 className={cn(
                   'flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-border',
                   'bg-surface px-4 py-3 text-body-sm font-medium text-foreground hover:border-primary/40 transition-colors',
                 )}
               >
-                {block.label}
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{block.label}</p>
+                  {display && display.label !== block.label ? (
+                    <p className="mt-0.5 text-[12px] font-normal text-[var(--accent-blue)] truncate">
+                      {display.label}
+                      {display.hint ? <span className="text-muted"> · {display.hint}</span> : null}
+                    </p>
+                  ) : null}
+                </div>
                 <ArrowUpRight className="w-4 h-4 text-muted shrink-0" aria-hidden />
               </a>
             );
+          }
           case 'callout':
             return (
               <Card key={i} elevated>

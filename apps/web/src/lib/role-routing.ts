@@ -103,9 +103,8 @@ export function dashboardActionsForRole(role: string | null | undefined): Dashbo
   };
 }
 
-export function dashboardSubtitle(role: string | null | undefined): string {
-  const persona = defaultPersonaForRole(role);
-  return `Your default workspace is ${personaLabel(persona)} — ${personaDescription(persona)}`;
+export function dashboardSubtitle(_role: string | null | undefined): string {
+  return 'Onboard product URLs, run ingest, and open Workspace for agents and pipeline tools.';
 }
 
 export function readStoredRole(): AppRole | null {

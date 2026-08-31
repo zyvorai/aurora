@@ -88,6 +88,8 @@ make env                 # cp .env.example → .env
 brew install ollama && ollama serve && make ollama-pull
 #    (compose: docker compose -f infra/docker-compose.yml --profile ollama up -d)
 
+**Build profile** caps retrieved context (~6 chunks, ~5k tokens) before the LLM call to avoid 413 errors on Groq and similar providers. Product name is scoped in the retrieval query so summaries stay on-product.
+
 # 3. Infrastructure
 make infra-up            # Docker Compose up + wait for Postgres
 

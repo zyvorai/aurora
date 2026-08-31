@@ -15,6 +15,7 @@ import {
   Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell,
 } from '@/components/ui/Table';
 import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { SourceLink } from '@/components/sources/SourceLink';
 import forgeStyles from '@/components/workflow/forge.module.css';
 import { cn } from '@/lib/cn';
 
@@ -191,7 +192,12 @@ export default function SalesPage() {
                     onClick={() => setSelectedLead(lead)}
                     className="cursor-pointer hover:bg-background/60"
                   >
-                    <TableCell className="font-medium">{lead.company_name}</TableCell>
+                    <TableCell>
+                      <p className="font-medium">{lead.company_name}</p>
+                      {lead.domain ? (
+                        <SourceLink urlOrKey={lead.domain} variant="compact" stopPropagation className="mt-0.5" />
+                      ) : null}
+                    </TableCell>
                     <TableCell className="text-muted">{lead.industry ?? '—'}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {lead.score ? Math.round(lead.score) : '—'}
@@ -246,7 +252,11 @@ export default function SalesPage() {
               </div>
               <div>
                 <Eyebrow>Domain</Eyebrow>
-                <Text>{selectedLead.domain ?? '—'}</Text>
+                {selectedLead.domain ? (
+                  <SourceLink urlOrKey={selectedLead.domain} variant="compact" />
+                ) : (
+                  <Text>—</Text>
+                )}
               </div>
             </div>
             {selectedLead.explanation && (
@@ -273,7 +283,7 @@ export default function SalesPage() {
             )}
             <div className="flex gap-3 pt-2">
               <Link href={`/products/${id}?tab=outreach`} className="flex-1">
-                <Button className="w-full">Draft outreach</Button>
+                <Button size="sm">Draft outreach</Button>
               </Link>
               <Button variant="secondary" onClick={() => setSelectedLead(null)}>
                 Close

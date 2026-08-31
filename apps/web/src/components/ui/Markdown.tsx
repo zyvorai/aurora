@@ -1,8 +1,52 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { formatSourceDisplay, isIpHost, resolveSourceHref } from '@/lib/source-display';
 import { cn } from '@/lib/cn';
+
+function MarkdownAnchor({ href, children }: { href?: string; children?: ReactNode }) {
+  if (!href) return <span>{children}</span>;
+
+  const childText = typeof children === 'string' ? children.trim() : '';
+  const resolved = resolveSourceHref(href) ?? href;
+  const strippedHref = href.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+  const looksLikeRawUrl =
+    childText.length > 0 &&
+    (childText === href ||
+      childText === strippedHref ||
+      childText === resolved ||
+      /^https?:\/\//i.test(childText) ||
+      isIpHost(childText.split('/')[0]?.split(':')[0] ?? ''));
+
+  if (looksLikeRawUrl) {
+    const { label, hint } = formatSourceDisplay(href);
+    return (
+      <a
+        href={resolved}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[var(--accent-blue)] hover:underline underline-offset-2"
+        title={resolved}
+      >
+        {label}
+        {hint ? <span className="text-muted"> · {hint}</span> : null}
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={resolved}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-[var(--accent-blue)] hover:underline underline-offset-2"
+    >
+      {children}
+    </a>
+  );
+}
 
 export function Markdown({ children, className }: { children: string; className?: string }) {
   return (
@@ -19,11 +63,7 @@ export function Markdown({ children, className }: { children: string; className?
           ul: ({ children }) => <ul className="list-disc list-inside space-y-1">{children}</ul>,
           ol: ({ children }) => <ol className="list-decimal list-inside space-y-1">{children}</ol>,
           li: ({ children }) => <li className="text-muted">{children}</li>,
-          a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-gtm-accent hover:underline">
-              {children}
-            </a>
-          ),
+          a: ({ href, children }) => <MarkdownAnchor href={href}>{children}</MarkdownAnchor>,
           code: ({ children }) => (
             <code className="px-1 py-0.5 rounded bg-gtm-bg border border-gtm-border text-xs font-mono">{children}</code>
           ),

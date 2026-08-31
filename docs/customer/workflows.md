@@ -3,9 +3,10 @@
 ## First product (admin)
 
 1. Sign in → [GTM workspace](pages/workspace/dashboard.md)
-2. Create product with website/docs URL
-3. [Full Forge](pages/product/products-id.md) → Add source → Ingest → wait **completed**
-4. Open Brief; run one agent tab; Approve → Publish
+2. **+ Onboard product** or create product with website/docs URL
+3. [Workspace](pages/product/products-id.md) → Add source → Ingest → wait **completed**
+4. **Build profile** → **Generate strategy** (or Q&A to verify citations)
+5. Approve → Publish
 
 ## Sales day
 

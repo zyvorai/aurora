@@ -18,11 +18,11 @@ Your GTM workspace — create/onboard products and open role-default personas.
 ## Operate from the console (UX)
 
 1. Open `/dashboard` after sign-in.
-2. Create / Onboard product.
-3. Open role-default persona.
-4. Secondary: Brief or Full Forge.
-5. **Empty / fail:** No products → create one with a website/docs URL.
-6. **Success:** Product card opens Forge/Brief.
+2. **+ Onboard product** — centered modal; name, website URL, optional description.
+3. **Search** (6+ products) and **All / Ready / Setup** filters.
+4. Open role-default persona from a product card (**Open Workspace**, **Brief**).
+5. **Empty / fail:** No products → onboard with a website/docs URL.
+6. **Success:** Product card shows status (Setup / Ready) and compact source link.
 
 Use `http://<host>:3000` for the web UI and `http://<host>:8000/health` for the API. Never publish lab IPs in customer docs.
 

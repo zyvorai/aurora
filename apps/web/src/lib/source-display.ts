@@ -1,15 +1,73 @@
 import type { ProductSource } from '@/lib/api';
 
-export function formatSourcePath(urlOrKey: string | null | undefined): string {
-  if (!urlOrKey) return '';
-  const raw = urlOrKey.trim();
+const IP_V4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
+
+export function isIpHost(hostname: string): boolean {
+  return IP_V4.test(hostname);
+}
+
+function parseUrl(raw: string): URL | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
   try {
-    const u = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
-    const path = u.pathname === '/' ? '' : u.pathname;
-    return `${u.hostname}${path}`.replace(/\/$/, '');
+    return new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
   } catch {
-    return raw.length > 48 ? `${raw.slice(0, 45)}…` : raw;
+    return null;
   }
+}
+
+/** Full URL for opening in a new tab, or null when not linkable. */
+export function resolveSourceHref(urlOrKey: string | null | undefined): string | null {
+  if (!urlOrKey?.trim()) return null;
+  const raw = urlOrKey.trim();
+  if (/^(s3|file|gs|azure):\/\//i.test(raw)) return null;
+  const parsed = parseUrl(raw);
+  if (!parsed || !['http:', 'https:'].includes(parsed.protocol)) return null;
+  return parsed.href;
+}
+
+export interface SourceDisplay {
+  label: string;
+  hint: string | null;
+  href: string | null;
+}
+
+/** Human-readable label + optional hint (IP host) + link target. */
+export function formatSourceDisplay(urlOrKey: string | null | undefined): SourceDisplay {
+  if (!urlOrKey?.trim()) {
+    return { label: '', hint: null, href: null };
+  }
+
+  const raw = urlOrKey.trim();
+  const href = resolveSourceHref(raw);
+
+  const parsed = parseUrl(raw);
+  if (parsed) {
+    const path = parsed.pathname === '/' ? '' : parsed.pathname.replace(/\/$/, '');
+    const hostname = parsed.hostname;
+
+    if (isIpHost(hostname)) {
+      const pathLabel = path ? path.replace(/^\//, '') : null;
+      return {
+        label: pathLabel || hostname,
+        hint: pathLabel ? hostname : parsed.port ? `${hostname}:${parsed.port}` : null,
+        href,
+      };
+    }
+
+    return {
+      label: `${hostname}${path}`.replace(/\/$/, ''),
+      hint: null,
+      href,
+    };
+  }
+
+  const truncated = raw.length > 48 ? `${raw.slice(0, 45)}…` : raw;
+  return { label: truncated, hint: null, href: null };
+}
+
+export function formatSourcePath(urlOrKey: string | null | undefined): string {
+  return formatSourceDisplay(urlOrKey).label;
 }
 
 export function normalizeSourceKey(source: ProductSource): string {

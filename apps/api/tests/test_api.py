@@ -3,7 +3,13 @@
 import pytest
 from gtm_api.auth import hash_password, verify_password, slugify, content_hash
 from gtm_api.config import get_settings
+from gtm_api.agents.product_understanding import (
+    _PROFILE_CHUNK_TOKEN_LIMIT,
+    _PROFILE_CONTEXT_TOKEN_BUDGET,
+)
 from gtm_api.services.chunking import chunk_text, compact_profile, estimate_tokens, truncate_to_token_budget
+from gtm_api.services.citation_gate import build_context_from_results
+from gtm_api.services.vector_store import SearchResult
 from gtm_api.services.llm import get_chat_model, get_provider
 
 
@@ -48,6 +54,24 @@ class TestChunking:
         })
         assert "field_status" not in profile
         assert len(profile["features"]) <= 8
+
+    def test_profile_context_stays_within_budget(self):
+        """Regression: Groq on_demand rejects profile prompts over ~8k tokens."""
+        big = " ".join(["word"] * 5000)
+        results = [
+            SearchResult(
+                chunk_id=f"c{i}",
+                document_title=f"Doc {i}",
+                url=f"https://example.com/{i}",
+                content=big,
+                score=0.9,
+                metadata={},
+            )
+            for i in range(6)
+        ]
+        context = build_context_from_results(results, max_content_tokens=_PROFILE_CHUNK_TOKEN_LIMIT)
+        trimmed = truncate_to_token_budget(context, _PROFILE_CONTEXT_TOKEN_BUDGET)
+        assert estimate_tokens(trimmed) <= _PROFILE_CONTEXT_TOKEN_BUDGET + 50
 
 
 class TestEnterprise:

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Reveal } from '@/components/ui/Reveal';
+import { MarketingBottomCta, MarketingHeroActions } from '@/components/marketing/MarketingHeroActions';
 import styles from './marketing.module.css';
 
 const PROOF = [
@@ -101,14 +102,7 @@ export function HomeHero() {
           Onboard from a website or docs. Build a grounded knowledge graph. Run marketing, sales, and
           solution agents — quietly, in the background.
         </p>
-        <div className={styles.heroBtnrow}>
-          <Link href="/login" className={styles.btnPrimary}>
-            Get started
-          </Link>
-          <Link href="/features" className={styles.linkCta}>
-            Learn more <span aria-hidden>›</span>
-          </Link>
-        </div>
+        <MarketingHeroActions variant="home" />
       </div>
     </section>
   );
@@ -193,9 +187,7 @@ export function HomeInkCta() {
           <p className={styles.inkLede}>
             Onboard your first product and generate a GTM strategy in minutes.
           </p>
-          <Link href="/login" className={styles.btnPrimary}>
-            Get started
-          </Link>
+          <MarketingBottomCta />
         </div>
       </section>
     </Reveal>

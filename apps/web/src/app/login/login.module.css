@@ -30,7 +30,7 @@
   inset: 0;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(247, 126, 45, 0.08), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.06), transparent 55%),
     linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
 }
 
@@ -107,7 +107,7 @@
 }
 
 .panel {
-  width: min(100%, 380px);
+  width: min(100%, 440px);
   margin-top: clamp(2rem, 5vh, 2.75rem);
   animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both;
 }
@@ -135,7 +135,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0 0 1.25rem;
+  max-width: 100%;
+  margin: 0 0 1rem;
   padding: 0.4rem 0.75rem 0.4rem 0.4rem;
   border-radius: 980px;
   background: #ffffff;
@@ -143,6 +144,13 @@
   font-size: 0.8125rem;
   color: var(--login-ink);
   animation: fadeSwap 0.35s ease both;
+}
+
+.accountChip > span:nth-child(2) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .accountAvatar {
@@ -176,18 +184,20 @@
 .fieldWrap {
   position: relative;
   text-align: left;
+  width: 100%;
+  margin-bottom: 0.25rem;
 }
 
 .field {
   width: 100%;
-  height: 2.875rem;
-  padding: 1rem 0.9rem 0.3rem;
+  height: 3rem;
+  padding: 0 0.9rem;
   border-radius: 12px;
   border: 1px solid var(--login-line);
   background: #ffffff;
   color: var(--login-ink);
   font: inherit;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   letter-spacing: -0.01em;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -195,30 +205,41 @@
 
 .field:focus {
   border-color: var(--login-accent);
-  box-shadow: 0 0 0 4px rgba(247, 126, 45, 0.18);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.16);
 }
 
+/* Hide placeholder until focus so it doesn't fight the floating label */
 .field::placeholder {
   color: transparent;
+  transition: color 0.15s ease;
+}
+
+.field:focus::placeholder {
+  color: var(--login-mute);
 }
 
 .label {
   position: absolute;
   left: 0.9rem;
+  right: 0.9rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--login-mute);
   pointer-events: none;
-  transition: transform 0.18s ease, font-size 0.18s ease, top 0.18s ease;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Label disappears on focus or once the user has typed */
 .field:focus + .label,
-.field:not(:placeholder-shown) + .label {
-  top: 0.5rem;
-  transform: none;
-  font-size: 0.625rem;
-  letter-spacing: 0.01em;
+.field:not(:placeholder-shown) + .label,
+.field:-webkit-autofill + .label {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .primary {
@@ -228,14 +249,16 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  margin-top: 1rem;
-  height: 2.25rem;
+  max-width: 100%;
+  margin-top: 1.25rem;
+  height: 3.25rem;
+  padding: 0 1.75rem;
   border: 0;
   border-radius: 980px;
   background: var(--login-accent);
   color: #fff;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 1.0625rem;
   font-weight: 400;
   letter-spacing: -0.01em;
   cursor: pointer;
@@ -295,6 +318,13 @@
 
 .stepPane {
   animation: fadeSwap 0.35s ease both;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.stepPane .primary {
+  align-self: stretch;
 }
 
 @keyframes fadeSwap {

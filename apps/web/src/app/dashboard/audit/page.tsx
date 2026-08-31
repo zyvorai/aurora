@@ -79,7 +79,7 @@ export default function AuditLogPage() {
           <select
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
-            className="text-[13px] bg-background border border-border rounded-[10px] px-3 py-2 text-foreground"
+            className="apple-select w-auto min-w-[10rem]"
             aria-label="Filter by action"
           >
             {actionTypes.map((type) => (

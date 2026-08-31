@@ -138,7 +138,7 @@ export default function ArtifactList({ artifacts, canApprove, canPublish, onChan
             <select
               value={channel}
               onChange={(e) => setChannel(e.target.value as PublishChannel)}
-              className="w-full px-4 py-2.5 bg-background border border-border rounded-md text-body text-foreground focus-ring"
+              className="apple-select"
             >
               {PUBLISH_CHANNELS.map((c) => (
                 <option key={c} value={c}>{c}</option>

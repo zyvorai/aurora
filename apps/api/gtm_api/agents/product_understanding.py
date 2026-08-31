@@ -14,6 +14,7 @@ from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
     build_context_from_results,
 )
+from gtm_api.services.chunking import truncate_to_token_budget
 from gtm_api.services.embeddings import LLMServiceError, embedding_service
 from gtm_api.services.knowledge_graph import knowledge_graph
 from gtm_api.services.vector_store import vector_store
@@ -21,7 +22,9 @@ from gtm_api.tenant import record_usage
 
 settings = get_settings()
 
-EXTRACTION_PROMPT = """Analyze the following product documentation and extract structured information.
+EXTRACTION_PROMPT = """Analyze the following product documentation and extract structured information for the product named "{product_name}".
+Only include facts that describe "{product_name}" specifically — ignore mentions of other products in the same sources.
+
 Return a JSON object with these fields:
 - summary: brief product summary (2-3 sentences)
 - features: list of key features
@@ -47,29 +50,44 @@ Sources:
 class ProductUnderstandingState(TypedDict):
     product_id: str
     tenant_id: str
+    product_name: str
     context: str
     profile: dict
     entities: list[dict]
     tokens_used: int
 
 
+# Groq on_demand tier caps input at ~8k tokens; cap retrieval so profile
+# extraction stays under that budget (prompt + JSON response included).
+_PROFILE_CHUNK_TOKEN_LIMIT = 400
+_PROFILE_CONTEXT_TOKEN_BUDGET = 5000
+
+
 async def retrieve_context(state: ProductUnderstandingState) -> ProductUnderstandingState:
-    query = "product features architecture pricing competitors target customers use cases"
+    name = state.get("product_name") or "this product"
+    query = f"{name} product features architecture pricing competitors target customers use cases"
     vector = await embedding_service.embed_query(query)
     results = await vector_store.search(
         uuid.UUID(state["tenant_id"]),
         uuid.UUID(state["product_id"]),
         vector,
-        limit=10,
+        limit=6,
     )
-    state["context"] = build_context_from_results(results)
+    state["context"] = build_context_from_results(
+        results,
+        max_content_tokens=_PROFILE_CHUNK_TOKEN_LIMIT,
+    )
     return state
 
 
 async def extract_profile(state: ProductUnderstandingState) -> ProductUnderstandingState:
     llm = get_chat_model("product_understanding", temperature=0.1)
 
-    prompt = EXTRACTION_PROMPT.format(context=state["context"])
+    context = truncate_to_token_budget(state["context"], _PROFILE_CONTEXT_TOKEN_BUDGET)
+    prompt = EXTRACTION_PROMPT.format(
+        product_name=state.get("product_name") or "this product",
+        context=context,
+    )
     try:
         response = await llm.ainvoke([
             {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
@@ -165,6 +183,7 @@ async def run_product_understanding(
     initial_state: ProductUnderstandingState = {
         "product_id": str(product.id),
         "tenant_id": str(tenant_id),
+        "product_name": product.name,
         "context": "",
         "profile": {},
         "entities": [],

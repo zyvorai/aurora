@@ -9,6 +9,7 @@ import { readStoredRole } from '@/lib/role-routing';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHero } from '@/components/layout/PageHero';
+import { WorkspacePage } from '@/components/layout/WorkspacePanel';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
@@ -125,6 +126,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-[var(--hs-gutter)] py-10 space-y-8 animate-fade-up min-h-full bg-[var(--app-canvas)]">
+      <WorkspacePage>
       <PageHero eyebrow="Account" title="Settings" description="Manage your account and workspace preferences." variant="display" />
 
       <SettingsGroup label="Account">
@@ -190,7 +192,7 @@ export default function SettingsPage() {
                 <select
                   value={syncProductId}
                   onChange={(e) => setSyncProductId(e.target.value)}
-                  className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-[13px]"
+                  className="apple-select flex-1"
                 >
                   {productList.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
@@ -298,6 +300,7 @@ export default function SettingsPage() {
         tenant is created and updated directly in the database. Contact your admin to change a
         teammate&apos;s role.
       </TextSmall>
+      </WorkspacePage>
     </div>
   );
 }

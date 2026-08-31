@@ -5,6 +5,7 @@ import { admin, type AdminPlanInfo } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { PageHero } from '@/components/layout/PageHero';
+import { WorkspacePage } from '@/components/layout/WorkspacePanel';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -79,6 +80,7 @@ export default function AdminDangerZonePage() {
 
   return (
     <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-10 space-y-10 animate-fade-up">
+      <WorkspacePage>
       <PageHero
         eyebrow="Admin"
         title="Danger zone"
@@ -126,6 +128,7 @@ export default function AdminDangerZonePage() {
                 />
                 <Button
                   variant="danger"
+                  size="sm"
                   disabled={purging || purgeConfirm !== plan.tenant_slug}
                   onClick={handlePurge}
                 >
@@ -136,6 +139,7 @@ export default function AdminDangerZonePage() {
           )}
         </div>
       </section>
+      </WorkspacePage>
     </div>
   );
 }

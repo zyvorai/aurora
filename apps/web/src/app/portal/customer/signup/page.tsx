@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { MarketingLayout } from '@/components/layout/MarketingLayout';
 import { PortalAuthShell } from '@/components/portal/PortalAuthShell';
@@ -12,9 +13,13 @@ import { portal } from '@/lib/portal-api';
 
 function SignupForm() {
   const searchParams = useSearchParams();
+  const tenantFromUrl = searchParams.get('tenant') ?? '';
+  const productFromUrl = searchParams.get('product') ?? '';
+  const hasInvite = Boolean(tenantFromUrl && productFromUrl);
+
   const [form, setForm] = useState({
-    tenant_slug: searchParams.get('tenant') ?? '',
-    product_id: searchParams.get('product') ?? '',
+    tenant_slug: tenantFromUrl,
+    product_id: productFromUrl,
     email: '',
     password: '',
     company_name: '',
@@ -26,6 +31,10 @@ function SignupForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.tenant_slug.trim() || !form.product_id.trim()) {
+      setError('Use the invite link from your vendor — it includes your organization.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -51,22 +60,22 @@ function SignupForm() {
     );
   }
 
+  if (!hasInvite) {
+    return (
+      <div className="space-y-4 text-center py-2">
+        <p className="text-[15px] text-muted leading-relaxed">
+          Customer access requires an invite link from your vendor — it pre-fills your organization
+          and product. Contact them if you don&apos;t have one.
+        </p>
+        <Link href="/portal/customer/login" className="apple-link text-[15px]">
+          Already have access? Sign in
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Input
-        type="text"
-        placeholder="Tenant slug"
-        required
-        value={form.tenant_slug}
-        onChange={(e) => setForm({ ...form, tenant_slug: e.target.value })}
-      />
-      <Input
-        type="text"
-        placeholder="Product ID"
-        required
-        value={form.product_id}
-        onChange={(e) => setForm({ ...form, product_id: e.target.value })}
-      />
       <Input
         type="text"
         placeholder="Company name"
@@ -81,8 +90,9 @@ function SignupForm() {
       />
       <Input
         type="email"
-        placeholder="Email"
+        placeholder="Work email"
         required
+        autoComplete="email"
         value={form.email}
         onChange={(e) => setForm({ ...form, email: e.target.value })}
       />
@@ -91,6 +101,7 @@ function SignupForm() {
         placeholder="Password"
         required
         minLength={8}
+        autoComplete="new-password"
         value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })}
       />

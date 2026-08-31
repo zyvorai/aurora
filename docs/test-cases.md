@@ -275,6 +275,7 @@ Still **not** automated:
 | Priority | Proposed ID | Scenario | Suggested approach |
 |----------|-------------|----------|-------------------|
 | P2 | TC-AGT-001 | Build Product Profile happy path | Mock LLM JSON response + test DB |
+| P2 | TC-AGT-001b | Profile context stays within token budget | `tests/test_api.py::TestChunking::test_profile_context_stays_within_budget` |
 | P2 | TC-AGT-002 | Generate GTM Strategy happy path | Same pattern |
 | P2 | TC-EXP-001 | Proposal PDF/DOCX/PPTX export renders valid files | Assert file magic bytes (`%PDF-`, `PK\x03\x04`) per format, per `services/proposal_export.py` |
 | P2 | TC-E2E-001 | Live Ollama smoke (optional, manual CI job) | `@pytest.mark.live` gated by env flag |

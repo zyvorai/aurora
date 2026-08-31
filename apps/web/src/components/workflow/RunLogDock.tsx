@@ -3,10 +3,28 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { products, type WorkflowRunStatus } from '@/lib/api';
+import { sanitizeWorkflowError } from '@/lib/workflow-errors';
 import { useResizableRail } from '@/hooks/useResizableRail';
 import { cn } from '@/lib/cn';
 
 const POLL_INTERVAL_MS = 4000;
+const MAX_VISIBLE_RUNS = 10;
+
+/** Keep the latest terminal run per workflow; always show active runs. */
+function visibleRuns(runs: WorkflowRunStatus[]): WorkflowRunStatus[] {
+  const seenTerminal = new Set<string>();
+  const out: WorkflowRunStatus[] = [];
+  for (const run of runs) {
+    if (run.status === 'running' || run.status === 'queued') {
+      out.push(run);
+      continue;
+    }
+    if (seenTerminal.has(run.workflow_name)) continue;
+    seenTerminal.add(run.workflow_name);
+    out.push(run);
+  }
+  return out.slice(0, MAX_VISIBLE_RUNS);
+}
 
 const STATUS_DOT: Record<string, string> = {
   queued: 'bg-border',
@@ -55,6 +73,7 @@ export function RunLogDock({ productId }: { productId: string }) {
   }, [productId]);
 
   const runningCount = runs.filter((r) => r.status === 'running' || r.status === 'queued').length;
+  const displayRuns = visibleRuns(runs);
 
   if (dock.collapsed) {
     return (
@@ -104,7 +123,7 @@ export function RunLogDock({ productId }: { productId: string }) {
         </button>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {runs.length === 0 ? (
+        {displayRuns.length === 0 ? (
           <div className="px-4 py-8 text-[13px] text-muted leading-[1.47]">
             Nothing running.
             <p className="mt-3">
@@ -112,7 +131,7 @@ export function RunLogDock({ productId }: { productId: string }) {
             </p>
           </div>
         ) : (
-          runs.map((run) => {
+          displayRuns.map((run) => {
             const pct = runProgressPercent(run);
             return (
               <div
@@ -126,7 +145,7 @@ export function RunLogDock({ productId }: { productId: string }) {
                 <div className="min-w-0">
                   <div className="text-[13px] text-foreground truncate">{run.workflow_name}</div>
                   <div className="text-[11px] text-muted mt-0.5">
-                    {run.status === 'failed' ? (run.error_message ?? 'failed') : run.status}
+                    {run.status === 'failed' ? sanitizeWorkflowError(run.error_message) : run.status}
                   </div>
                   {run.status === 'running' && (
                     <div className="mt-2 h-0.5 w-full rounded-full bg-border overflow-hidden">

@@ -9,7 +9,7 @@ import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/Wor
 import { SkeletonLine } from '@/components/ui/Skeleton';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Input, Textarea } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -250,23 +250,21 @@ export default function CustomerHomePage() {
             value={ticketForm.subject}
             onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
           />
-          <textarea
+          <Textarea
             placeholder="Describe what happened, steps to reproduce, etc."
             required
             rows={4}
             value={ticketForm.description}
             onChange={(e) => setTicketForm({ ...ticketForm, description: e.target.value })}
-            className="w-full px-4 py-2.5 bg-background border border-border rounded-md text-body text-foreground placeholder:text-muted focus-ring resize-none"
           />
-          <div className="flex gap-2">
+          <div className="apple-segments w-full" role="group" aria-label="Ticket priority">
             {PRIORITY_OPTIONS.map((p) => (
               <button
                 key={p.value}
                 type="button"
                 onClick={() => setTicketForm({ ...ticketForm, priority: p.value })}
-                className={`flex-1 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring ${
-                  ticketForm.priority === p.value ? 'bg-primary text-primary-foreground' : 'text-muted hover:text-foreground bg-[var(--glass-bg)]'
-                }`}
+                className="apple-segment"
+                data-active={ticketForm.priority === p.value}
               >
                 {p.label}
               </button>

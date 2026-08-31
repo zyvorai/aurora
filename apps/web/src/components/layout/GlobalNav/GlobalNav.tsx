@@ -121,11 +121,35 @@ export function GlobalNav({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetSection, setSheetSection] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [marketingAuthed, setMarketingAuthed] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const accountRef = useRef<HTMLDivElement>(null);
 
-  const markHref = homeHref ?? (variant === 'app' ? '/dashboard' : '/');
+  const markHref = homeHref ?? (variant === 'app' ? '/dashboard' : marketingAuthed ? '/dashboard' : '/');
   const navOpen = Boolean(openKey) || sheetOpen || accountOpen || externalOpen;
+  const marketingCtaHref = marketingAuthed ? '/dashboard' : NAV_CTA_HREF;
+  const marketingCtaLabel = marketingAuthed ? 'Dashboard' : NAV_CTA_LABEL;
+
+  const resolveMarketingLink = useCallback(
+    (link: { label: string; to: string; sub?: string }) => {
+      if (!marketingAuthed) return link;
+      if (link.to === '/login') {
+        return { label: 'Dashboard', to: '/dashboard', sub: 'Your products and workspace' };
+      }
+      return link;
+    },
+    [marketingAuthed],
+  );
+
+  const directLinks = marketingAuthed
+    ? [{ label: 'Dashboard', to: '/dashboard' }, ...NAV_FLYOUT_DIRECT_LINKS]
+    : NAV_FLYOUT_DIRECT_LINKS;
+
+  useEffect(() => {
+    if (variant !== 'marketing') return;
+    setMarketingAuthed(typeof window !== 'undefined' && !!localStorage.getItem('token'));
+  }, [variant, pathname]);
 
   const clearCloseTimer = useCallback(() => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -147,15 +171,29 @@ export function GlobalNav({
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && openKey) {
-        const key = openKey;
-        setOpenKey(null);
-        triggerRefs.current[key]?.focus();
+      if (e.key === 'Escape') {
+        if (accountOpen) setAccountOpen(false);
+        if (openKey) {
+          const key = openKey;
+          setOpenKey(null);
+          triggerRefs.current[key]?.focus();
+        }
       }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openKey]);
+  }, [openKey, accountOpen]);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    function onPointerDown(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [accountOpen]);
 
   useEffect(() => {
     document.body.style.overflow = sheetOpen ? 'hidden' : '';
@@ -205,9 +243,9 @@ export function GlobalNav({
                   {NAV_FLYOUT_TRIGGER_LABELS[panel.key]}
                 </button>
               ))}
-              {NAV_FLYOUT_DIRECT_LINKS.map((link) => (
+              {directLinks.map((link) => (
                 <Link
-                  key={link.to}
+                  key={`${link.to}-${link.label}`}
                   className={styles.link}
                   href={link.to}
                   aria-current={pathname === link.to ? 'page' : undefined}
@@ -252,9 +290,15 @@ export function GlobalNav({
             ) : null}
 
             {variant === 'marketing' ? (
-              <Link className={styles.icon} href="/login" aria-label="Sign in">
-                <SignInIcon />
-              </Link>
+              marketingAuthed ? (
+                <Link className={styles.link} href="/dashboard" aria-label="Dashboard">
+                  Products
+                </Link>
+              ) : (
+                <Link className={styles.icon} href="/login" aria-label="Sign in">
+                  <SignInIcon />
+                </Link>
+              )
             ) : null}
 
             {variant === 'marketing' || variant === 'app' || variant === 'portal' ? (
@@ -271,7 +315,7 @@ export function GlobalNav({
             ) : null}
 
             {variant === 'app' ? (
-              <div className={`${styles.accountWrap} hidden md:block`}>
+              <div ref={accountRef} className={`${styles.accountWrap} hidden md:block`}>
                 <button
                   type="button"
                   className={styles.accountBtn}
@@ -283,9 +327,7 @@ export function GlobalNav({
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
                 {accountOpen ? (
-                  <>
-                    <div className="fixed inset-0 z-[58]" onClick={() => setAccountOpen(false)} />
-                    <div role="menu" className={styles.accountMenu}>
+                  <div role="menu" className={styles.accountMenu}>
                       {accountItems.map((item) => (
                         <Link
                           key={item.href}
@@ -306,7 +348,6 @@ export function GlobalNav({
                         </button>
                       ) : null}
                     </div>
-                  </>
                 ) : null}
               </div>
             ) : null}
@@ -318,8 +359,8 @@ export function GlobalNav({
             ) : null}
 
             {showFlyout ? (
-              <Link className={styles.cta} href={NAV_CTA_HREF}>
-                {NAV_CTA_LABEL}
+              <Link className={styles.cta} href={marketingCtaHref}>
+                {marketingCtaLabel}
               </Link>
             ) : null}
 
@@ -366,14 +407,17 @@ export function GlobalNav({
                       >
                         <h3>{group.heading}</h3>
                         <ul>
-                          {group.links.map((link) => (
-                            <li key={link.to}>
-                              <Link href={link.to} onClick={() => setOpenKey(null)}>
-                                {link.label}
-                                {link.sub ? <small>{link.sub}</small> : null}
-                              </Link>
-                            </li>
-                          ))}
+                          {group.links.map((link) => {
+                            const resolved = resolveMarketingLink(link);
+                            return (
+                              <li key={`${resolved.to}-${resolved.label}`}>
+                                <Link href={resolved.to} onClick={() => setOpenKey(null)}>
+                                  {resolved.label}
+                                  {resolved.sub ? <small>{resolved.sub}</small> : null}
+                                </Link>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     ))}
@@ -402,11 +446,14 @@ export function GlobalNav({
                   </button>
                   <div className={styles.sheetSub} data-open={String(sheetSection === panel.key)}>
                     {panel.groups.flatMap((group) =>
-                      group.links.map((link) => (
-                        <Link key={link.to} href={link.to} onClick={closeSheet}>
-                          {link.label}
-                        </Link>
-                      )),
+                      group.links.map((link) => {
+                        const resolved = resolveMarketingLink(link);
+                        return (
+                          <Link key={`${resolved.to}-${resolved.label}`} href={resolved.to} onClick={closeSheet}>
+                            {resolved.label}
+                          </Link>
+                        );
+                      }),
                     )}
                   </div>
                 </div>
@@ -444,12 +491,14 @@ export function GlobalNav({
                 </div>
               ))}
               <div className={styles.sheetCta}>
-                <Link className={styles.sheetCtaBtn} href={NAV_CTA_HREF} onClick={closeSheet}>
-                  {NAV_CTA_LABEL}
+                <Link className={styles.sheetCtaBtn} href={marketingCtaHref} onClick={closeSheet}>
+                  {marketingCtaLabel}
                 </Link>
-                <Link className={styles.sheetCtaBtn} href="/login" onClick={closeSheet}>
-                  Sign in
-                </Link>
+                {!marketingAuthed ? (
+                  <Link className={styles.sheetCtaBtn} href="/login" onClick={closeSheet}>
+                    Sign in
+                  </Link>
+                ) : null}
               </div>
             </>
           ) : null}

@@ -11,13 +11,16 @@
   --primary: #0071e3;
   --primary-hover: #0077ed;
   --border: #d2d2d7;
-  --accent-blue: #5a7ea8;
-  --hs-accent: #f77e2d;
+  --accent-blue: #0071e3;
+  --accent-blue-hover: #0077ed;
+  --login-accent: #0071e3;
+  --login-accent-hover: #0077ed;
+  --hs-accent: #0071e3;
+  --hs-accent-deep: #0077ed;
   --login-ink: #1d1d1f;
   --login-mute: #6e6e73;
   --login-line: #d2d2d7;
-  --login-blue: #5a7ea8;
-  --login-accent: #f77e2d;
+  --login-blue: #0071e3;
 
   position: relative;
   min-height: calc(100vh - var(--nav-h, 44px));
@@ -37,7 +40,7 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(247, 126, 45, 0.08), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.08), transparent 55%),
     linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
 }
 
@@ -113,7 +116,15 @@
   border-color: var(--login-line);
 }
 
+.panel :global(form) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .panel :global(button[type='submit']) {
+  align-self: stretch;
+  margin-top: 0.5rem;
   border-radius: 980px;
   font-weight: 400;
 }

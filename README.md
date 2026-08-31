@@ -55,10 +55,10 @@ make start    # infra + DB + API + web (background)
 make stop     # when done
 ```
 
-**First useful thing after login:** add a product URL → ingest a source → open
-the product brief → run one agent (strategy / chat / content). Operator SSO
-guide: [docs/sso-oidc.md](docs/sso-oidc.md). Full local setup:
-[docs/dev-guide.md](docs/dev-guide.md).
+**First useful thing after login:** add a product URL → ingest a source → **Build profile** → run
+strategy or Q&A. UI uses Apple-blue accent (`#0071e3`), viewport-centered modals, and
+compact source links (`zyvor.dev/path`). Operator SSO guide: [docs/sso-oidc.md](docs/sso-oidc.md).
+Full local setup: [docs/dev-guide.md](docs/dev-guide.md).
 
 ```bash
 # Optional local LLM (not required when OPENAI_* / Groq is configured)

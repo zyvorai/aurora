@@ -2,8 +2,10 @@
 
 import ProductProfileView from './ProductProfileView';
 import SourcesUsedPanel from './SourcesUsedPanel';
+import { SourceLink } from '@/components/sources/SourceLink';
 import { Eyebrow, Stat, SubsectionTitle, TextMuted, TextSmall } from '@/components/ui/Typography';
 import { Markdown } from '@/components/ui/Markdown';
+import { sanitizeWorkflowError } from '@/lib/workflow-errors';
 
 type Result = Record<string, unknown>;
 
@@ -63,9 +65,9 @@ function CitationsList({ citations }: { citations: Array<{ chunk_id?: string; do
             <p className="font-medium text-gtm-accent">{c.document_title || 'Document'}</p>
             {c.excerpt && <p className="text-muted mt-1 line-clamp-2">{c.excerpt}</p>}
             {Boolean(c.url) && (
-              <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-xs text-gtm-accent hover:underline mt-1 inline-block">
-                View source
-              </a>
+              <div className="mt-1.5">
+                <SourceLink urlOrKey={c.url} variant="compact" />
+              </div>
             )}
           </li>
         ))}
@@ -456,7 +458,7 @@ function JobStatusView({ data }: { data: Result }) {
 
 export default function ResultPanel({ result }: { result: Result }) {
   if ('error' in result && result.error) {
-    return <ErrorBanner message={String(result.error)} />;
+    return <ErrorBanner message={sanitizeWorkflowError(String(result.error))} />;
   }
 
   if ('funnel' in result && 'period' in result) {

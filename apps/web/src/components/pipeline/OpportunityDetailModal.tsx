@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { TextMuted, TextSmall } from '@/components/ui/Typography';
+import { SourceLink } from '@/components/sources/SourceLink';
+import { resolveSourceHref } from '@/lib/source-display';
 
 interface OpportunityDetailModalProps {
   productId: string;
@@ -84,7 +86,13 @@ export default function OpportunityDetailModal({ productId, opportunityId, onClo
       ) : (
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 text-body-sm">
-            <div><TextSmall className="text-muted">Company</TextSmall><p>{opp.company ?? '—'}</p></div>
+            <div><TextSmall className="text-muted">Company</TextSmall>
+              {opp.company && resolveSourceHref(opp.company) ? (
+                <SourceLink urlOrKey={opp.company} variant="compact" />
+              ) : (
+                <p>{opp.company ?? '—'}</p>
+              )}
+            </div>
             <div><TextSmall className="text-muted">Stage</TextSmall><p><Badge>{opp.stage}</Badge></p></div>
             <div><TextSmall className="text-muted">Amount</TextSmall><p>{opp.amount ? `$${opp.amount.toLocaleString()}` : '—'}</p></div>
             <div><TextSmall className="text-muted">Probability</TextSmall><p>{Math.round(opp.probability * 100)}%</p></div>
