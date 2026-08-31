@@ -7,7 +7,7 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gtm_api.models import OPPORTUNITY_STAGES, Opportunity, OpportunityActivity
+from gtm_api.models import OPPORTUNITY_STAGES, AccountHealth, Opportunity, OpportunityActivity
 
 STAGE_PROBABILITY = {
     "discovery": 0.1,
@@ -37,6 +37,18 @@ async def create_opportunity(
 ) -> Opportunity:
     if stage not in OPPORTUNITY_STAGES:
         stage = "discovery"
+    # Idempotent for seed re-runs: same name + company on the product returns existing.
+    existing = await db.execute(
+        select(Opportunity).where(
+            Opportunity.tenant_id == tenant_id,
+            Opportunity.product_id == product_id,
+            Opportunity.name == name,
+            Opportunity.company == company,
+        ).limit(1)
+    )
+    found = existing.scalar_one_or_none()
+    if found:
+        return found
     opp = Opportunity(
         tenant_id=tenant_id,
         product_id=product_id,
@@ -139,6 +151,24 @@ async def get_opportunity(
     if opp and opp.tenant_id == tenant_id:
         return opp
     return None
+
+
+async def delete_opportunity(
+    db: AsyncSession,
+    opportunity_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+) -> bool:
+    opp = await get_opportunity(db, opportunity_id, tenant_id)
+    if not opp:
+        return False
+    activities = await db.execute(
+        select(OpportunityActivity).where(OpportunityActivity.opportunity_id == opportunity_id)
+    )
+    for act in activities.scalars().all():
+        await db.delete(act)
+    await db.delete(opp)
+    await db.flush()
+    return True
 
 
 async def pipeline_summary(

@@ -2,33 +2,23 @@
 
 ## Purpose
 
-Your GTM workspace — create/onboard products and open role-default personas.
-
-## When to use it
-
-- Operate **Your GTM workspace** when your job matches this page
-- Admin lands on Full Forge by default; editors on Sales; approvers/viewers on Brief
-- Confirm auth and that workers are up if ingest never completes
+Product grid — onboard products, filter Ready/Setup, open Workspace or Brief.
 
 ## How to get there
 
 - Route: `/dashboard`
-- Nav: **Workspace → GTM workspace**
+- Nav: **Products** (app) or **Dashboard** CTA when signed in on marketing pages
 
 ## Operate from the console (UX)
 
 1. Open `/dashboard` after sign-in.
-2. **+ Onboard product** — centered modal; name, website URL, optional description.
-3. **Search** (6+ products) and **All / Ready / Setup** filters.
-4. Open role-default persona from a product card (**Open Workspace**, **Brief**).
-5. **Empty / fail:** No products → onboard with a website/docs URL.
-6. **Success:** Product card shows status (Setup / Ready) and compact source link.
-
-Use `http://<host>:3000` for the web UI and `http://<host>:8000/health` for the API. Never publish lab IPs in customer docs.
+2. **+ Onboard product** — viewport-centered modal; name, website URL, optional description.
+3. **Search** (6+ products) and **All / Ready / Setup** filters (counts are labeled for screen readers).
+4. Product cards show status, description, and compact **SourceLink** (`zyvor.dev/path`).
+5. **Open Workspace →** or **Brief** per product.
 
 ## Related pages
 
-- [Full Forge](../product/products-id.md)
+- [Workspace](../product/products-id.md)
 - [Settings](dashboard-settings.md)
 - [Getting Started](../../getting-started.md)
-- [Page index](../../PAGE_INDEX.md)

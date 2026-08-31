@@ -111,6 +111,13 @@ ensure_product() {
 
 add_source() {
   local pid="$1" url="$2" label="$3"
+  local existing
+  existing=$(api GET "/products/${pid}/sources" | "$JQ_BIN" -r --arg u "$url" \
+    '.[] | select((.url // "") == $u) | .id' | "$HEAD_BIN" -1)
+  if [ -n "$existing" ] && [ "$existing" != "null" ]; then
+    info "  source exists: ${label}"
+    return 0
+  fi
   api POST "/products/${pid}/sources" -d "$("$JQ_BIN" -n \
     --arg url "$url" --arg name "$label" \
     '{source_type:"website", url:$url, display_name:$name}')" >/dev/null 2>&1 \
@@ -138,6 +145,15 @@ wait_ingest() {
 
 create_opportunity() {
   local pid="$1" name="$2" company="$3" amount="$4"
+  local existing
+  existing=$(api GET "/products/${pid}/opportunities" | "$JQ_BIN" -r --arg n "$name" --arg c "$company" \
+    '.[] | select(.name==$n and .company==$c) | .id' | "$HEAD_BIN" -1)
+  if [ -n "$existing" ] && [ "$existing" != "null" ]; then
+    info "  opportunity exists: ${name}"
+    echo "$("$JQ_BIN" -nc --arg id "$existing" --arg name "$name" --arg company "$company" --argjson amount "$amount" \
+      '{id:$id, name:$name, company:$company, stage:"discovery", amount:$amount}')"
+    return 0
+  fi
   api POST "/products/${pid}/opportunities" -d "$("$JQ_BIN" -n \
     --arg name "$name" --arg company "$company" --argjson amount "$amount" \
     '{name:$name, company:$company, stage:"discovery", amount:$amount, metadata:{source:"seed-zyvor-suite"}}')" \
@@ -183,9 +199,17 @@ for row in "${PRODUCTS[@]}"; do
   create_opportunity "$PID" "$OPP_NAME" "$OPP_CO" "$OPP_AMT" || warn "opportunity failed"
 
   if [ "$SKIP_OUTREACH" != "1" ]; then
-    info "  customer mail + follow-up sequence…"
-    generate_outreach "$PID" "$PROSPECT" "$PERSONA" "${NAME} suite seed" \
-      || warn "outreach failed (LLM may still be warming)"
+    local existing_campaign
+    existing_campaign=$(api GET "/products/${PID}/artifacts" 2>/dev/null \
+      | "$JQ_BIN" -r --arg c "${NAME} suite seed" \
+        '[.[] | select(.type=="outreach" and ((.title // "") | contains($c)))] | length' 2>/dev/null || echo 0)
+    if [ "${existing_campaign:-0}" != "0" ] && [ "${existing_campaign}" -gt 0 ] 2>/dev/null; then
+      info "  outreach campaign exists — skip"
+    else
+      info "  customer mail + follow-up sequence…"
+      generate_outreach "$PID" "$PROSPECT" "$PERSONA" "${NAME} suite seed" \
+        || warn "outreach failed (LLM may still be warming)"
+    fi
   fi
 done
 

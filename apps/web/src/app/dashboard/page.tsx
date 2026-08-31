@@ -228,10 +228,13 @@ export default function DashboardPage() {
                     aria-selected={filter === f.key}
                     data-active={filter === f.key}
                     className="apple-segment"
+                    aria-label={`${f.label}, ${f.count}`}
                     onClick={() => setFilter(f.key)}
                   >
                     {f.label}
-                    <span className="ml-1 opacity-60 tabular-nums">{f.count}</span>
+                    <span className="ml-1.5 opacity-60 tabular-nums" aria-hidden>
+                      {f.count}
+                    </span>
                   </button>
                 ))}
               </div>

@@ -19,9 +19,10 @@ Workspace — ingest sources, run the GTM pipeline chain, agent tabs, approve an
 1. **Sources** panel — add URL/file sources; **Ingest all** or per-row **Ingest**.
 2. **Next up** card — drives the pipeline (ingest → **Build profile** → strategy → …).
 3. **Build profile** runs async; pipeline rail updates when complete (no full-page reload).
-4. **Run log** — shows active jobs; only the latest result per workflow (old failures hidden after success). Errors are user-safe (no provider org IDs).
-5. Agent tabs: Q&A, Content, Sales chat, Architect, Analytics, Strategy, Outreach, Proposal, Publish.
-6. Source links display as `zyvor.dev/path` (clickable), not raw IPs.
+4. Pipeline stages are **sequential** — later stages (e.g. Outreach) stay idle until earlier ones (Strategy) are done.
+5. **Run log** — shows active jobs; only the latest result per workflow (old failures hidden after success). Errors are user-safe (no provider org IDs).
+6. Agent tabs: Q&A, Content, Sales chat, Architect, Analytics, Strategy, Outreach, Proposal, Publish.
+7. Source links display as `zyvor.dev/path` (clickable), not raw IPs.
 
 Use `https://<host>:30443` for lab TLS. Never publish lab IPs in customer docs.
 

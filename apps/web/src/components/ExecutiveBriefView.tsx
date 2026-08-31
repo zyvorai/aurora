@@ -34,9 +34,9 @@ interface Props {
   brief: ExecutiveBrief;
 }
 
-function ReadinessBadge({ ok, label }: { ok: boolean; label: string }) {
+function ReadinessBadge({ ok, readyLabel, pendingLabel }: { ok: boolean; readyLabel: string; pendingLabel: string }) {
   return (
-    <Badge variant={ok ? 'success' : 'warning'}>{label}</Badge>
+    <Badge variant={ok ? 'success' : 'warning'}>{ok ? readyLabel : pendingLabel}</Badge>
   );
 }
 
@@ -70,10 +70,10 @@ export default function ExecutiveBriefView({ brief }: Props) {
         <CardBody>
           <SectionHeader label="Readiness" title="GTM status" />
           <div className="flex flex-wrap gap-2">
-            <ReadinessBadge ok={r.ingest_complete} label="Ingest complete" />
-            <ReadinessBadge ok={r.profile_built} label="Profile built" />
-            <ReadinessBadge ok={r.strategy_ready} label="Strategy ready" />
-            <ReadinessBadge ok={r.outreach_ready} label="Outreach ready" />
+            <ReadinessBadge ok={r.ingest_complete} readyLabel="Ingest complete" pendingLabel="Ingest pending" />
+            <ReadinessBadge ok={r.profile_built} readyLabel="Profile built" pendingLabel="Profile pending" />
+            <ReadinessBadge ok={r.strategy_ready} readyLabel="Strategy ready" pendingLabel="Strategy pending" />
+            <ReadinessBadge ok={r.outreach_ready} readyLabel="Outreach ready" pendingLabel="Outreach pending" />
           </div>
         </CardBody>
       </Card>

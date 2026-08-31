@@ -17,7 +17,7 @@ Trial binaries ship from the public distro repo (no source in the trial). Source
 
 **Trial package:** follow **GETTING-STARTED** in the tarball.  
 **Source:** `make start` → web `:3000`, API `:8000`.  
-**Zyvor lab:** `./scripts/deploy-remote.sh` (infra) + `./scripts/deploy-k8s.sh` (app). Seed suite products with `./scripts/seed-zyvor-suite.sh`.
+**Zyvor lab:** `./scripts/deploy-remote.sh` (infra) + `./scripts/deploy-k8s.sh` (app). Seed suite products with `./scripts/seed-zyvor-suite.sh` (idempotent — skips existing products, sources, opportunities, and outreach campaigns).
 
 ## 2. Sign in
 

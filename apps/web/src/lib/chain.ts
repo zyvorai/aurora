@@ -75,18 +75,19 @@ export function deriveChain(
   if (!readiness) {
     return CHAIN.map((stage, i) => ({ ...stage, status: i === 0 ? 'need' : 'idle' }));
   }
-  let firstNotDoneFound = false;
+  // Sequential pipeline: a stage is only "done" when it and every prior stage
+  // are ready. Otherwise seed/demo artifacts (e.g. outreach without strategy)
+  // make later dots green while Next up still asks for an earlier step.
+  let blocked = false;
   return CHAIN.map((stage) => {
-    const done = isStageDone(stage.id, readiness);
-    if (done) return { ...stage, status: 'done' as ChainStatus };
-    if (stage.id === runningStageId) {
-      firstNotDoneFound = true;
-      return { ...stage, status: 'run' as ChainStatus };
-    }
-    if (!firstNotDoneFound) {
-      firstNotDoneFound = true;
+    const ready = isStageDone(stage.id, readiness);
+    if (!blocked && ready) return { ...stage, status: 'done' as ChainStatus };
+    if (!blocked) {
+      blocked = true;
+      if (stage.id === runningStageId) return { ...stage, status: 'run' as ChainStatus };
       return { ...stage, status: 'need' as ChainStatus };
     }
+    if (stage.id === runningStageId) return { ...stage, status: 'run' as ChainStatus };
     return { ...stage, status: 'idle' as ChainStatus };
   });
 }

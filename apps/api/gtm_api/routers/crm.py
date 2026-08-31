@@ -16,6 +16,7 @@ from gtm_api.schemas import (
 )
 from gtm_api.services.crm import (
     create_opportunity,
+    delete_opportunity,
     get_opportunity,
     list_opportunities,
     pipeline_summary,
@@ -80,6 +81,25 @@ async def post_opportunity(
     await db.commit()
     await db.refresh(opp)
     return _to_response(opp)
+
+
+@router.delete(
+    "/products/{product_id}/opportunities/{opportunity_id}",
+    status_code=204,
+)
+async def remove_opportunity(
+    product_id: uuid.UUID,
+    opportunity_id: uuid.UUID,
+    user: User = Depends(require_permission("write")),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+    opp = await get_opportunity(db, opportunity_id, ctx.tenant_id)
+    if not opp or opp.product_id != product_id:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+    await delete_opportunity(db, opportunity_id, ctx.tenant_id)
+    await db.commit()
 
 
 @router.get("/products/{product_id}/opportunities/{opportunity_id}", response_model=OpportunityResponse)

@@ -150,8 +150,10 @@ async def build_executive_brief(
         risks.append("Product profile not built — run Crawl & Ingest then Build Profile")
     if profile_built and not strategy_ready:
         risks.append("GTM strategy not generated")
-    if kpis["leads"] == 0:
-        risks.append("No leads in pipeline yet")
+    # Leads (sales contacts) are distinct from CRM opportunities — only warn
+    # once the GTM chain is far enough that discovering leads is the next gap.
+    if strategy_ready and kpis["leads"] == 0 and discovered_n == 0:
+        risks.append("No discovered accounts or leads yet")
 
     narrative = _build_narrative(product, gtm_readiness, kpis, risks)
 

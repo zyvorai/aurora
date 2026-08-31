@@ -291,7 +291,7 @@ export function GlobalNav({
 
             {variant === 'marketing' ? (
               marketingAuthed ? (
-                <Link className={styles.link} href="/dashboard" aria-label="Dashboard">
+                <Link className={styles.link} href="/dashboard">
                   Products
                 </Link>
               ) : (
