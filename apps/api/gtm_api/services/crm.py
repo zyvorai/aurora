@@ -166,6 +166,11 @@ async def delete_opportunity(
     )
     for act in activities.scalars().all():
         await db.delete(act)
+    health = await db.execute(
+        select(AccountHealth).where(AccountHealth.opportunity_id == opportunity_id)
+    )
+    for row in health.scalars().all():
+        await db.delete(row)
     await db.delete(opp)
     await db.flush()
     return True
