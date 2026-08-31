@@ -76,3 +76,12 @@ export const TONE_CLASSES: Record<Tone, ToneClassSet> = {
 
 /** Stable rotation for contexts with no inherent category (e.g. a plain product grid). */
 export const TONE_ROTATION: Tone[] = ['sky', 'pink', 'emerald', 'violet', 'teal', 'amber'];
+
+/** Deterministic tone from a string key (product name, id, etc.). */
+export function toneFromKey(key: string): Tone {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) {
+    h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  }
+  return TONE_ROTATION[h % TONE_ROTATION.length];
+}

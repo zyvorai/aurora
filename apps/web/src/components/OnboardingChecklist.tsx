@@ -106,10 +106,10 @@ export default function OnboardingChecklist({
   if (dismissed) return null;
 
   return (
-    <div className="animate-fade-up rounded-[var(--radius-lg)] bg-background px-5 py-5 sm:px-6 sm:py-6">
+    <div className="animate-fade-up apple-card px-5 py-5 sm:px-6 sm:py-6">
       <div className="space-y-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <Text className="font-semibold text-[21px] tracking-[-0.02em]">
               {hasProduct ? 'Getting started' : 'Start here'}
             </Text>
@@ -118,6 +118,14 @@ export default function OnboardingChecklist({
                 ? `${completedCount} of ${steps.length} complete`
                 : 'Create a product first. Everything else unlocks after that.'}
             </TextMuted>
+            {hasProduct ? (
+              <div className="mt-3 h-1 rounded-full bg-[var(--app-canvas)] overflow-hidden border border-border">
+                <div
+                  className="h-full rounded-full bg-[var(--accent-blue)] transition-all duration-500"
+                  style={{ width: `${(completedCount / steps.length) * 100}%` }}
+                />
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="sm" onClick={() => setCollapsed((c) => !c)} aria-label={collapsed ? 'Expand' : 'Collapse'}>
@@ -132,20 +140,20 @@ export default function OnboardingChecklist({
         </div>
 
         {!collapsed && nextStep && !nextStep.done ? (
-          <div className="rounded-[var(--radius-md)] bg-surface px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+          <div className="rounded-[12px] bg-[var(--app-canvas)] px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between border border-border">
             <div className="min-w-0">
-              <TextSmall className="text-primary font-medium">Next up</TextSmall>
+              <TextSmall className="text-[var(--accent-blue)] font-medium">Next up</TextSmall>
               <p className="text-[17px] font-semibold tracking-tight mt-0.5">{nextStep.title}</p>
               <TextMuted className="text-body-sm mt-1">{nextStep.hint}</TextMuted>
             </div>
             {nextStep.onAction ? (
-              <Button size="lg" className="shrink-0" onClick={nextStep.onAction}>
+              <Button className="shrink-0" onClick={nextStep.onAction}>
                 {nextStep.actionLabel}
                 <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             ) : nextStep.href ? (
               <Link href={nextStep.href} className="shrink-0">
-                <Button size="lg">
+                <Button>
                   {nextStep.actionLabel}
                   <ArrowRight className="h-4 w-4 ml-1.5" />
                 </Button>
@@ -163,8 +171,8 @@ export default function OnboardingChecklist({
                   <span
                     className={cn(
                       'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                      step.done && 'bg-success text-white',
-                      !step.done && !step.locked && 'bg-primary text-white',
+                      step.done && 'bg-[var(--accent-sage)] text-white',
+                      !step.done && !step.locked && 'bg-[var(--accent-blue)] text-white',
                       step.locked && 'bg-surface text-muted',
                     )}
                     aria-hidden

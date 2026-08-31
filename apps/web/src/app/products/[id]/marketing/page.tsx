@@ -8,12 +8,14 @@ import { showToast } from '@/lib/toast';
 import { useWorkflowPolling } from '@/lib/useWorkflowPolling';
 import { workflowProgressPercent } from '@/lib/workflow-progress';
 import { PageHero } from '@/components/layout/PageHero';
-import { SectionHeader } from '@/components/layout/SectionHeader';
+import { KpiStrip, WorkspacePage, WorkspacePanel, WorkspaceRow } from '@/components/layout/WorkspacePanel';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import CampaignsPanel from '@/components/campaigns/CampaignsPanel';
-import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { TextSmall } from '@/components/ui/Typography';
+import forgeStyles from '@/components/workflow/forge.module.css';
+import { cn } from '@/lib/cn';
 
 export default function MarketingPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,104 +53,84 @@ export default function MarketingPage() {
   }
 
   return (
-    <div className="space-y-10 animate-fade-up">
+    <WorkspacePage>
       <PageHero
         eyebrow="Marketing"
         title="Marketing"
         description="Strategy and campaigns run in the background — your browser won't block."
-        actions={
-          <Button disabled={running} onClick={runOutboundSprint}>
-            {running ? 'Running…' : 'Run Outbound Sprint'}
-          </Button>
-        }
       />
 
-      {brief && (
-        <div className="flex items-center justify-between gap-4 border-y border-border py-5">
-          <div>
-            <p className="text-[17px] font-semibold tracking-[-0.02em] text-foreground">GTM strategy</p>
-            <p className="mt-1 text-[13px] text-muted">Market research and ICP readiness</p>
-          </div>
-          <Badge variant={brief.gtm_readiness.strategy_ready ? 'success' : 'warning'}>
-            {brief.gtm_readiness.strategy_ready ? 'Ready' : 'Not generated'}
-          </Badge>
-        </div>
-      )}
-
-      <section>
-        <SectionHeader
-          title="Outbound Sprint"
-          description="One workflow: product → market research → ICP → discover → qualify → campaign."
+      {brief ? (
+        <KpiStrip
+          items={[
+            { label: 'Strategy', value: brief.gtm_readiness.strategy_ready ? 'Ready' : '—' },
+            { label: 'Accounts found', value: brief.kpis.accounts_found },
+            { label: 'Qualified', value: brief.kpis.qualified },
+            { label: 'Agent runs', value: brief.kpis.agent_runs },
+          ]}
         />
-        <div className="rounded-[var(--radius-lg)] bg-surface px-5 py-5 space-y-4 max-w-xl">
-          <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
-            {['product', 'market research', 'ICP', 'discover', 'qualify', 'campaign'].map((step, i) => (
-              <span key={step} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-muted">→</span>}
-                <span
-                  className={
-                    i === 0
-                      ? 'px-2 py-0.5 rounded-full bg-success/10 text-success'
-                      : 'px-2 py-0.5 rounded-full bg-background text-muted'
-                  }
-                >
-                  {step}
-                </span>
-              </span>
-            ))}
-          </div>
-          <TextSmall className="text-muted">Runs continue if you close this tab.</TextSmall>
-          {run && (
-            <div className="space-y-2">
-              <ProgressBar percent={workflowProgressPercent(run)} label={`Status: ${run.status}`} />
-              <ul className="space-y-1">
-                {run.steps.map((step) => (
-                  <li key={step.name} className="flex items-center justify-between text-[13px]">
-                    <span className="text-foreground">{step.name}</span>
-                    <Badge
-                      variant={
-                        step.status === 'failed' ? 'danger' : step.status === 'completed' ? 'success' : 'default'
-                      }
-                    >
-                      {step.status}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </section>
+      ) : null}
 
-      <section>
-        <SectionHeader title="Content & strategy" />
-        <div className="rounded-[var(--radius-lg)] bg-surface divide-y divide-border overflow-hidden">
-          <div className="flex items-center justify-between gap-4 px-5 py-4">
-            <div className="min-w-0">
-              <Text className="font-medium">GTM Strategy</Text>
-              <TextMuted className="mt-0.5 block text-[13px]">Generate ICP and go-to-market plan</TextMuted>
-            </div>
-            <Link href={`/products/${id}?tab=strategy`} className="shrink-0">
-              <Button size="sm" variant="secondary">
-                Open
-              </Button>
-            </Link>
-          </div>
-          <div className="flex items-center justify-between gap-4 px-5 py-4">
-            <div className="min-w-0">
-              <Text className="font-medium">Content studio</Text>
-              <TextMuted className="mt-0.5 block text-[13px]">LinkedIn posts and blog articles</TextMuted>
-            </div>
-            <Link href={`/products/${id}?tab=content`} className="shrink-0">
-              <Button size="sm" variant="secondary">
-                Open
-              </Button>
-            </Link>
-          </div>
+      <div className={cn(forgeStyles.spotlight, running && forgeStyles.spotlightRunning, 'flex flex-col sm:flex-row sm:items-center gap-5')}>
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-primary mb-1.5">Outbound sprint</p>
+          <h2 className={forgeStyles.spotlightTitle}>Run the full GTM chain</h2>
+          <p className={forgeStyles.spotlightBody}>
+            Product → market research → ICP → discover → qualify → campaign. Keeps running if you close the tab.
+          </p>
         </div>
-      </section>
+        <Button disabled={running} onClick={runOutboundSprint} className="shrink-0">
+          {running ? 'Running…' : 'Start sprint'}
+        </Button>
+      </div>
+
+      {run ? (
+        <WorkspacePanel title="Sprint progress" bodyClassName="p-4 space-y-3">
+          <ProgressBar percent={workflowProgressPercent(run)} label={`Status: ${run.status}`} />
+          <ul className="space-y-1.5 m-0 p-0 list-none">
+            {run.steps.map((step) => (
+              <li key={step.name} className="flex items-center justify-between text-[13px]">
+                <span className="text-foreground">{step.name}</span>
+                <Badge variant={step.status === 'failed' ? 'danger' : step.status === 'completed' ? 'success' : 'default'}>
+                  {step.status}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </WorkspacePanel>
+      ) : null}
+
+      <WorkspacePanel title="Content & strategy" description="Open in Workspace to generate">
+        <WorkspaceRow
+          title="GTM Strategy"
+          description="Generate ICP and go-to-market plan"
+          actions={
+            <Link href={`/products/${id}?tab=strategy`}>
+              <Button size="sm" variant="secondary">Open</Button>
+            </Link>
+          }
+        />
+        <WorkspaceRow
+          title="Content studio"
+          description="LinkedIn posts and blog articles"
+          actions={
+            <Link href={`/products/${id}?tab=content`}>
+              <Button size="sm" variant="secondary">Open</Button>
+            </Link>
+          }
+        />
+        <WorkspaceRow
+          title="Publish"
+          description="Review and approve artifacts"
+          actions={
+            <Link href={`/products/${id}?tab=publish`}>
+              <Button size="sm" variant="secondary">Open</Button>
+            </Link>
+          }
+        />
+      </WorkspacePanel>
 
       <CampaignsPanel productId={id} />
-    </div>
+    </WorkspacePage>
   );
 }

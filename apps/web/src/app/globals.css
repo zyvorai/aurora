@@ -30,9 +30,10 @@
   --success: #6b7f52;
   --warning: #e06a1c;
   --danger: #d70015;
-  --accent-fill: #5a7ea8;
+  --accent-fill: #0071e3;
   --accent-tint: #fff1e6;
-  --accent-blue: #5a7ea8;
+  --accent-blue: #0071e3;
+  --accent-blue-hover: #0077ed;
   --accent-pink: #8b6fa0;
   --accent-teal: #6b7f52;
   --accent-purple: #8b6fa0;
@@ -40,7 +41,9 @@
   --accent-sage: #a9b689;
   --accent-lavender: #dfceea;
   --accent-deep-blue: #32374a;
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  /* Flat Apple surfaces: hairline only by default; soft shadow on elevated/hover */
+  --shadow-card: none;
+  --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-accent: 0 4px 14px rgba(247, 126, 45, 0.22);
   --nav-bg: rgba(255, 255, 255, 0.72);
   --nav-bg-open: rgba(255, 255, 255, 0.96);
@@ -75,12 +78,13 @@
   --accent-hover: var(--primary-hover);
   --radius-liquid: 18px;
   --radius-liquid-lg: 20px;
+  /* glass-* tokens = flat panel aliases (historical names; not translucent glass) */
   --glass-bg: #ffffff;
   --glass-bg-elevated: #ffffff;
   --glass-bg-strong: #fbfbfd;
   --glass-border: #d2d2d7;
   --glass-border-strong: #86868b;
-  --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --glass-shadow: none;
   --glass-highlight: transparent;
   --nav-h: 44px;
   --hs-nav-h: 44px;
@@ -114,6 +118,7 @@
   --hs-deep: #1d1d1f;
   --hs-deep-mint: #a9b689;
   --hs-bg-alt: #f5f5f7;
+  --app-canvas: #f5f5f7;
 }
 
 html.dark-theme {
@@ -129,7 +134,8 @@ html.dark-theme {
   --success: #a9b689;
   --warning: #ff9a4d;
   --danger: #ff453a;
-  --accent-blue: #96aed1;
+  --accent-blue: #2997ff;
+  --accent-blue-hover: #40a6ff;
   --accent-pink: #dfceea;
   --accent-teal: #a9b689;
   --accent-purple: #dfceea;
@@ -137,7 +143,8 @@ html.dark-theme {
   --accent-sage: #a9b689;
   --accent-lavender: #dfceea;
   --accent-deep-blue: #96aed1;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --shadow-card: none;
+  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.4);
   --nav-bg: rgba(5, 5, 5, 0.72);
   --nav-bg-open: rgba(5, 5, 5, 0.96);
   --nav-border: rgba(255, 255, 255, 0.06);
@@ -147,12 +154,15 @@ html.dark-theme {
   --glass-bg-strong: #0b0f14;
   --glass-border: rgba(255, 255, 255, 0.07);
   --glass-border-strong: rgba(255, 255, 255, 0.14);
-  --glass-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  --glass-shadow: none;
   --hs-text-subtle: #a1a1a6;
   --hs-bg-alt: #0a0a0a;
+  --app-canvas: #0a0a0a;
   --hs-e2: 0 6px 20px rgba(0, 0, 0, 0.35);
   --hs-accent: #ff9a4d;
   --hs-accent-deep: #f77e2d;
+  --hs-text-heading: var(--foreground);
+  --hs-text-muted: var(--muted-foreground);
 }
 
 html {
@@ -176,9 +186,10 @@ html {
   --primary-foreground: #ffffff;
   --border: #d2d2d7;
   --ring: #f77e2d;
-  --accent-fill: #5a7ea8;
+  --accent-fill: #0071e3;
   --accent-tint: #fff1e6;
-  --accent-blue: #5a7ea8;
+  --accent-blue: #0071e3;
+  --accent-blue-hover: #0077ed;
   --accent-pink: #8b6fa0;
   --accent-teal: #6b7f52;
   --accent-purple: #8b6fa0;
@@ -338,8 +349,7 @@ code, pre {
   .chain-meter-run::after { animation: none; }
 }
 
-/* ---- staggered entrance delays -- same idea as the login page's
-   .login-fade-in-d1..d4, generalized for any animate-fade-up grid. ---- */
+/* ---- staggered entrance delays for animate-fade-up grids ---- */
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.1s; }
 .stagger-3 { animation-delay: 0.15s; }
@@ -352,35 +362,37 @@ code, pre {
   50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
 }
 
-/* ---- Apple flat surfaces (glass/tahoe class names kept as aliases) ---- */
+/* ---- Apple flat panels (.glass / .tahoe-* kept as aliases for call sites) ---- */
 
 .glass {
   background-color: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--radius-liquid);
-  transition: box-shadow 0.18s ease;
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .glass-elevated {
   background-color: var(--glass-bg-elevated);
+  box-shadow: none;
 }
 
 .glass-strong {
   background-color: var(--glass-bg-strong);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .glass:hover, .glass-elevated:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .glass-hover-lift {
-  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .glass-hover-lift:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--glass-border-strong);
 }
 
 .tahoe-hero {
@@ -464,14 +476,14 @@ code, pre {
 }
 
 .tahoe-glass-card {
-  border-radius: var(--radius-liquid);
+  border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  box-shadow: var(--glass-shadow);
+  box-shadow: none;
 }
 
 .tahoe-glass-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-elevated);
 }
 
 .tahoe-empty {
@@ -487,172 +499,7 @@ code, pre {
   border: 1px solid var(--border);
 }
 
-/* ---- login page: Zyvor Design System v2 skin -- fixed white/ink/rust/teal palette
-   independent of the app's dark/light token system, same "distinct marketing skin"
-   pattern as app/page.tsx and app/features/page.tsx. Left hero panel stays dark
-   (ink/teal) for contrast; right form panel is flat white. ---- */
-
-.login-hero {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(160deg, #21414F 0%, #14161A 100%);
-}
-
-.login-hero-mesh {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse 90% 80% at 40% 30%, black 10%, transparent 70%);
-  pointer-events: none;
-}
-
-.login-logo-ring {
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-@keyframes login-fade-in-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.login-fade-in { animation: login-fade-in-up 0.65s ease-out forwards; }
-.login-fade-in-d1 { animation-delay: 0.1s; opacity: 0; }
-.login-fade-in-d2 { animation-delay: 0.2s; opacity: 0; }
-.login-fade-in-d3 { animation-delay: 0.3s; opacity: 0; }
-.login-fade-in-d4 { animation-delay: 0.4s; opacity: 0; }
-
-.login-text-gradient {
-  /* Apple blue -> violet two-tone, matching hypersdk-web's own gradient-CTA treatment
-     (orange retired in favor of blue as the one interactive/brand color). Sits on the
-     dark .login-hero panel, so uses the brighter dark-mode-safe blue (#0A84FF) rather
-     than the deeper #0071E3 used on the white canvas elsewhere. */
-  background: linear-gradient(135deg, #0A84FF 0%, #A78BFA 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.login-stat-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.3rem 0.7rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.login-feature-icon {
-  background: rgba(10, 132, 255, 0.16);
-  border: 1px solid rgba(10, 132, 255, 0.3);
-  color: #0A84FF;
-}
-
-.login-feature-card {
-  transition: border-color 0.25s cubic-bezier(0.23, 1, 0.32, 1), transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.login-feature-card:hover {
-  transform: translateY(-1px);
-  border-color: rgba(10, 132, 255, 0.35);
-}
-
-.login-feature-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
-
-.login-panel {
-  /* Right-hand form panel is always a flat white surface, independent of the
-     app's dark/light token system -- without this it silently fell through
-     to body's var(--background), which is fine when that's a mid-dark ink
-     but reads as a near-black seam now that dark mode's --background is a
-     much darker #050505 (hypersdk-web token port). */
-  background: #FFFFFF;
-}
-
-.login-panel-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.025;
-  pointer-events: none;
-  background-image: radial-gradient(circle at 1px 1px, rgba(20, 22, 26, 0.9) 1px, transparent 0);
-  background-size: 32px 32px;
-}
-
-.login-glass {
-  background: #FFFFFF;
-  border: 1px solid rgba(20, 22, 26, 0.12);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(20, 22, 26, 0.06);
-  position: relative;
-}
-
-.login-input {
-  width: 100%;
-  padding: 0.65rem 0.9rem 0.65rem 2.5rem;
-  border-radius: 12px;
-  background: #F5F6F8;
-  border: 1px solid rgba(20, 22, 26, 0.14);
-  color: #14161A;
-  font-size: 0.875rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.login-input::placeholder { color: rgba(20, 22, 26, 0.4); }
-
-.login-input:focus {
-  outline: none;
-  border-color: #0071E3;
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
-}
-
-.login-field-icon {
-  position: absolute;
-  left: 0.85rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1rem;
-  height: 1rem;
-  color: rgba(20, 22, 26, 0.4);
-  pointer-events: none;
-  transition: color 0.2s ease;
-}
-
-.group:focus-within .login-field-icon { color: #0071E3; }
-
-.login-btn-primary {
-  position: relative;
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: white;
-  overflow: hidden;
-  background: #0071E3;
-  border: 1px solid #0071E3;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.login-btn-primary:hover:not(:disabled) {
-  background: #0058B3;
-  transform: translateY(-1px);
-}
-
-.login-btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* ---- Auth form error shake (portal + login call sites) ---- */
 
 @keyframes login-shake {
   0%, 100% { transform: translateX(0); }
@@ -671,8 +518,7 @@ code, pre {
   .tahoe-empty-orb { animation: none; }
   .login-shake { animation: none; }
   .animate-fade-up, .animate-slide-in, .animate-glass-in, .animate-fade-in,
-  .animate-fade-out, .animate-slide-out, .animate-glass-out,
-  .login-fade-in, .login-fade-in-d1, .login-fade-in-d2, .login-fade-in-d3, .login-fade-in-d4 {
+  .animate-fade-out, .animate-slide-out, .animate-glass-out {
     animation: none;
     opacity: 1;
     transform: none;
@@ -685,13 +531,103 @@ code, pre {
 }
 
 .focus-ring {
-  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
 @layer components {
   .text-eyebrow {
     @apply text-xs font-normal text-muted;
-    letter-spacing: var(--tracking-eyebrow);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .apple-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 400;
+  }
+
+  .apple-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .apple-card {
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface-elevated);
+    box-shadow: none;
+  }
+
+  .apple-card-hover {
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  }
+
+  .apple-card-hover:hover {
+    border-color: color-mix(in srgb, var(--accent-blue) 28%, var(--border));
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .apple-segments {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 3px;
+    border-radius: 980px;
+    background: color-mix(in srgb, var(--border) 35%, var(--app-canvas));
+    border: 1px solid var(--border);
+  }
+
+  .apple-segment {
+    padding: 0.35rem 0.85rem;
+    border-radius: 980px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .apple-segment:hover {
+    color: var(--foreground);
+  }
+
+  .apple-segment[data-active='true'] {
+    background: var(--surface-elevated);
+    color: var(--foreground);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+
+  .apple-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media (min-width: 640px) {
+    .apple-stat-strip {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2rem;
+    }
+  }
+
+  .apple-stat-value {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .apple-stat-label {
+    margin-top: 0.5rem;
+    font-size: 12px;
+    color: var(--muted-foreground);
   }
 
   .text-stat-value {

@@ -28,13 +28,14 @@
   border-bottom-color: transparent;
 }
 
-:global(html:not(.dark-theme) .marketing-theme) .gnav,
-:global(html:not(.dark-theme) .marketing-theme) .gnav[data-open='true'] {
+/* Marketing is always light chrome — must beat html.dark-theme .gnav (same specificity, later wins) */
+:global(html .marketing-theme) .gnav,
+:global(html .marketing-theme) .gnav[data-open='true'] {
   background: rgba(255, 255, 255, 0.96);
   border-bottom-color: transparent;
 }
 
-:global(html:not(.dark-theme) .marketing-theme) .gnav:not([data-open='true']) {
+:global(html .marketing-theme) .gnav:not([data-open='true']) {
   background: rgba(255, 255, 255, 0.72);
   border-bottom-color: rgba(20, 22, 26, 0.08);
 }
@@ -354,7 +355,7 @@
   background: rgba(5, 5, 5, 0.97);
 }
 
-:global(.marketing-theme) .fly {
+:global(html .marketing-theme) .fly {
   background: rgba(255, 255, 255, 0.96);
 }
 
@@ -383,7 +384,7 @@
 .flyInner {
   max-width: var(--hs-max-width);
   margin: 0 auto;
-  padding: var(--hs-s7) var(--hs-gutter) var(--hs-s8);
+  padding: var(--hs-s8) var(--hs-gutter) var(--hs-s9);
 }
 
 .flyPanel {
@@ -435,9 +436,9 @@
 }
 
 .flyGroup a {
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -0.018em;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.016em;
   color: var(--hs-text-heading);
   display: inline-block;
   text-decoration: none;
@@ -488,6 +489,13 @@
 
 .subnav {
   border-top: 1px solid var(--nav-border);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+:global(html.dark-theme) .subnav {
+  background: rgba(5, 5, 5, 0.65);
 }
 
 .subnavInner {
@@ -496,7 +504,7 @@
   padding: 0 var(--hs-gutter);
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   overflow-x: auto;
 }
 
@@ -545,7 +553,7 @@
     background: rgba(5, 5, 5, 0.97);
   }
 
-  :global(.marketing-theme) .sheet {
+  :global(html .marketing-theme) .sheet {
     background: rgba(255, 255, 255, 0.97);
   }
 

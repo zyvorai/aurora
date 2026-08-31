@@ -5,7 +5,7 @@ import { ShieldAlert, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
-import { Card, CardBody } from '@/components/ui/Card';
+import { WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { SkeletonHero, SkeletonTable } from '@/components/ui/Skeleton';
 import { Badge } from '@/components/ui/Badge';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
@@ -29,7 +29,7 @@ export default function SalesActivityAdminPage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
         <SkeletonHero />
         <SkeletonTable />
       </div>
@@ -40,7 +40,7 @@ export default function SalesActivityAdminPage() {
   // all, not just fail on submit.
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-6 py-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
         <EmptyState
           icon={ShieldAlert}
           title="Admin access required"
@@ -51,78 +51,73 @@ export default function SalesActivityAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
-      <PageHero
-        icon={TrendingUp}
-        eyebrow="Admin"
-        title="Sales Activity"
-        description="Who's working which client, and at what stage."
-      />
-
-      {loading ? (
-        <SkeletonTable />
-      ) : activity.length === 0 ? (
-        <EmptyState
-          icon={Users}
-          tone="emerald"
-          title="No approved sales reps yet"
-          description="Approve sales-rep portal signups to see their activity here."
+    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
+      <WorkspacePage>
+        <PageHero
+          icon={TrendingUp}
+          eyebrow="Admin"
+          title="Sales Activity"
+          description="Who's working which client, and at what stage."
         />
-      ) : (
-        <div className="space-y-6">
-          {activity.map((entry) => {
-            const totalAssigned = entry.leads.length + entry.opportunities.length;
-            return (
-              <Card key={entry.salesperson.id}>
-                <CardBody className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold">
-                        {entry.salesperson.contact_name || entry.salesperson.email}
-                      </div>
-                      <div className="text-muted text-body-sm">
-                        {entry.salesperson.territory ? `Territory: ${entry.salesperson.territory} · ` : ''}
-                        {entry.salesperson.email}
-                      </div>
-                    </div>
-                    <Badge variant="default">{totalAssigned} assigned</Badge>
-                  </div>
 
-                  {totalAssigned > 0 ? (
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableHeaderCell>Client</TableHeaderCell>
-                          <TableHeaderCell>Type</TableHeaderCell>
-                          <TableHeaderCell>Stage</TableHeaderCell>
+        {loading ? (
+          <SkeletonTable />
+        ) : activity.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            tone="emerald"
+            title="No approved sales reps yet"
+            description="Approve sales-rep portal signups to see their activity here."
+          />
+        ) : (
+          activity.map((entry) => {
+            const totalAssigned = entry.leads.length + entry.opportunities.length;
+            const repName = entry.salesperson.contact_name || entry.salesperson.email;
+            return (
+              <WorkspacePanel
+                key={entry.salesperson.id}
+                title={repName}
+                description={
+                  entry.salesperson.territory
+                    ? `${entry.salesperson.territory} · ${entry.salesperson.email}`
+                    : entry.salesperson.email
+                }
+                actions={<Badge variant="default">{totalAssigned} assigned</Badge>}
+              >
+                {totalAssigned > 0 ? (
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableHeaderCell>Client</TableHeaderCell>
+                        <TableHeaderCell>Type</TableHeaderCell>
+                        <TableHeaderCell>Stage</TableHeaderCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {entry.leads.map((lead) => (
+                        <TableRow key={`lead-${lead.id}`}>
+                          <TableCell>{lead.company || lead.name || '—'}</TableCell>
+                          <TableCell>Lead</TableCell>
+                          <TableCell className="capitalize">{lead.stage}</TableCell>
                         </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {entry.leads.map((lead) => (
-                          <TableRow key={`lead-${lead.id}`}>
-                            <TableCell>{lead.company || lead.name || '—'}</TableCell>
-                            <TableCell>Lead</TableCell>
-                            <TableCell className="capitalize">{lead.stage}</TableCell>
-                          </TableRow>
-                        ))}
-                        {entry.opportunities.map((opp) => (
-                          <TableRow key={`opp-${opp.id}`}>
-                            <TableCell>{opp.company || opp.name}</TableCell>
-                            <TableCell>Opportunity</TableCell>
-                            <TableCell className="capitalize">{opp.stage}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-muted text-body-sm">No leads or opportunities assigned yet.</p>
-                  )}
-                </CardBody>
-              </Card>
+                      ))}
+                      {entry.opportunities.map((opp) => (
+                        <TableRow key={`opp-${opp.id}`}>
+                          <TableCell>{opp.company || opp.name}</TableCell>
+                          <TableCell>Opportunity</TableCell>
+                          <TableCell className="capitalize">{opp.stage}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="px-4 py-3.5 text-muted text-[13px]">No leads or opportunities assigned yet.</p>
+                )}
+              </WorkspacePanel>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </WorkspacePage>
     </div>
   );
 }

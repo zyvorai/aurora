@@ -224,7 +224,7 @@ export default function WorkflowStagesAdminPage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
         <SkeletonHero />
         <SkeletonTable />
       </div>
@@ -233,7 +233,7 @@ export default function WorkflowStagesAdminPage() {
 
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-6 py-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
         <EmptyState icon={ShieldAlert} title="Admin access required" description="This page is restricted to admin users." />
       </div>
     );
@@ -245,7 +245,7 @@ export default function WorkflowStagesAdminPage() {
   }, {});
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
+    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8 animate-fade-up">
       <PageHero
         icon={Workflow}
         eyebrow="Admin"

@@ -34,6 +34,7 @@ def _allowed(path: str, api_prefix: str) -> bool:
         "/auth/sso/callback",
         "/auth/oauth/",
         "/portal/",
+        "/public/",
     ):
         if path.startswith(f"{api_prefix}{suffix}") or path == f"{api_prefix}{suffix.rstrip('/')}":
             return True

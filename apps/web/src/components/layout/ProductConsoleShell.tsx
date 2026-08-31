@@ -20,11 +20,12 @@ import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
 import navStyles from '@/components/layout/GlobalNav/GlobalNav.module.css';
 import { LicenseBanner } from '@/components/LicenseBanner';
 import { cn } from '@/lib/cn';
+import { TONE_CLASSES, toneFromKey } from '@/lib/tone';
 
 const STATUS_DOT: Record<ChainStage['status'], string> = {
   idle: 'bg-border',
-  need: 'bg-warning',
-  run: 'bg-primary',
+  need: 'bg-[var(--accent-blue)]',
+  run: 'bg-[var(--accent-blue)]',
   done: 'bg-success',
 };
 
@@ -108,6 +109,8 @@ export function ProductConsoleShell({
   ).map((group) => ({ ...group, stages: [...group.stages].sort((a, b) => a.position - b.position) }));
 
   const stages = deriveChain(brief?.gtm_readiness);
+  const productTone = toneFromKey(product?.name ?? productId);
+  const productToneClasses = TONE_CLASSES[productTone];
   const groups = getNavGroups(true, role);
   const workspaceGroup = groups.find((g) => g.id === 'workspace');
   const systemGroup = groups.find((g) => g.id === 'system');
@@ -137,7 +140,7 @@ export function ProductConsoleShell({
             key={item.id}
             href={href}
             className={cn(
-              'px-3 py-2 text-[13px] font-normal whitespace-nowrap border-b-[1.5px] transition-colors',
+              'px-3 py-2.5 text-[13px] font-normal whitespace-nowrap border-b-[1.5px] transition-colors',
               active ? 'border-primary text-foreground' : 'border-transparent text-muted hover:text-foreground',
             )}
           >
@@ -186,7 +189,7 @@ export function ProductConsoleShell({
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface">
+    <div className="min-h-screen flex flex-col bg-[var(--app-canvas)]">
       <LicenseBanner />
       <GlobalNav
         variant="app"
@@ -200,14 +203,18 @@ export function ProductConsoleShell({
       <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
       <aside
         style={{ '--rail-w': `${rail.effectiveWidth}px` } as CSSProperties}
-        className="relative w-full lg:w-[var(--rail-w)] shrink-0 border-b lg:border-b-0 lg:border-r border-border bg-surface lg:sticky lg:top-[var(--nav-h)] lg:h-[calc(100vh-var(--nav-h))] flex flex-row lg:flex-col gap-3 lg:gap-0 p-2.5 overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto"
+        className="relative w-full lg:w-[var(--rail-w)] shrink-0 border-b lg:border-b-0 lg:border-r border-border bg-[var(--surface)] lg:sticky lg:top-[var(--nav-h)] lg:h-[calc(100vh-var(--nav-h))] flex flex-row lg:flex-col gap-3 lg:gap-0 p-2.5 overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto"
       >
         <Link
           href="/dashboard"
           title={product?.name ?? undefined}
-          className="flex items-center gap-2.5 p-2 rounded-[var(--radius-md)] hover:bg-background transition-colors shrink-0"
+          className="flex items-center gap-2.5 p-2 rounded-[8px] hover:bg-white/80 dark:hover:bg-background transition-colors shrink-0"
         >
-          <span className="w-[28px] h-[28px] shrink-0 flex items-center justify-center rounded-full bg-foreground text-background text-[12px] font-semibold">
+          <span className={cn(
+            'w-[28px] h-[28px] shrink-0 flex items-center justify-center rounded-full text-[12px] font-semibold',
+            productToneClasses.bg,
+            productToneClasses.text,
+          )}>
             {product?.name?.charAt(0)?.toUpperCase() ?? '?'}
           </span>
           {!rail.collapsed && (
@@ -224,13 +231,13 @@ export function ProductConsoleShell({
           type="button"
           onClick={() => rail.setCollapsed((v) => !v)}
           aria-label={rail.collapsed ? 'Expand rail' : 'Collapse rail'}
-          className="hidden lg:flex items-center justify-center h-6 w-6 shrink-0 rounded-[var(--radius-sm)] text-muted hover:text-foreground hover:bg-background transition-colors"
+          className="hidden lg:flex items-center justify-center h-6 w-6 shrink-0 rounded-[6px] text-muted hover:text-foreground hover:bg-white/80 transition-colors"
         >
           {rail.collapsed ? <ChevronsRight className="w-3.5 h-3.5" /> : <ChevronsLeft className="w-3.5 h-3.5" />}
         </button>
 
         {!rail.collapsed && (
-          <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-medium text-muted">Pipeline</div>
+          <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-normal tracking-[0.02em] uppercase text-muted">Pipeline</div>
         )}
         <nav className="flex flex-row lg:flex-col gap-0.5 shrink-0">
           {stages.map((stage, i) => {
@@ -241,7 +248,7 @@ export function ProductConsoleShell({
                 href={chainStageHref(productId, stage.id)}
                 title={stage.label}
                 className={cn(
-                  'flex items-center gap-2 lg:gap-2.5 px-2 py-[7px] rounded-[var(--radius-sm)] text-[13px] text-foreground/75 hover:bg-background hover:text-foreground transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 lg:gap-2.5 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 hover:text-foreground transition-colors whitespace-nowrap',
                   rail.collapsed && 'lg:justify-center',
                 )}
               >
@@ -260,7 +267,7 @@ export function ProductConsoleShell({
         </nav>
 
         {!rail.collapsed && (
-          <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-medium text-muted">Surfaces</div>
+          <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-normal tracking-[0.02em] uppercase text-muted">Surfaces</div>
         )}
         <nav className="flex flex-row lg:flex-col gap-0.5 shrink-0">
           {SURFACES.map((s) => {
@@ -271,7 +278,7 @@ export function ProductConsoleShell({
                 href={`/products/${productId}?tab=${s.key}`}
                 title={s.label}
                 className={cn(
-                  'flex items-center gap-2 px-2 py-[7px] rounded-[var(--radius-sm)] text-[13px] text-foreground/75 hover:bg-background hover:text-foreground transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 hover:text-foreground transition-colors whitespace-nowrap',
                   rail.collapsed && 'lg:justify-center',
                 )}
               >
@@ -285,7 +292,7 @@ export function ProductConsoleShell({
         {customGroups.map((group) => (
           <div key={group.label} className="shrink-0 contents lg:block">
             {!rail.collapsed && (
-              <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-medium text-muted">{group.label}</div>
+              <div className="hidden lg:block mt-5 mb-1.5 px-2 text-[11px] font-normal tracking-[0.02em] uppercase text-muted">{group.label}</div>
             )}
             <nav className="flex flex-row lg:flex-col gap-0.5 shrink-0">
               {group.stages.map((stage) => (
@@ -294,12 +301,12 @@ export function ProductConsoleShell({
                   href={`/products/${productId}?tab=custom:${stage.id}`}
                   title={stage.label}
                   className={cn(
-                    'flex items-center gap-2 px-2 py-[7px] rounded-[var(--radius-sm)] text-[13px] text-foreground/75 hover:bg-background hover:text-foreground transition-colors whitespace-nowrap lg:truncate',
+                    'flex items-center gap-2 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 hover:text-foreground transition-colors whitespace-nowrap lg:truncate',
                     rail.collapsed && 'lg:justify-center',
                   )}
                 >
                   {rail.collapsed && (
-                    <span className="hidden lg:flex w-4 h-4 shrink-0 items-center justify-center rounded-full bg-background text-[9px]">
+                    <span className="hidden lg:flex w-4 h-4 shrink-0 items-center justify-center rounded-full bg-white text-[9px]">
                       {stage.label.charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -327,7 +334,7 @@ export function ProductConsoleShell({
         {!rail.collapsed && (
           <div
             onMouseDown={rail.startDrag}
-            className="hidden lg:block absolute top-0 bottom-0 right-0 w-1 cursor-col-resize hover:bg-primary/30 transition-colors"
+            className="hidden lg:block absolute top-0 bottom-0 right-0 w-1 cursor-col-resize hover:bg-primary/20 transition-colors"
             aria-hidden
           />
         )}
@@ -335,8 +342,8 @@ export function ProductConsoleShell({
 
       <div className="flex-1 min-w-0 flex flex-col min-h-0">
         <div className="flex flex-1 min-w-0 min-h-0">
-          <main className="flex-1 min-w-0 bg-background overflow-y-auto">
-            <div className="max-w-content mx-auto px-6 py-8 lg:px-8 lg:py-10">{children}</div>
+          <main className="flex-1 min-w-0 bg-[var(--app-canvas)] overflow-y-auto">
+            <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 lg:px-8 lg:py-10">{children}</div>
           </main>
           <RunLogDock productId={productId} />
         </div>

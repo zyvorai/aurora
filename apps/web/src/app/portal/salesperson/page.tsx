@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Briefcase, Pencil, TrendingUp } from 'lucide-react';
 import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
 import { PageHero } from '@/components/layout/PageHero';
+import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { SkeletonLine } from '@/components/ui/Skeleton';
-import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -94,50 +94,58 @@ export default function SalesPersonHomePage() {
   if (!account) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[var(--surface)]">
       <GlobalNav variant="portal" portalLabel="Sales Rep Portal" onSignOut={handleSignOut} />
 
-      <main className="flex-1 max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up w-full">
-        <PageHero
-          icon={Briefcase}
-          accent="teal"
-          eyebrow="Account"
-          title={account.contact_name || account.email}
-          description={account.territory ? `Territory: ${account.territory}` : 'My assigned pipeline'}
-          actions={
-            <Button variant="secondary" size="sm" onClick={openEditModal}>
-              <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
-            </Button>
-          }
-        />
+      <main className="flex-1 max-w-content mx-auto px-[var(--hs-gutter)] py-10 w-full">
+        <WorkspacePage>
+          <PageHero
+            eyebrow="Account"
+            title={account.contact_name || account.email}
+            description={account.territory ? `Territory: ${account.territory}` : 'My assigned pipeline'}
+            actions={
+              <Button variant="secondary" size="sm" onClick={openEditModal}>
+                <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
+              </Button>
+            }
+          />
 
-        <Card>
-          <CardBody className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Status</span>
+          <KpiStrip
+            items={[
+              { label: 'Status', value: account.status },
+              { label: 'Leads', value: pipeline.leads.length },
+              { label: 'Opportunities', value: pipeline.opportunities.length },
+              { label: 'Commission', value: `${(account.commission_rate * 100).toFixed(1)}%` },
+            ]}
+          />
+
+          <WorkspacePanel title="Account details" bodyClassName="divide-y divide-border">
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-muted text-[13px]">Status</span>
               <Badge variant={STATUS_VARIANT[account.status]}>{account.status}</Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Email</span>
-              <span className="text-body-sm">{account.email}</span>
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-muted text-[13px]">Email</span>
+              <span className="text-[13px]">{account.email}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Commission rate</span>
-              <span className="text-body-sm">{(account.commission_rate * 100).toFixed(1)}%</span>
-            </div>
-          </CardBody>
-        </Card>
+            {account.territory && (
+              <div className="flex items-center justify-between px-4 py-3.5">
+                <span className="text-muted text-[13px]">Territory</span>
+                <span className="text-[13px]">{account.territory}</span>
+              </div>
+            )}
+          </WorkspacePanel>
 
-        <PortalStatusNotice status={account.status} signupHref="/portal/salesperson/signup" />
+          <PortalStatusNotice status={account.status} signupHref="/portal/salesperson/signup" />
 
-        {account.status === 'approved' && (
-          <>
-            <section>
-              <h2 className="text-lg font-semibold mb-3">Assigned leads</h2>
-              {pipeline.leads.length === 0 ? (
-                <EmptyState icon={TrendingUp} tone="teal" title="No leads assigned yet" description="Leads assigned to you will appear here." />
-              ) : (
-                <Card>
+          {account.status === 'approved' && (
+            <>
+              <WorkspacePanel title="Assigned leads" description={`${pipeline.leads.length} lead${pipeline.leads.length === 1 ? '' : 's'}`}>
+                {pipeline.leads.length === 0 ? (
+                  <div className="p-4">
+                    <EmptyState icon={TrendingUp} tone="teal" title="No leads assigned yet" description="Leads assigned to you will appear here." />
+                  </div>
+                ) : (
                   <Table>
                     <TableHead>
                       <TableRow>
@@ -158,16 +166,15 @@ export default function SalesPersonHomePage() {
                       ))}
                     </TableBody>
                   </Table>
-                </Card>
-              )}
-            </section>
+                )}
+              </WorkspacePanel>
 
-            <section>
-              <h2 className="text-lg font-semibold mb-3">Assigned opportunities</h2>
-              {pipeline.opportunities.length === 0 ? (
-                <EmptyState icon={Briefcase} tone="teal" title="No opportunities assigned yet" description="Opportunities assigned to you will appear here." />
-              ) : (
-                <Card>
+              <WorkspacePanel title="Assigned opportunities" description={`${pipeline.opportunities.length} open`}>
+                {pipeline.opportunities.length === 0 ? (
+                  <div className="p-4">
+                    <EmptyState icon={Briefcase} tone="teal" title="No opportunities assigned yet" description="Opportunities assigned to you will appear here." />
+                  </div>
+                ) : (
                   <Table>
                     <TableHead>
                       <TableRow>
@@ -190,11 +197,11 @@ export default function SalesPersonHomePage() {
                       ))}
                     </TableBody>
                   </Table>
-                </Card>
-              )}
-            </section>
-          </>
-        )}
+                )}
+              </WorkspacePanel>
+            </>
+          )}
+        </WorkspacePage>
       </main>
 
       <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Edit profile">

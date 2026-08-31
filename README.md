@@ -30,7 +30,7 @@ Customer Sources → Product Discovery → Knowledge Extraction → AI Knowledge
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Next.js, React, Tailwind CSS, shadcn/ui |
+| Frontend | Next.js, React, Tailwind CSS |
 | Backend | FastAPI (Python) |
 | Agents | LangChain, LangGraph |
 | LLM (dev) | Ollama (`--profile ollama`) or OpenAI-compatible |
@@ -215,12 +215,13 @@ Light-first **Apple.com-style** system keyed to **iPhone 17** finishes: Cosmic O
 primary (`--primary` `#f77e2d`), Mist Blue / Sage / Lavender / Deep Blue accents, SF/system
 typography, and pill CTAs in `apps/web/src/app/globals.css`. Informational text links use
 Mist Blue (`--accent-blue`). Dark mode is opt-in via `html.dark-theme` (`ThemeContext`).
-Legacy `.glass*` / `.tahoe-*` class names still exist as aliases to the flat Apple styles
-for older call sites.
+Legacy `.glass*` / `.tahoe-*` class names remain as **aliases** for flat Apple panels
+(hairline border, no decorative shadow by default).
 
 **Chrome:** `GlobalNav` (mega-menu flyouts) sits on marketing (`MarketingLayout`), app
 (`AppShell`), product console (`ProductConsoleShell`), and portal auth pages. Marketing
-home is `/` (`HomeSections`); sign-up/sign-in live at `/login`. New tenants get an
+home is `/` (`HomeSections`); sign-up/sign-in live at `/login` with the same Cosmic Orange
+auth language as `PortalAuthShell`. New tenants get an
 `OnboardingChecklist` on `/dashboard` and Workspace until sources are ingested and an
 agent has run.
 

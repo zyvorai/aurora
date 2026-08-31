@@ -12,11 +12,10 @@ import { workflowProgressPercent } from '@/lib/workflow-progress';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useProduct } from '@/context/ProductContext';
 import { PageHero } from '@/components/layout/PageHero';
-import { SectionHeader } from '@/components/layout/SectionHeader';
+import { WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
 import ProductProfileView from '@/components/ProductProfileView';
 import ResultPanel from '@/components/ResultPanel';
 import { Markdown } from '@/components/ui/Markdown';
@@ -27,7 +26,7 @@ import ArtifactList from '@/components/artifacts/ArtifactList';
 import AgentTaskProgress from '@/components/AgentTaskProgress';
 import { taskButtonLabel, type AgentTaskId } from '@/lib/agent-tasks';
 import { cn } from '@/lib/cn';
-import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { TextMuted } from '@/components/ui/Typography';
 import { SkeletonHero } from '@/components/ui/Skeleton';
 import type { Tone } from '@/components/layout/PageHero';
 import {
@@ -35,10 +34,35 @@ import {
   Send, Blocks, FileSignature, Rocket, BarChart3, type LucideIcon,
 } from 'lucide-react';
 import { StageBlockRenderer } from '@/components/workflow/StageBlockRenderer';
-import { StageChain } from '@/components/workflow/StageChain';
 import { NextAction } from '@/components/workflow/NextAction';
-import OnboardingChecklist from '@/components/OnboardingChecklist';
-import { deriveChain, nextActionableStage, chainStageHref, chainStatusLabel, type ChainStageId } from '@/lib/chain';
+import { ForgeHeader, ForgeProgressRail } from '@/components/workflow/ForgeHeader';
+import { InboundEmbedPanel } from '@/components/workflow/InboundEmbedPanel';
+import { SequenceMonitorPanel } from '@/components/workflow/SequenceMonitorPanel';
+import { deriveChain, nextActionableStage, chainStageHref, type ChainStageId } from '@/lib/chain';
+import forgeStyles from '@/components/workflow/forge.module.css';
+
+function dedupeArtifacts(artifacts: Artifact[]): Array<{ artifact: Artifact; count: number }> {
+  const map = new Map<string, { artifact: Artifact; count: number }>();
+  for (const a of artifacts) {
+    const key = `${a.type}::${a.title.toLowerCase().trim()}`;
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, { artifact: a, count: 1 });
+      continue;
+    }
+    existing.count += 1;
+    if (new Date(a.created_at) > new Date(existing.artifact.created_at)) {
+      existing.artifact = a;
+    }
+  }
+  return [...map.values()].sort(
+    (a, b) => new Date(b.artifact.created_at).getTime() - new Date(a.artifact.created_at).getTime(),
+  );
+}
+
+function artifactAbbrev(type: string): string {
+  return type.slice(0, 2).toUpperCase();
+}
 
 type FixedTab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'analytics';
 // Custom (tenant-defined) stages use a `custom:<stageId>` tab key alongside the 10
@@ -194,6 +218,7 @@ export default function ProductForgePageInner() {
     : null;
   const chainStages = deriveChain(brief?.gtm_readiness, runningStageId);
   const nextStage = nextActionableStage(chainStages);
+  const recentArtifacts = dedupeArtifacts(artifacts).slice(0, 5);
 
   useEffect(() => {
     setTab(parseTab(searchParams.get('tab')));
@@ -347,22 +372,25 @@ export default function ProductForgePageInner() {
   }
 
   return (
-    <div className="space-y-10 animate-fade-up">
-      <PageHero
-        eyebrow="Workspace"
-        title={product.name}
-        description={product.website_url ?? 'Sources, agents, and workflow tools'}
-        actions={
-          <Badge variant={nextStage === null ? 'success' : nextStage.status === 'run' ? 'default' : 'warning'}>
-            {chainStatusLabel(chainStages)}
-          </Badge>
-        }
-      />
+    <div className="space-y-8 animate-fade-up">
+      {tab === 'overview' ? (
+        <ForgeHeader name={product.name} websiteUrl={product.website_url} stages={chainStages} />
+      ) : (
+        <PageHero
+          eyebrow="Workspace"
+          title={product.name}
+          description={product.website_url ?? 'Agents and workflow tools'}
+        />
+      )}
 
-      <div className="space-y-10">
+      <div className="space-y-8">
           {tab === 'overview' && (
-            <div className="space-y-10">
-              <OnboardingChecklist hasProduct firstProductId={id} />
+            <div className="space-y-8">
+              <ForgeProgressRail
+                stages={chainStages}
+                activeId={runningStageId ?? nextStage?.id}
+                onSelect={(stageId) => router.push(chainStageHref(id, stageId))}
+              />
 
               <NextAction
                 stage={nextStage}
@@ -370,7 +398,7 @@ export default function ProductForgePageInner() {
                 onAct={() => {
                   if (!nextStage) return;
                   if (nextStage.id === 'sources') {
-                    document.getElementById('sources-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document.getElementById('sources')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     return;
                   }
                   if (nextStage.id === 'ingest') {
@@ -392,221 +420,241 @@ export default function ProductForgePageInner() {
                   nextStage?.id === 'sources'
                     ? () => {
                         setSourceOpenKind('github');
-                        document.getElementById('sources-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        document.getElementById('sources')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }
                     : nextStage?.id === 'ingest'
-                      ? () => document.getElementById('sources-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      ? () => document.getElementById('sources')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       : nextStage?.id === 'profile'
                         ? handleRefreshKnowledge
                         : undefined
                 }
               />
 
-              <section>
-                <SectionHeader
-                  title="Pipeline"
-                  description={`Where ${product.name} stands — tap a stage to jump in.`}
-                />
-                <StageChain
-                  stages={chainStages}
-                  activeId={runningStageId ?? undefined}
-                  onSelect={(stageId) => router.push(chainStageHref(id, stageId))}
-                />
-              </section>
+              <SourcesPanel
+                productId={id}
+                externalOpenKind={sourceOpenKind}
+                onExternalOpenHandled={() => setSourceOpenKind(undefined)}
+              />
 
-              <div id="sources-panel">
-                <SourcesPanel
-                  productId={id}
-                  externalOpenKind={sourceOpenKind}
-                  onExternalOpenHandled={() => setSourceOpenKind(undefined)}
-                />
-              </div>
+              <InboundEmbedPanel productId={id} />
+
+              <SequenceMonitorPanel productId={id} />
 
               {product.profile && Object.keys(product.profile).length > 0 && (
-                <section>
-                  <SectionHeader title="Product profile" />
-                  <div className="rounded-[var(--radius-lg)] bg-surface px-5 py-5">
+                <WorkspacePanel title="Product profile">
+                  <div className="px-5 py-5">
                     <ProductProfileView profile={product.profile} />
                   </div>
-                </section>
+                </WorkspacePanel>
               )}
 
-              {artifacts.length > 0 && (
-                <section>
-                  <SectionHeader
-                    title="Recent artifacts"
-                    action={
-                      <button
-                        type="button"
-                        onClick={() => selectTab('publish')}
-                        className="text-[15px] text-[var(--accent-blue)] hover:underline"
-                      >
-                        View all ›
-                      </button>
-                    }
-                  />
-                  <div className="rounded-[var(--radius-lg)] bg-surface divide-y divide-border overflow-hidden">
-                    {artifacts.slice(0, 5).map((a) => (
-                      <div key={a.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
-                        <Text className="font-medium truncate">{a.title}</Text>
-                        <TextSmall className="shrink-0">
+              {recentArtifacts.length > 0 && (
+                <WorkspacePanel
+                  title="Recent artifacts"
+                  actions={
+                    <button
+                      type="button"
+                      onClick={() => selectTab('publish')}
+                      className="text-[13px] text-[var(--accent-blue)] hover:underline"
+                    >
+                      View all ›
+                    </button>
+                  }
+                  bodyClassName="divide-y divide-border"
+                >
+                  {recentArtifacts.map(({ artifact: a, count }) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => selectTab('publish')}
+                      className={cn(forgeStyles.artifactRow, 'w-full text-left')}
+                    >
+                      <span className={forgeStyles.artifactIcon} aria-hidden>
+                        {artifactAbbrev(a.type)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <p className={forgeStyles.artifactTitle}>{a.title}</p>
+                        <p className={forgeStyles.artifactMeta}>
                           {a.type} · {a.status}
-                        </TextSmall>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                          {count > 1 ? ` · ${count} versions` : ''}
+                        </p>
+                      </span>
+                    </button>
+                  ))}
+                </WorkspacePanel>
               )}
             </div>
           )}
 
           {tab === 'query' && (
-            <form onSubmit={handleQuery} className="flex gap-3">
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ask anything…" className="flex-1" disabled={loading} />
-              <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Ask', 'query')}</Button>
-            </form>
+            <WorkspacePanel title="Q&A" description="Ask anything grounded in your product knowledge">
+              <form onSubmit={handleQuery} className="flex gap-3 p-4">
+                <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ask anything…" className="flex-1" disabled={loading} />
+                <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Ask', 'query')}</Button>
+              </form>
+            </WorkspacePanel>
           )}
 
           {tab === 'strategy' && (
-            <Button disabled={loading} onClick={() => runAction('strategy')}>
-              {taskButtonLabel(loadingAction, loading, 'Generate GTM Strategy', 'strategy')}
-            </Button>
+            <WorkspacePanel title="GTM Strategy" description="Generate ICP and go-to-market plan from your product profile">
+              <div className="p-4">
+                <Button disabled={loading} onClick={() => runAction('strategy')}>
+                  {taskButtonLabel(loadingAction, loading, 'Generate GTM Strategy', 'strategy')}
+                </Button>
+              </div>
+            </WorkspacePanel>
           )}
 
           {tab === 'content' && (
-            <div className="flex flex-wrap gap-3">
-              <Button disabled={loading} onClick={() => runAction('content', { content_type: 'linkedin', topic: `${product.name} launch` })}>
-                LinkedIn Post
-              </Button>
-              <Button variant="secondary" disabled={loading} onClick={() => runAction('content', { content_type: 'blog', topic: `${product.name} overview` })}>
-                Blog Article
-              </Button>
-            </div>
+            <WorkspacePanel title="Content studio" description="LinkedIn posts and blog articles">
+              <div className="flex flex-wrap gap-3 p-4">
+                <Button disabled={loading} onClick={() => runAction('content', { content_type: 'linkedin', topic: `${product.name} launch` })}>
+                  LinkedIn Post
+                </Button>
+                <Button variant="secondary" disabled={loading} onClick={() => runAction('content', { content_type: 'blog', topic: `${product.name} overview` })}>
+                  Blog Article
+                </Button>
+              </div>
+            </WorkspacePanel>
           )}
 
           {tab === 'chat' && (
-            <div>
-              <Card elevated className="h-96 overflow-y-auto mb-4">
-                <CardBody className="space-y-3">
-                  {chatMessages.length === 0 && (
-                    <TextMuted className="text-center py-10">Start a conversation with the sales agent</TextMuted>
-                  )}
-                  {chatMessages.map((m, i) => (
-                    <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={cn(
-                        'max-w-[80%] px-4 py-2 rounded-lg text-body',
-                        m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-surface border border-border',
-                      )}>
-                        {m.role === 'user' ? m.content : <Markdown className="text-body">{m.content}</Markdown>}
+            <WorkspacePanel title="Sales chat" description="Conversational agent grounded in product facts">
+              <div className="p-4">
+                <Card elevated className="h-96 overflow-y-auto mb-4">
+                  <CardBody className="space-y-3">
+                    {chatMessages.length === 0 && (
+                      <TextMuted className="text-center py-10">Start a conversation with the sales agent</TextMuted>
+                    )}
+                    {chatMessages.map((m, i) => (
+                      <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={cn(
+                          'max-w-[80%] px-4 py-2 rounded-lg text-body',
+                          m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-surface border border-border',
+                        )}>
+                          {m.role === 'user' ? m.content : <Markdown className="text-body">{m.content}</Markdown>}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </CardBody>
-              </Card>
-              <form onSubmit={handleChat} className="flex gap-3">
-                <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Ask about the product…" className="flex-1" />
-                <Button type="submit" disabled={loading}>Send</Button>
-              </form>
-            </div>
+                    ))}
+                  </CardBody>
+                </Card>
+                <form onSubmit={handleChat} className="flex gap-3">
+                  <Input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Ask about the product…" className="flex-1" />
+                  <Button type="submit" disabled={loading}>Send</Button>
+                </form>
+              </div>
+            </WorkspacePanel>
           )}
 
           {tab === 'outreach' && (
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!outreachUrl.trim()) return;
-              runAction('outreach', {
-                company_url: outreachUrl,
-                target_persona: 'CTO',
-                recipient_email: outreachRecipient || undefined,
-              });
-            }} className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                name="company_url"
-                type="url"
-                value={outreachUrl}
-                onChange={(e) => setOutreachUrl(e.target.value)}
-                placeholder="https://prospect-company.com"
-                required
-                disabled={loading}
-                className="flex-1"
-              />
-              <Input
-                name="recipient_email"
-                type="email"
-                value={outreachRecipient}
-                onChange={(e) => setOutreachRecipient(e.target.value)}
-                placeholder="Recipient email (optional)"
-                disabled={loading}
-                className="flex-1"
-              />
-              <Button type="submit" disabled={loading}>
-                {taskButtonLabel(loadingAction, loading, 'Generate Outreach', 'outreach')}
-              </Button>
-            </form>
+            <WorkspacePanel title="Outreach" description="Personalized email for a target company">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (!outreachUrl.trim()) return;
+                runAction('outreach', {
+                  company_url: outreachUrl,
+                  target_persona: 'CTO',
+                  recipient_email: outreachRecipient || undefined,
+                });
+              }} className="flex flex-col gap-3 sm:flex-row p-4">
+                <Input
+                  name="company_url"
+                  type="url"
+                  value={outreachUrl}
+                  onChange={(e) => setOutreachUrl(e.target.value)}
+                  placeholder="https://prospect-company.com"
+                  required
+                  disabled={loading}
+                  className="flex-1"
+                />
+                <Input
+                  name="recipient_email"
+                  type="email"
+                  value={outreachRecipient}
+                  onChange={(e) => setOutreachRecipient(e.target.value)}
+                  placeholder="Recipient email (optional)"
+                  disabled={loading}
+                  className="flex-1"
+                />
+                <Button type="submit" disabled={loading}>
+                  {taskButtonLabel(loadingAction, loading, 'Generate Outreach', 'outreach')}
+                </Button>
+              </form>
+            </WorkspacePanel>
           )}
 
           {tab === 'architect' && (
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!architectQuestion.trim()) return;
-              runAction('architect', { question: architectQuestion });
-            }} className="flex gap-3">
-              <Input value={architectQuestion} onChange={(e) => setArchitectQuestion(e.target.value)} placeholder="K8s HA deployment question…" className="flex-1" disabled={loading} />
-              <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Ask Architect', 'architect')}</Button>
-            </form>
+            <WorkspacePanel title="Solution architect" description="Technical deployment and architecture questions">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (!architectQuestion.trim()) return;
+                runAction('architect', { question: architectQuestion });
+              }} className="flex gap-3 p-4">
+                <Input value={architectQuestion} onChange={(e) => setArchitectQuestion(e.target.value)} placeholder="K8s HA deployment question…" className="flex-1" disabled={loading} />
+                <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Ask Architect', 'architect')}</Button>
+              </form>
+            </WorkspacePanel>
           )}
 
           {tab === 'proposal' && (
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!proposalScope.trim()) return;
-              runAction('proposal', { scope: proposalScope });
-            }} className="flex gap-3">
-              <Input value={proposalScope} onChange={(e) => setProposalScope(e.target.value)} placeholder="Enterprise scope…" className="flex-1" disabled={loading} />
-              <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Generate Proposal', 'proposal')}</Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={loading || generatingProposalAsync || !proposalScope.trim()}
-                onClick={handleGenerateProposalAsync}
-              >
-                {generatingProposalAsync ? 'Generating…' : 'Generate in background'}
-              </Button>
-            </form>
-          )}
-
-          {tab === 'proposal' && asyncProposalRun && (
-            <ProgressBar percent={workflowProgressPercent(asyncProposalRun)} label={`Background proposal: ${asyncProposalRun.status}`} />
-          )}
-
-          {tab === 'proposal' && typeof result?.artifact_id === 'string' && (
-            <div className="flex flex-wrap gap-2">
-              {(['pdf', 'docx', 'pptx'] as const).map((format) => (
+            <WorkspacePanel title="Proposal" description="SOW and ROI framing grounded in product facts">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (!proposalScope.trim()) return;
+                runAction('proposal', { scope: proposalScope });
+              }} className="flex flex-col sm:flex-row gap-3 p-4">
+                <Input value={proposalScope} onChange={(e) => setProposalScope(e.target.value)} placeholder="Enterprise scope…" className="flex-1" disabled={loading} />
+                <Button type="submit" disabled={loading}>{taskButtonLabel(loadingAction, loading, 'Generate Proposal', 'proposal')}</Button>
                 <Button
-                  key={format}
-                  size="sm"
+                  type="button"
                   variant="secondary"
-                  onClick={() => products.downloadProposalExport(id, result.artifact_id as string, format)}
+                  disabled={loading || generatingProposalAsync || !proposalScope.trim()}
+                  onClick={handleGenerateProposalAsync}
                 >
-                  Export {format.toUpperCase()}
+                  {generatingProposalAsync ? 'Generating…' : 'Generate in background'}
                 </Button>
-              ))}
-            </div>
+              </form>
+              {asyncProposalRun ? (
+                <div className="px-4 pb-4">
+                  <ProgressBar percent={workflowProgressPercent(asyncProposalRun)} label={`Background proposal: ${asyncProposalRun.status}`} />
+                </div>
+              ) : null}
+              {typeof result?.artifact_id === 'string' ? (
+                <div className="flex flex-wrap gap-2 px-4 pb-4">
+                  {(['pdf', 'docx', 'pptx'] as const).map((format) => (
+                    <Button
+                      key={format}
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => products.downloadProposalExport(id, result.artifact_id as string, format)}
+                    >
+                      Export {format.toUpperCase()}
+                    </Button>
+                  ))}
+                </div>
+              ) : null}
+            </WorkspacePanel>
           )}
 
           {tab === 'publish' && (
-            <ArtifactList
-              artifacts={artifacts}
-              canApprove={canApprove}
-              canPublish={canPublish}
-              onChanged={() => products.artifacts(id).then(setArtifacts).catch(() => {})}
-            />
+            <WorkspacePanel title="Publish" description="Review, approve, and publish artifacts">
+              <ArtifactList
+                artifacts={artifacts}
+                canApprove={canApprove}
+                canPublish={canPublish}
+                onChanged={() => products.artifacts(id).then(setArtifacts).catch(() => {})}
+              />
+            </WorkspacePanel>
           )}
 
           {tab === 'analytics' && (
-            <Button disabled={loading} onClick={() => runAction('analytics')}>
-              {taskButtonLabel(loadingAction, loading, 'Load Analytics', 'analytics')}
-            </Button>
+            <WorkspacePanel title="Analytics" description="Pipeline and engagement metrics">
+              <div className="p-4">
+                <Button disabled={loading} onClick={() => runAction('analytics')}>
+                  {taskButtonLabel(loadingAction, loading, 'Load Analytics', 'analytics')}
+                </Button>
+              </div>
+            </WorkspacePanel>
           )}
 
           {tab.startsWith('custom:') && (() => {
@@ -626,11 +674,11 @@ export default function ProductForgePageInner() {
           )}
 
           {result && !loading && (
-            <Card elevated>
-              <CardBody>
+            <WorkspacePanel title="Result">
+              <div className="p-4">
                 <ResultPanel result={result} />
-              </CardBody>
-            </Card>
+              </div>
+            </WorkspacePanel>
           )}
       </div>
 

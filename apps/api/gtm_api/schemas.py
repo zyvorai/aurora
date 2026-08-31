@@ -702,6 +702,89 @@ class PipelineSummaryResponse(BaseModel):
     weighted_pipeline: float
 
 
+class InboundLeadRequest(BaseModel):
+    email: str
+    name: Optional[str] = None
+    company: Optional[str] = None
+    phone: Optional[str] = None
+    title: Optional[str] = None
+    domain: Optional[str] = None
+    utm_source: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_medium: Optional[str] = None
+
+
+class InboundLeadResponse(BaseModel):
+    lead_id: str
+    score: float
+    stage: str
+    assigned_sales_person_id: Optional[str] = None
+    enrichment_provider: str
+    crm_sync: dict[str, Any] = Field(default_factory=dict)
+
+
+class PublicInboundLeadRequest(InboundLeadRequest):
+    product_id: str
+    embed_key: str
+
+
+class InboundEmbedConfigResponse(BaseModel):
+    product_id: str
+    product_name: str
+    embed_key: str
+    form_fields: list[str] = Field(default_factory=list)
+
+
+class SequenceStepInput(BaseModel):
+    day: int = 3
+    subject: str = ""
+    body: str = ""
+
+
+class UpdateSequenceRequest(BaseModel):
+    recipient: Optional[str] = None
+    steps: list[SequenceStepInput] = Field(default_factory=list)
+
+
+class UpdateSequenceResponse(BaseModel):
+    parent_artifact_id: str
+    steps: int
+
+
+class SequenceStepResponse(BaseModel):
+    step: int
+    day: int
+    subject: str
+    body: str
+    status: str
+    scheduled_at: Optional[str] = None
+    channel_post_id: Optional[str] = None
+    artifact_id: Optional[str] = None
+
+
+class SequenceItemResponse(BaseModel):
+    parent_artifact_id: str
+    title: str
+    recipient: Optional[str] = None
+    status: str
+    steps: list[SequenceStepResponse] = Field(default_factory=list)
+
+
+class SequenceListResponse(BaseModel):
+    sequences: list[SequenceItemResponse] = Field(default_factory=list)
+
+
+class AttributionSummaryResponse(BaseModel):
+    period_days: int
+    total_touchpoints: int
+    by_channel: dict[str, int] = Field(default_factory=dict)
+    by_campaign: dict[str, int] = Field(default_factory=dict)
+    by_source: dict[str, int] = Field(default_factory=dict)
+    unique_leads: int = 0
+    first_touch_sample: list[dict[str, Any]] = Field(default_factory=list)
+    last_touch_sample: list[dict[str, Any]] = Field(default_factory=list)
+
+
 # Workflows (Wave 3)
 class TechnicalEvalRequest(BaseModel):
     opportunity_name: str
@@ -801,6 +884,10 @@ class SyncStatusResponse(BaseModel):
     enabled: bool
     provider: Optional[str] = None
     deployment_profile: str = "full"
+    enrichment_enabled: bool = True
+    apollo_configured: bool = False
+    sales_crm_configured: bool = False
+    hubspot_configured: bool = False
 
 
 # Admin (Phase 12)

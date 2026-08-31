@@ -1,12 +1,18 @@
 /* Shared Apple.com auth language: quiet surface, brand wordmark, pill submit */
 
 .page {
+  /* Force light Apple ID canvas independent of html.dark-theme */
+  color-scheme: light;
   --login-ink: #1d1d1f;
   --login-mute: #6e6e73;
   --login-line: #d2d2d7;
   --login-blue: #5a7ea8;
-  --login-accent: #f77e2d;
-  --login-accent-hover: #e06a1c;
+  --login-accent: #0071e3;
+  --login-accent-hover: #0077ed;
+  --foreground: #1d1d1f;
+  --muted-foreground: #6e6e73;
+  --primary: #0071e3;
+  --accent-blue: #0071e3;
 
   position: relative;
   min-height: 100dvh;
@@ -223,13 +229,13 @@
   gap: 0.5rem;
   width: 100%;
   margin-top: 1rem;
-  height: 2.75rem;
+  height: 2.25rem;
   border: 0;
   border-radius: 980px;
   background: var(--login-accent);
   color: #fff;
   font: inherit;
-  font-size: 1.0625rem;
+  font-size: 0.875rem;
   font-weight: 400;
   letter-spacing: -0.01em;
   cursor: pointer;

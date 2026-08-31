@@ -47,7 +47,7 @@ export function EmptyState({ icon: Icon, title, description, actions, tone, clas
             {actions.map((action) => (
               <Button
                 key={action.label}
-                size="lg"
+                size="md"
                 variant={action.primary === false ? 'secondary' : 'primary'}
                 onClick={action.onClick}
               >

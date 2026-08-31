@@ -11,10 +11,12 @@ from gtm_api.database import async_session_factory, get_db
 from gtm_api.models import User
 from gtm_api.schemas import (
     AccountHealthResponse,
+    AttributionSummaryResponse,
     InsightsResponse,
     SuccessPlanResponse,
     SyncStatusResponse,
 )
+from gtm_api.services.attribution import get_attribution_summary
 from gtm_api.services.crm import get_opportunity
 from gtm_api.services.crm_sync import sync_opportunities_to_external, sync_status
 from gtm_api.services.customer_success import (
@@ -113,6 +115,19 @@ async def trigger_cs_brief_refresh(
     result = await refresh_cs_briefs_for_product(db, product_id, ctx.tenant_id)
     await db.commit()
     return result
+
+
+@router.get("/products/{product_id}/attribution", response_model=AttributionSummaryResponse)
+async def product_attribution(
+    product_id: uuid.UUID,
+    days: int = 30,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    ctx = await get_tenant_context(user, db)
+    await get_product_for_tenant(db, product_id, ctx.tenant_id)
+    data = await get_attribution_summary(db, ctx.tenant_id, product_id, days=days)
+    return AttributionSummaryResponse(**data)
 
 
 @router.get("/crm/sync-status", response_model=SyncStatusResponse)

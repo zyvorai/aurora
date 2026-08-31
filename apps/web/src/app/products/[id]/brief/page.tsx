@@ -4,9 +4,10 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { products, type ExecutiveBrief, type ProductInsights } from '@/lib/api';
+import { products, type ExecutiveBrief, type ProductInsights, type AttributionSummary } from '@/lib/api';
 import { useProduct } from '@/context/ProductContext';
 import { PageHero } from '@/components/layout/PageHero';
+import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import ExecutiveBriefView from '@/components/ExecutiveBriefView';
 import InsightsPanel from '@/components/InsightsPanel';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -20,11 +21,13 @@ export default function BriefPage() {
   const { product } = useProduct();
   const [brief, setBrief] = useState<ExecutiveBrief | null>(null);
   const [insights, setInsights] = useState<ProductInsights | null>(null);
+  const [attribution, setAttribution] = useState<AttributionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadInsights = useCallback(() => {
     products.insights(id).then(setInsights).catch(() => setInsights(null));
+    products.attribution(id).then(setAttribution).catch(() => setAttribution(null));
   }, [id]);
 
   useEffect(() => {
@@ -48,14 +51,26 @@ export default function BriefPage() {
   const needsSetup = Boolean(brief && !brief.gtm_readiness.profile_built && !brief.gtm_readiness.ingest_complete);
 
   return (
-    <div className="space-y-10 animate-fade-up">
+    <WorkspacePage>
       <PageHero
         eyebrow="Brief"
         title={product?.name ?? 'Product'}
         description={brief?.narrative || 'SQL-first readiness — no LLM at page load.'}
       />
-      {error && <TextSmall className="text-danger">{error}</TextSmall>}
-      {!brief && !error && <SkeletonText lines={5} />}
+
+      {error ? <TextSmall className="text-danger">{error}</TextSmall> : null}
+      {!brief && !error ? <SkeletonText lines={5} /> : null}
+
+      {brief && !needsSetup ? (
+        <KpiStrip
+          items={[
+            { label: 'Accounts found', value: brief.kpis.accounts_found },
+            { label: 'Qualified', value: brief.kpis.qualified },
+            { label: 'Conversations', value: brief.kpis.conversations },
+            { label: 'Agent runs', value: brief.kpis.agent_runs },
+          ]}
+        />
+      ) : null}
 
       {needsSetup ? (
         <EmptyState
@@ -66,19 +81,41 @@ export default function BriefPage() {
         />
       ) : null}
 
-      {brief && !needsSetup && <ExecutiveBriefView brief={brief} />}
-      {insights && (
-        <InsightsPanel
-          insights={insights}
-          onRefresh={handleRefreshInsights}
-          refreshing={refreshing}
-        />
-      )}
-      {brief && !needsSetup && !insights && (
+      {brief && !needsSetup ? (
+        <WorkspacePanel title="Executive brief">
+          <div className="p-4 sm:p-5">
+            <ExecutiveBriefView brief={brief} />
+          </div>
+        </WorkspacePanel>
+      ) : null}
+
+      {insights ? (
+        <WorkspacePanel title="Intelligence">
+          <div className="p-4 sm:p-5">
+            <InsightsPanel insights={insights} onRefresh={handleRefreshInsights} refreshing={refreshing} />
+          </div>
+        </WorkspacePanel>
+      ) : null}
+
+      {attribution && attribution.total_touchpoints > 0 ? (
+        <WorkspacePanel title="Attribution" description={`${attribution.total_touchpoints} touchpoints · ${attribution.unique_leads} leads`}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 sm:p-5">
+            {Object.entries(attribution.by_channel).map(([channel, count]) => (
+              <div key={channel}>
+                <p className="text-[20px] font-semibold tabular-nums">{count}</p>
+                <p className="text-[12px] text-muted capitalize">{channel}</p>
+              </div>
+            ))}
+          </div>
+        </WorkspacePanel>
+      ) : null}
+
+      {brief && !needsSetup && !insights ? (
         <Button variant="secondary" onClick={handleRefreshInsights} disabled={refreshing}>
           Load intelligence
         </Button>
-      )}
+      ) : null}
+
       {needsSetup ? (
         <div className="text-center">
           <Link
@@ -89,6 +126,6 @@ export default function BriefPage() {
           </Link>
         </div>
       ) : null}
-    </div>
+    </WorkspacePage>
   );
 }

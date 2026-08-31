@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { audit, type AuditLogEntry } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
-import { Button } from '@/components/ui/Button';
+import { WorkspaceFilterBar, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -67,60 +67,64 @@ export default function AuditLogPage() {
   }, [entries, actionFilter, search]);
 
   return (
-    <div className="max-w-content mx-auto px-6 py-10 space-y-8 animate-fade-up">
-      <PageHero
-        eyebrow="Compliance"
-        title="Audit log"
-        description="Immutable trail of write, approve, and publish actions across your tenant."
-      />
+    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-10">
+      <WorkspacePage>
+        <PageHero
+          eyebrow="Compliance"
+          title="Audit log"
+          description="Immutable trail of write, approve, and publish actions across your tenant."
+        />
 
-      <div className="flex flex-wrap items-center gap-2">
-        {actionTypes.map((type) => (
-          <Button
-            key={type}
-            size="sm"
-            variant={actionFilter === type ? 'primary' : 'secondary'}
-            onClick={() => setActionFilter(type)}
+        <WorkspaceFilterBar>
+          <select
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+            className="text-[13px] bg-background border border-border rounded-[10px] px-3 py-2 text-foreground"
+            aria-label="Filter by action"
           >
-            {type === 'all' ? 'All' : type}
-          </Button>
-        ))}
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search resource…"
-          className="ml-auto max-w-xs"
-        />
-      </div>
+            {actionTypes.map((type) => (
+              <option key={type} value={type}>
+                {type === 'all' ? 'All actions' : type}
+              </option>
+            ))}
+          </select>
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search resource…"
+            className="flex-1 min-w-[12rem] max-w-sm"
+          />
+        </WorkspaceFilterBar>
 
-      {loading ? (
-        <SkeletonTable />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={ClipboardList}
-          title="No audit entries found"
-          description="Actions will appear here as your team works."
-        />
-      ) : (
-        <ul className="rounded-[var(--radius-lg)] bg-background divide-y divide-border overflow-hidden list-none m-0 p-0">
-          {filtered.map((entry) => (
-            <li key={entry.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-5 py-3.5">
-              <span className="text-[12px] text-muted whitespace-nowrap sm:w-44 shrink-0">
-                {new Date(entry.created_at).toLocaleString()}
-              </span>
-              <Badge variant={actionVariant(entry.action)} className="w-fit">
-                {entry.action}
-              </Badge>
-              <span className="text-[13px] text-muted min-w-0 truncate">
-                {entry.resource_type}
-                {entry.resource_id && (
-                  <span className="ml-1.5 text-[12px] opacity-70">{entry.resource_id}</span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+        {loading ? (
+          <SkeletonTable />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="No audit entries found"
+            description="Actions will appear here as your team works."
+          />
+        ) : (
+          <WorkspacePanel title="Activity" description={`${filtered.length} entries`} bodyClassName="divide-y divide-border">
+            {filtered.map((entry) => (
+              <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3.5">
+                <span className="text-[12px] text-muted whitespace-nowrap sm:w-44 shrink-0">
+                  {new Date(entry.created_at).toLocaleString()}
+                </span>
+                <Badge variant={actionVariant(entry.action)} className="w-fit">
+                  {entry.action}
+                </Badge>
+                <span className="text-[13px] text-muted min-w-0 truncate">
+                  {entry.resource_type}
+                  {entry.resource_id && (
+                    <span className="ml-1.5 text-[12px] opacity-70">{entry.resource_id}</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </WorkspacePanel>
+        )}
+      </WorkspacePage>
     </div>
   );
 }

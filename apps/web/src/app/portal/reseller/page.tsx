@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Handshake, Pencil, Plus } from 'lucide-react';
+import { Building2, Pencil, Plus } from 'lucide-react';
 import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
 import { PageHero } from '@/components/layout/PageHero';
+import { WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { SkeletonLine } from '@/components/ui/Skeleton';
-import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -108,58 +108,55 @@ export default function ResellerHomePage() {
   if (!account) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[var(--surface)]">
       <GlobalNav variant="portal" portalLabel="Reseller Portal" onSignOut={handleSignOut} />
 
-      <main className="flex-1 max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up w-full">
-        <PageHero
-          icon={Handshake}
-          accent="violet"
-          eyebrow="Account"
-          title={account.company_name || account.contact_name || account.email}
-          description={`Margin tier: ${account.margin_tier}`}
-          actions={
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={openEditModal}>
-                <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
-              </Button>
-              {account.status === 'approved' && (
-                <Button onClick={() => setShowModal(true)}>
-                  <Plus className="w-4 h-4 mr-1.5" aria-hidden /> Register Deal
+      <main className="flex-1 max-w-content mx-auto px-[var(--hs-gutter)] py-10 w-full">
+        <WorkspacePage>
+          <PageHero
+            eyebrow="Account"
+            title={account.company_name || account.contact_name || account.email}
+            description={`Margin tier: ${account.margin_tier}`}
+            actions={
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={openEditModal}>
+                  <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
                 </Button>
-              )}
-            </div>
-          }
-        />
+                {account.status === 'approved' && (
+                  <Button onClick={() => setShowModal(true)}>
+                    <Plus className="w-4 h-4 mr-1.5" aria-hidden /> Register deal
+                  </Button>
+                )}
+              </div>
+            }
+          />
 
-        <Card>
-          <CardBody className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Status</span>
+          <WorkspacePanel title="Account details" bodyClassName="divide-y divide-border">
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-muted text-[13px]">Status</span>
               <Badge variant={STATUS_VARIANT[account.status]}>{account.status}</Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Email</span>
-              <span className="text-body-sm">{account.email}</span>
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-muted text-[13px]">Email</span>
+              <span className="text-[13px]">{account.email}</span>
             </div>
             {account.business_id && (
-              <div className="flex items-center justify-between">
-                <span className="text-muted text-body-sm">Business ID</span>
-                <span className="text-body-sm">{account.business_id}</span>
+              <div className="flex items-center justify-between px-4 py-3.5">
+                <span className="text-muted text-[13px]">Business ID</span>
+                <span className="text-[13px]">{account.business_id}</span>
               </div>
             )}
-          </CardBody>
-        </Card>
+          </WorkspacePanel>
 
-        <PortalStatusNotice status={account.status} signupHref="/portal/reseller/signup" />
+          <PortalStatusNotice status={account.status} signupHref="/portal/reseller/signup" />
 
-        {account.status === 'approved' && (
-          <section>
-            <h2 className="text-lg font-semibold mb-3">My registered deals</h2>
-            {deals.length === 0 ? (
-              <EmptyState icon={Building2} tone="violet" title="No deals registered yet" description="Register a prospect to get started." />
-            ) : (
-              <Card>
+          {account.status === 'approved' && (
+            <WorkspacePanel title="Registered deals" description={`${deals.length} deal${deals.length === 1 ? '' : 's'}`}>
+              {deals.length === 0 ? (
+                <div className="p-4">
+                  <EmptyState icon={Building2} tone="violet" title="No deals registered yet" description="Register a prospect to get started." />
+                </div>
+              ) : (
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -178,10 +175,10 @@ export default function ResellerHomePage() {
                     ))}
                   </TableBody>
                 </Table>
-              </Card>
-            )}
-          </section>
-        )}
+              )}
+            </WorkspacePanel>
+          )}
+        </WorkspacePage>
       </main>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Register a deal">

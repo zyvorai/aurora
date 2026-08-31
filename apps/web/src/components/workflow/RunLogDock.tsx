@@ -60,7 +60,7 @@ export function RunLogDock({ productId }: { productId: string }) {
     return (
       <aside
         style={{ '--dock-w': `${dock.effectiveWidth}px` } as CSSProperties}
-        className="w-[var(--dock-w)] shrink-0 border-l border-border bg-surface sticky top-0 h-screen hidden xl:flex flex-col items-center py-3.5 gap-2.5"
+        className="w-[var(--dock-w)] shrink-0 border-l border-border bg-[var(--surface)] sticky top-0 h-screen hidden xl:flex flex-col items-center py-3.5 gap-2.5"
       >
         <button
           type="button"
@@ -82,7 +82,7 @@ export function RunLogDock({ productId }: { productId: string }) {
   return (
     <aside
       style={{ '--dock-w': `${dock.effectiveWidth}px` } as CSSProperties}
-      className="relative w-[var(--dock-w)] shrink-0 border-l border-border bg-surface sticky top-0 h-screen hidden xl:flex flex-col"
+      className="relative w-[var(--dock-w)] shrink-0 border-l border-border bg-[var(--surface)] sticky top-0 h-screen hidden xl:flex flex-col"
     >
       <div
         onMouseDown={dock.startDrag}
@@ -90,7 +90,7 @@ export function RunLogDock({ productId }: { productId: string }) {
         aria-hidden
       />
       <div className="flex items-center gap-2 px-4 py-3.5 border-b border-border">
-        <span className="text-[13px] font-semibold tracking-[-0.01em] text-foreground">Run log</span>
+        <span className="text-[13px] font-semibold tracking-[-0.02em] text-foreground">Run log</span>
         <span className="ml-auto text-[11px] text-muted">
           {runningCount > 0 ? `${runningCount} running` : 'Idle'}
         </span>

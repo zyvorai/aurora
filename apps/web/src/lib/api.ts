@@ -562,6 +562,57 @@ export const products = {
     return request(`/products/${id}/refresh-cs-briefs`, { method: 'POST', body: '{}' });
   },
 
+  crmSyncStatus(): Promise<CrmSyncStatus> {
+    return request<CrmSyncStatus>('/crm/sync-status');
+  },
+
+  triggerCrmSync(id: string): Promise<Record<string, unknown>> {
+    return request(`/products/${id}/crm/sync`, { method: 'POST', body: '{}' });
+  },
+
+  attribution(id: string, days = 30): Promise<AttributionSummary> {
+    return request<AttributionSummary>(`/products/${id}/attribution?days=${days}`);
+  },
+
+  submitInboundLead(
+    id: string,
+    data: {
+      email: string;
+      name?: string;
+      company?: string;
+      phone?: string;
+      title?: string;
+      domain?: string;
+      utm_source?: string;
+      utm_campaign?: string;
+      utm_medium?: string;
+    },
+  ): Promise<InboundLeadResult> {
+    return request<InboundLeadResult>(`/products/${id}/inbound`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  inboundEmbedConfig(id: string): Promise<InboundEmbedConfig> {
+    return request<InboundEmbedConfig>(`/products/${id}/inbound/embed`);
+  },
+
+  listSequences(id: string): Promise<SequenceList> {
+    return request<SequenceList>(`/products/${id}/sequences`);
+  },
+
+  updateSequence(
+    id: string,
+    artifactId: string,
+    data: { recipient?: string; steps: SequenceStepInput[] },
+  ): Promise<{ parent_artifact_id: string; steps: number }> {
+    return request(`/products/${id}/artifacts/${artifactId}/sequence`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
   getOpportunity(id: string, opportunityId: string): Promise<Opportunity> {
     return request(`/products/${id}/opportunities/${opportunityId}`);
   },
@@ -888,6 +939,102 @@ export interface PipelineSummary {
   total: number;
   by_stage: Record<string, number>;
   weighted_pipeline: number;
+}
+
+export interface CrmSyncStatus {
+  enabled: boolean;
+  provider: string | null;
+  deployment_profile: string;
+  enrichment_enabled: boolean;
+  apollo_configured: boolean;
+  sales_crm_configured: boolean;
+  hubspot_configured: boolean;
+}
+
+export interface AttributionSummary {
+  period_days: number;
+  total_touchpoints: number;
+  by_channel: Record<string, number>;
+  by_campaign: Record<string, number>;
+  by_source: Record<string, number>;
+  unique_leads: number;
+}
+
+export interface InboundLeadResult {
+  lead_id: string;
+  score: number;
+  stage: string;
+  assigned_sales_person_id: string | null;
+  enrichment_provider: string;
+  crm_sync: Record<string, unknown>;
+}
+
+export interface InboundEmbedConfig {
+  product_id: string;
+  product_name: string;
+  embed_key: string;
+  form_fields: string[];
+}
+
+export interface SequenceStep {
+  step: number;
+  day: number;
+  subject: string;
+  body: string;
+  status: string;
+  scheduled_at: string | null;
+  channel_post_id: string | null;
+  artifact_id: string | null;
+}
+
+export interface OutreachSequence {
+  parent_artifact_id: string;
+  title: string;
+  recipient: string | null;
+  status: string;
+  steps: SequenceStep[];
+}
+
+export interface SequenceList {
+  sequences: OutreachSequence[];
+}
+
+export interface SequenceStepInput {
+  day: number;
+  subject: string;
+  body: string;
+}
+
+/** Unauthenticated public API call (embed forms). */
+export async function submitPublicInboundLead(data: {
+  product_id: string;
+  embed_key: string;
+  email: string;
+  name?: string;
+  company?: string;
+  phone?: string;
+  title?: string;
+  domain?: string;
+  utm_source?: string;
+  utm_campaign?: string;
+  utm_medium?: string;
+}): Promise<InboundLeadResult> {
+  const response = await fetch(`${resolveApiBase()}/public/inbound`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const body = await response.json();
+      detail = body.detail ?? detail;
+    } catch {
+      // ignore
+    }
+    throw new Error(typeof detail === 'string' ? detail : 'Submission failed');
+  }
+  return response.json() as Promise<InboundLeadResult>;
 }
 
 const OPPORTUNITY_STAGES = [

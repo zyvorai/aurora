@@ -113,7 +113,7 @@ function SignupForm() {
           <TextSmall className="text-danger">{error}</TextSmall>
         </div>
       )}
-      <Button type="submit" disabled={loading} className="w-full" size="lg">
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply as sales rep'}
       </Button>
     </form>

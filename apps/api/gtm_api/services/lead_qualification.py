@@ -142,6 +142,14 @@ async def qualify_leads(
                 metadata_={"discovered_account_id": str(account.id), "domain": account.domain},
             )
             db.add(lead)
+            await db.flush()
+
+            from gtm_api.config import get_settings
+            from gtm_api.services.crm_sync import sync_lead_to_external
+
+            if get_settings().external_crm_sync_enabled:
+                await sync_lead_to_external(lead)
+
             account.status = "qualified"
 
         scored.append({

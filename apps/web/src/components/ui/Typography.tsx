@@ -31,7 +31,7 @@ export function PageTitle({ children, className, as: Tag = 'h1', id }: Typograph
     <Tag
       id={id}
       className={cn(
-        'text-[clamp(1.75rem,3vw,2.125rem)] font-semibold tracking-tight leading-tight',
+        'text-[clamp(1.75rem,3vw,2.125rem)] font-semibold tracking-[-0.03em] leading-[1.1]',
         className,
       )}
     >
@@ -69,7 +69,11 @@ export function TextSmall({ children, className, as: Tag = 'p' }: TypographyProp
 }
 
 export function TextLead({ children, className, as: Tag = 'p' }: TypographyProps) {
-  return <Tag className={cn('text-body-lg text-muted leading-relaxed', className)}>{children}</Tag>;
+  return (
+    <Tag className={cn('text-[17px] text-muted leading-[1.47]', className)}>
+      {children}
+    </Tag>
+  );
 }
 
 interface StatProps {

@@ -75,33 +75,35 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
+  gap: 6px;
+  height: 36px;
+  padding: 0 18px;
   border-radius: var(--hs-radius-pill);
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 400;
   color: #fff;
-  background: var(--hs-accent);
-  border: 1px solid var(--hs-accent);
+  background: #0071e3;
+  border: 1px solid #0071e3;
   text-decoration: none;
-  transition: background var(--hs-fast) ease, transform var(--hs-fast) ease;
+  transition: background var(--hs-fast) ease;
 }
 
 .btnPrimary:hover {
-  background: var(--hs-accent-deep);
+  background: #0077ed;
+  border-color: #0077ed;
   color: #fff;
   text-decoration: none;
-  transform: scale(1.02);
 }
 
 .btnSecondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
+  gap: 6px;
+  height: 36px;
+  padding: 0 18px;
   border-radius: var(--hs-radius-pill);
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--hs-text-heading);
   background: transparent;
@@ -205,17 +207,114 @@
 }
 
 .showcaseVisual {
-  min-height: 280px;
+  min-height: 320px;
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(145deg, rgba(247, 126, 45, 0.1) 0%, transparent 50%),
-    linear-gradient(180deg, #ffffff 0%, #e8e8ed 100%);
+  background: var(--hs-bg-alt);
+  border: 1px solid var(--hs-border);
+  padding: var(--hs-s5);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
 }
 
-.showcaseTint .showcaseVisual {
-  background:
-    linear-gradient(145deg, rgba(150, 174, 209, 0.2) 0%, transparent 50%),
-    linear-gradient(180deg, #ffffff 0%, #d2d2d7 100%);
+.productFrame {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid var(--hs-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+}
+
+.productFrameChrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--hs-border);
+  background: #fbfbfd;
+}
+
+.productFrameDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d2d2d7;
+}
+
+.productFrameBody {
+  flex: 1;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.productFrameBar {
+  height: 10px;
+  border-radius: 6px;
+  background: #f5f5f7;
+}
+
+.productFrameBarShort {
+  width: 42%;
+}
+
+.productFrameBarMid {
+  width: 68%;
+}
+
+.productFrameRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.productFrameTile {
+  flex: 1;
+  height: 72px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff7f0 0%, #f5f5f7 100%);
+  border: 1px solid #ebebeb;
+}
+
+.productFrameTileAlt {
+  background: linear-gradient(180deg, #f0f4f9 0%, #f5f5f7 100%);
+}
+
+.productFrameChat {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.productFrameBubble {
+  align-self: flex-end;
+  max-width: 78%;
+  padding: 8px 12px;
+  border-radius: 14px 14px 4px 14px;
+  background: #f5f5f7;
+  font-size: 12px;
+  color: var(--hs-text-muted);
+  line-height: 1.4;
+}
+
+.productFrameBubbleReply {
+  align-self: flex-start;
+  border-radius: 14px 14px 14px 4px;
+  background: #ffffff;
+  border: 1px solid var(--hs-border);
+}
+
+.productFrameCite {
+  font-size: 11px;
+  color: var(--hs-accent);
+  margin-top: 4px;
 }
 
 /* ---- Sections / pipeline ---- */
@@ -332,7 +431,13 @@
 .featuresHero {
   padding: var(--hs-s9) 0 var(--hs-s8);
   text-align: center;
-  background: linear-gradient(180deg, #ffffff 0%, var(--hs-bg-alt) 100%);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(247, 126, 45, 0.06), transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, var(--hs-bg-alt) 100%);
+}
+
+.featuresHero .heroHeadline {
+  max-width: 16ch;
 }
 
 .featureBand {
@@ -423,8 +528,9 @@
 .demoPanel {
   padding: var(--hs-s5);
   border-radius: var(--radius-lg);
-  background: var(--surface-elevated);
+  background: #ffffff;
   border: 1px solid var(--hs-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 .llmGrid {

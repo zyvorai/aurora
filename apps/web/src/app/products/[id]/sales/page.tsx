@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Target } from 'lucide-react';
+import { Target, Upload } from 'lucide-react';
 import { products, type ExecutiveBrief, type PipelineLead } from '@/lib/api';
 import { PageHero } from '@/components/layout/PageHero';
-import { SectionHeader } from '@/components/layout/SectionHeader';
+import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { Button } from '@/components/ui/Button';
 import { Badge, tierBadgeVariant } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -15,6 +15,8 @@ import {
   Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell,
 } from '@/components/ui/Table';
 import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import forgeStyles from '@/components/workflow/forge.module.css';
+import { cn } from '@/lib/cn';
 
 export default function SalesPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +26,7 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<PipelineLead | null>(null);
+  const [csvBusy, setCsvBusy] = useState(false);
 
   const loadLeads = useCallback(() => {
     products.pipelineLeads(id).then(setLeads).catch(() => setLeads([]));
@@ -51,6 +54,22 @@ export default function SalesPage() {
     }
   }
 
+  async function handleCsvImport(file: File) {
+    if (!profileBuilt) return;
+    setCsvBusy(true);
+    setMessage(null);
+    try {
+      const csv = await file.text();
+      const res = await products.discoverLeads(id, { csv_import: csv, max_leads: 50 });
+      setMessage(`Imported ${res.discovered_count} accounts from CSV`);
+      loadLeads();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'CSV import failed');
+    } finally {
+      setCsvBusy(false);
+    }
+  }
+
   async function runQualify() {
     setLoading(true);
     setMessage(null);
@@ -67,7 +86,7 @@ export default function SalesPage() {
   }
 
   return (
-    <div className="space-y-10 animate-fade-up">
+    <WorkspacePage>
       <PageHero
         eyebrow="Sales"
         title="Sales"
@@ -98,49 +117,65 @@ export default function SalesPage() {
         }
       />
 
-      {brief && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-y border-border py-6">
-          {[
+      {brief ? (
+        <KpiStrip
+          items={[
             { label: 'Accounts found', value: brief.kpis.accounts_found },
             { label: 'Qualified', value: brief.kpis.qualified },
             { label: 'Conversations', value: brief.kpis.conversations },
             { label: 'Agent runs', value: brief.kpis.agent_runs },
-          ].map((kpi) => (
-            <div key={kpi.label}>
-              <p className="text-[28px] font-semibold tracking-[-0.03em] tabular-nums text-foreground leading-none">
-                {kpi.value}
-              </p>
-              <p className="mt-2 text-[12px] text-muted">{kpi.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
+          ]}
+        />
+      ) : null}
 
-      {brief && !profileBuilt && (
-        <div className="rounded-[var(--radius-lg)] bg-surface px-6 py-8 sm:px-8 flex flex-col sm:flex-row sm:items-center gap-5">
+      {brief && !profileBuilt ? (
+        <div className={cn(forgeStyles.spotlight, 'flex flex-col sm:flex-row sm:items-center gap-5')}>
           <div className="flex-1 min-w-0">
-            <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-foreground">
-              Discover needs a product profile
-            </h2>
-            <p className="mt-2 text-[15px] leading-[1.47] text-muted max-w-[52ch]">
-              Scoring compares each account against what this product actually does. Build the profile in
-              Workspace first.
+            <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-primary mb-1.5">Blocked</p>
+            <h2 className={forgeStyles.spotlightTitle}>Discover needs a product profile</h2>
+            <p className={forgeStyles.spotlightBody}>
+              Scoring compares each account against what this product actually does. Build the profile in Workspace first.
             </p>
-            <p className="mt-3 text-[12px] text-muted">Blocked by ingest → product profile</p>
           </div>
           <Link href={`/products/${id}`}>
-            <Button size="lg">Open Workspace</Button>
+            <Button>Open Workspace</Button>
           </Link>
         </div>
-      )}
+      ) : null}
 
-      {message && <TextMuted className="text-[15px]">{message}</TextMuted>}
+      {message ? <TextMuted className="text-[15px]">{message}</TextMuted> : null}
 
-      <section>
-        <SectionHeader title="Qualified leads" />
+      <WorkspacePanel
+        title="Import accounts"
+        description="Upload a CSV with company_name and domain columns to seed discovery."
+      >
+        <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative">
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+              disabled={!profileBuilt || csvBusy}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleCsvImport(file);
+                e.target.value = '';
+              }}
+            />
+            <Button size="sm" variant="secondary" disabled={!profileBuilt || csvBusy} type="button">
+              <Upload className="w-3.5 h-3.5 mr-1.5" aria-hidden />
+              {csvBusy ? 'Importing…' : 'Upload CSV'}
+            </Button>
+          </div>
+          <TextSmall className="text-muted">
+            Columns: company_name, domain (optional: industry, company_size)
+          </TextSmall>
+        </div>
+      </WorkspacePanel>
+
+      <WorkspacePanel title="Qualified leads" description={`${leads.length} lead${leads.length === 1 ? '' : 's'}`}>
         {leads.length > 0 ? (
-          <div className="rounded-[var(--radius-lg)] bg-surface overflow-hidden">
-            <Table>
+          <Table>
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>Company</TableHeaderCell>
@@ -166,11 +201,11 @@ export default function SalesPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+            </TableBody>
+          </Table>
         ) : (
-          <EmptyState
+          <div className="p-4">
+            <EmptyState
             icon={Target}
             title="No leads yet"
             description={
@@ -186,9 +221,10 @@ export default function SalesPage() {
                   ]
                 : [{ label: 'Open Workspace', onClick: () => router.push(`/products/${id}`) }]
             }
-          />
+            />
+          </div>
         )}
-      </section>
+      </WorkspacePanel>
 
       <Modal
         open={selectedLead !== null}
@@ -246,6 +282,6 @@ export default function SalesPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </WorkspacePage>
   );
 }

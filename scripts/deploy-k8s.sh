@@ -22,6 +22,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 info() { echo "[deploy-k8s] $*"; }
 
+info "Rebuilding aurora-api and aurora-workers..."
+ssh "${DEPLOY_USER}@${HOST}" "cd \"\$HOME/${COMPOSE_DIR}\" && sudo docker build -t aurora-api:latest -f apps/api/Dockerfile apps/api"
+ssh "${DEPLOY_USER}@${HOST}" "cd \"\$HOME/${COMPOSE_DIR}\" && sudo docker build -t aurora-workers:latest -f apps/workers/Dockerfile ."
+
 info "Rebuilding aurora-web with NEXT_PUBLIC_API_URL for HTTPS NodePort ${TLS_NODEPORT}..."
 ssh "${DEPLOY_USER}@${HOST}" "cd \"\$HOME/${COMPOSE_DIR}\" && sudo docker build -t aurora-web:k8s-tls \
     --build-arg NEXT_PUBLIC_API_URL=https://${HOST}:${TLS_NODEPORT}/api/v1 \

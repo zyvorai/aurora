@@ -5,13 +5,12 @@ import { LifeBuoy, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
-import { Card } from '@/components/ui/Card';
+import { WorkspacePage, WorkspacePanel, WorkspaceTabPills } from '@/components/layout/WorkspacePanel';
 import { SkeletonHero, SkeletonTable } from '@/components/ui/Skeleton';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
-import { cn } from '@/lib/cn';
 import { portalAdmin, type TicketWithCustomer, type TicketStatus } from '@/lib/portal-api';
 
 type FilterTab = 'all' | TicketStatus;
@@ -78,7 +77,7 @@ export default function TicketsAdminPage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
         <SkeletonHero />
         <SkeletonTable />
       </div>
@@ -87,7 +86,7 @@ export default function TicketsAdminPage() {
 
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-6 py-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
         <EmptyState
           icon={ShieldAlert}
           title="Admin access required"
@@ -98,39 +97,29 @@ export default function TicketsAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
-      <PageHero
-        icon={LifeBuoy}
-        eyebrow="Admin"
-        title="Support Tickets"
-        description="Customer-reported issues, triaged by status."
-      />
+    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
+      <WorkspacePage>
+        <PageHero
+          icon={LifeBuoy}
+          eyebrow="Admin"
+          title="Support Tickets"
+          description="Customer-reported issues, triaged by status."
+        />
 
-      <div className="flex gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            onClick={() => setTab(t.value)}
-            className={cn(
-              'px-4 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring',
-              tab === t.value
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+        <WorkspaceTabPills
+          tabs={TABS.map((t) => t.value)}
+          active={tab}
+          onChange={setTab}
+          labels={Object.fromEntries(TABS.map((t) => [t.value, t.label])) as Record<FilterTab, string>}
+        />
 
-      {loading ? (
-        <SkeletonTable />
-      ) : tickets.length === 0 ? (
-        <EmptyState icon={LifeBuoy} tone="pink" title="No tickets" description="Customer-reported issues will appear here." />
-      ) : (
-        <Card>
-          <Table>
+        {loading ? (
+          <SkeletonTable />
+        ) : tickets.length === 0 ? (
+          <EmptyState icon={LifeBuoy} tone="pink" title="No tickets" description="Customer-reported issues will appear here." />
+        ) : (
+          <WorkspacePanel title="Tickets" description={`${tickets.length} in queue`}>
+            <Table>
             <TableHead>
               <TableRow>
                 <TableHeaderCell>Subject</TableHeaderCell>
@@ -178,10 +167,10 @@ export default function TicketsAdminPage() {
               ))}
             </TableBody>
           </Table>
-        </Card>
-      )}
+          </WorkspacePanel>
+        )}
 
-      <Modal
+        <Modal
         open={detailTicket !== null}
         onClose={() => setDetailTicket(null)}
         title={detailTicket?.subject ?? ''}
@@ -219,6 +208,7 @@ export default function TicketsAdminPage() {
           </div>
         )}
       </Modal>
+      </WorkspacePage>
     </div>
   );
 }

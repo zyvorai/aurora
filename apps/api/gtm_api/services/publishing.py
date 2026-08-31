@@ -12,6 +12,7 @@ from gtm_api.config import get_settings
 from gtm_api.models import Approval, ApprovalStatus, Artifact, ChannelPost
 from gtm_api.services.enterprise import is_suppressed
 from gtm_api.services.publishing_adapters import ADAPTER_REGISTRY
+from gtm_api.services.analytics import emit_event
 from gtm_api.tenant import audit_log
 
 settings = get_settings()
@@ -73,6 +74,19 @@ async def dispatch_channel_post(
     post.error_message = result.error
     if result.status == "published":
         post.published_at = datetime.now(timezone.utc)
+        if post.channel in EMAIL_CHANNELS:
+            await emit_event(
+                db,
+                tenant_id,
+                "outreach_sent",
+                product_id=artifact.product_id,
+                event_data={
+                    "channel": post.channel,
+                    "artifact_id": str(artifact.id),
+                    "recipient": resolved_recipient,
+                    "sequence_step": (artifact.metadata_ or {}).get("sequence_step"),
+                },
+            )
 
 
 async def publish_artifact(
@@ -118,6 +132,13 @@ async def publish_artifact(
         await dispatch_channel_post(db, post, artifact, tenant_id, user_id, recipient)
         if post.status == "blocked":
             return post
+
+        # Schedule follow-up sequence steps for outreach artifacts
+        from gtm_api.models import ArtifactType
+        from gtm_api.services.sequence_runner import schedule_outreach_sequence
+
+        if artifact.artifact_type == ArtifactType.OUTREACH and post.status == "published":
+            await schedule_outreach_sequence(db, artifact, tenant_id, recipient=recipient)
 
     await audit_log(
         db, tenant_id, user_id, "publish", "channel_post",

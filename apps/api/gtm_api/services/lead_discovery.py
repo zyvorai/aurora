@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.models import Artifact, ArtifactType, DiscoveredAccount, Product
+from gtm_api.services.enrichment.waterfall import enrich_candidates
 
 # Seed accounts per industry for lean/demo discovery (replace with enrichment API later)
 INDUSTRY_SEEDS: dict[str, list[dict]] = {
@@ -134,6 +135,8 @@ async def discover_leads(
                 "source": "rules",
             })
 
+    candidates = await enrich_candidates(candidates)
+
     # Dedup against accounts already discovered in prior runs for this product,
     # not just within this call -- otherwise re-clicking "Discover leads" keeps
     # re-inserting the same seed companies every time.
@@ -161,6 +164,7 @@ async def discover_leads(
             personas=item.get("personas", [{"title": "CTO"}]),
             source=item.get("source", "rules"),
             status="new",
+            metadata_={"enrichment": item.get("enrichment")} if item.get("enrichment") else {},
         )
         db.add(account)
         created.append(account)

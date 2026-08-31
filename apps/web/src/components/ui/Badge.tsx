@@ -7,17 +7,17 @@ export type BadgeVariant =
   | 'blue' | 'pink' | 'teal' | 'purple';
 
 const variants: Record<BadgeVariant, string> = {
-  default: 'bg-surface text-muted',
-  success: 'bg-surface text-success',
-  warning: 'bg-surface text-warning',
-  danger: 'bg-surface text-danger',
-  'tier-a': 'bg-surface text-success',
-  'tier-b': 'bg-surface text-warning',
-  'tier-c': 'bg-surface text-muted',
-  blue: 'bg-surface text-primary',
-  pink: 'bg-surface text-accent-pink',
-  teal: 'bg-surface text-accent-teal',
-  purple: 'bg-surface text-accent-purple',
+  default: 'bg-surface text-muted border-border',
+  success: 'bg-surface text-success border-border',
+  warning: 'bg-surface text-warning border-border',
+  danger: 'bg-surface text-danger border-border',
+  'tier-a': 'bg-surface text-success border-border',
+  'tier-b': 'bg-surface text-warning border-border',
+  'tier-c': 'bg-surface text-muted border-border',
+  blue: 'bg-surface text-primary border-border',
+  pink: 'bg-surface text-accent-pink border-border',
+  teal: 'bg-surface text-accent-teal border-border',
+  purple: 'bg-surface text-accent-purple border-border',
 };
 
 export function Badge({
@@ -32,7 +32,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-normal border',
         variants[variant],
         className,
       )}

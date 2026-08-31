@@ -5,7 +5,7 @@ import { FileText, ShieldAlert, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
-import { Card } from '@/components/ui/Card';
+import { WorkspacePage, WorkspacePanel, WorkspaceTabPills } from '@/components/layout/WorkspacePanel';
 import { SkeletonHero, SkeletonTable } from '@/components/ui/Skeleton';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
@@ -13,9 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
-import { cn } from '@/lib/cn';
 import { portalAdmin, type CustomerAccount, type ResellerAccount, type SalesPersonAccount } from '@/lib/portal-api';
-import { TONE_CLASSES } from '@/lib/tone';
 import type { Tone } from '@/components/layout/PageHero';
 
 type PortalAccount = CustomerAccount | ResellerAccount | SalesPersonAccount;
@@ -125,7 +123,7 @@ export default function PortalAccountsAdminPage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
         <SkeletonHero />
         <SkeletonTable />
       </div>
@@ -136,7 +134,7 @@ export default function PortalAccountsAdminPage() {
   // queue render at all, not just fail on submit.
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-6 py-8">
+      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
         <EmptyState
           icon={ShieldAlert}
           title="Admin access required"
@@ -147,37 +145,29 @@ export default function PortalAccountsAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up">
-      <PageHero
-        icon={Users}
-        eyebrow="Admin"
-        title="Portal Accounts"
-        description="Review and approve external portal signup requests."
-      />
+    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
+      <WorkspacePage>
+        <PageHero
+          icon={Users}
+          eyebrow="Admin"
+          title="Portal Accounts"
+          description="Review and approve external portal signup requests."
+        />
 
-      <div className="flex gap-2">
-        {(['customer', 'reseller', 'salesperson'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={cn(
-              'px-4 py-2 rounded-full text-body-sm font-medium transition-colors focus-ring capitalize',
-              tab === t ? TONE_CLASSES[TAB_TONE[t]].solid : 'text-muted hover:text-foreground hover:bg-[var(--glass-bg)]',
-            )}
-          >
-            {TAB_LABEL[t]}
-          </button>
-        ))}
-      </div>
+        <WorkspaceTabPills
+          tabs={['customer', 'reseller', 'salesperson'] as const}
+          active={tab}
+          onChange={setTab}
+          labels={TAB_LABEL}
+        />
 
-      {loading ? (
-        <SkeletonTable />
-      ) : accounts.length === 0 ? (
-        <EmptyState icon={Users} tone={TAB_TONE[tab]} title="No signup requests yet" description={`${TAB_LABEL[tab]} portal signups will appear here.`} />
-      ) : (
-        <Card>
-          <Table>
+        {loading ? (
+          <SkeletonTable />
+        ) : accounts.length === 0 ? (
+          <EmptyState icon={Users} tone={TAB_TONE[tab]} title="No signup requests yet" description={`${TAB_LABEL[tab]} portal signups will appear here.`} />
+        ) : (
+          <WorkspacePanel title={TAB_LABEL[tab]} description={`${accounts.length} account${accounts.length === 1 ? '' : 's'}`}>
+            <Table>
             <TableHead>
               <TableRow>
                 <TableHeaderCell>Email</TableHeaderCell>
@@ -233,10 +223,10 @@ export default function PortalAccountsAdminPage() {
               ))}
             </TableBody>
           </Table>
-        </Card>
-      )}
+          </WorkspacePanel>
+        )}
 
-      <Modal
+        <Modal
         open={rejectTarget !== null}
         onClose={() => setRejectTarget(null)}
         title={`Reject ${rejectTarget?.email ?? ''}`}
@@ -261,6 +251,7 @@ export default function PortalAccountsAdminPage() {
           </div>
         </div>
       </Modal>
+      </WorkspacePage>
     </div>
   );
 }

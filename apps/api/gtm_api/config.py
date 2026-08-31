@@ -180,6 +180,18 @@ class Settings(BaseSettings):
     enable_external_crm_sync: bool = False
     external_crm_provider: str = ""
 
+    # Enrichment waterfall (Clay/Apollo-style)
+    enrichment_enabled: bool = True
+    apollo_api_key: str = ""
+
+    # External CRM targets
+    sales_crm_url: str = ""
+    sales_crm_api_key: str = ""
+    hubspot_access_token: str = ""
+
+    # Inbound routing
+    inbound_auto_sync_crm: bool = True
+
     # Ollama (default dev)
     ollama_base_url: str = "http://localhost:11434/v1"
     ollama_api_key: str = "ollama"

@@ -40,14 +40,56 @@ const SHOWCASE = [
     lede: 'Every answer cites real knowledge — no hallucinated pitches.',
     href: '/features#grounded',
     tint: false,
+    visual: 'chat' as const,
   },
   {
     title: 'Runs in the background',
     lede: 'Long-running GTM work keeps going after you close the tab.',
     href: '/features#agents',
     tint: true,
+    visual: 'pipeline' as const,
   },
 ];
+
+function ShowcaseFrame({ kind }: { kind: 'chat' | 'pipeline' }) {
+  return (
+    <div className={styles.showcaseVisual} aria-hidden>
+      <div className={styles.productFrame}>
+        <div className={styles.productFrameChrome}>
+          <span className={styles.productFrameDot} />
+          <span className={styles.productFrameDot} />
+          <span className={styles.productFrameDot} />
+        </div>
+        <div className={styles.productFrameBody}>
+          {kind === 'chat' ? (
+            <>
+              <div className={`${styles.productFrameBar} ${styles.productFrameBarMid}`} />
+              <div className={`${styles.productFrameBar} ${styles.productFrameBarShort}`} />
+              <div className={styles.productFrameChat}>
+                <div className={styles.productFrameBubble}>What&apos;s in the enterprise tier?</div>
+                <div className={`${styles.productFrameBubble} ${styles.productFrameBubbleReply}`}>
+                  SSO, multi-tenant workspaces, and priority support.
+                  <div className={styles.productFrameCite}>pricing.md · docs/enterprise</div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={`${styles.productFrameBar} ${styles.productFrameBarMid}`} />
+              <div className={styles.productFrameRow}>
+                <div className={styles.productFrameTile} />
+                <div className={`${styles.productFrameTile} ${styles.productFrameTileAlt}`} />
+                <div className={styles.productFrameTile} />
+              </div>
+              <div className={`${styles.productFrameBar} ${styles.productFrameBarShort}`} />
+              <div className={`${styles.productFrameBar} ${styles.productFrameBarMid}`} />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function HomeHero() {
   return (
@@ -106,7 +148,7 @@ export function HomeShowcaseBands() {
                     Learn more <span aria-hidden>›</span>
                   </Link>
                 </div>
-                <div className={styles.showcaseVisual} aria-hidden />
+                <ShowcaseFrame kind={band.visual} />
               </div>
             </div>
           </section>

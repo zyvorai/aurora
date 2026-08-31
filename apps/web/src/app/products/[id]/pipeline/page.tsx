@@ -11,7 +11,7 @@ import {
   type WorkflowRunStatus,
 } from '@/lib/api';
 import { PageHero } from '@/components/layout/PageHero';
-import { SectionHeader } from '@/components/layout/SectionHeader';
+import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -22,6 +22,7 @@ import { workflowProgressPercent } from '@/lib/workflow-progress';
 import AccountHealthPanel from '@/components/success/AccountHealthPanel';
 import OpportunityDetailModal from '@/components/pipeline/OpportunityDetailModal';
 import { Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import forgeStyles from '@/components/workflow/forge.module.css';
 
 const STAGE_LABELS: Record<string, string> = {
   discovery: 'Discovery',
@@ -129,7 +130,7 @@ export default function PipelinePage() {
     }, null);
 
   return (
-    <div className="space-y-10 animate-fade-up">
+    <WorkspacePage>
       <PageHero
         eyebrow="Pipeline"
         title="Pipeline"
@@ -146,32 +147,25 @@ export default function PipelinePage() {
         }
       />
 
-      {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 border-y border-border py-6">
-          {[
+      {summary ? (
+        <KpiStrip
+          items={[
             { label: 'Open deals', value: summary.total },
             { label: 'Weighted pipeline', value: `$${summary.weighted_pipeline.toLocaleString()}` },
             { label: 'At proposal', value: summary.by_stage.proposal ?? 0 },
             { label: 'Oldest', value: openOldestDays === null ? '—' : `${openOldestDays}d` },
-          ].map((s) => (
-            <div key={s.label}>
-              <p className="text-[28px] font-semibold tracking-[-0.03em] tabular-nums text-foreground leading-none">
-                {s.value}
-              </p>
-              <p className="mt-2 text-[12px] text-muted">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
+          ]}
+        />
+      ) : null}
 
-      {message && <TextMuted className="text-[15px]">{message}</TextMuted>}
+      {message ? <TextMuted className="text-[15px]">{message}</TextMuted> : null}
 
-      {workflowStatus && workflowStatus.status !== 'completed' && (
-        <div className="rounded-[var(--radius-lg)] bg-surface px-5 py-4 space-y-3">
+      {workflowStatus && workflowStatus.status !== 'completed' ? (
+        <WorkspacePanel title="Technical eval" bodyClassName="p-4 space-y-3">
           <ProgressBar percent={workflowProgressPercent(workflowStatus)} label={`Workflow: ${workflowStatus.status}`} />
-          <ul className="space-y-1">
+          <ul className="space-y-1.5 m-0 p-0 list-none">
             {workflowStatus.steps.map((step) => (
-              <li key={step.name} className="flex items-center justify-between">
+              <li key={step.name} className="flex items-center justify-between text-[13px]">
                 <TextSmall>
                   {step.name}
                   {step.error ? ` — ${step.error}` : ''}
@@ -182,84 +176,82 @@ export default function PipelinePage() {
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        </WorkspacePanel>
+      ) : null}
 
-      <section>
-        <SectionHeader
-          title="Opportunities"
-          action={
-            <Link href={`/products/${id}/sales`} className="text-[15px] text-[var(--accent-blue)] hover:underline">
-              Leads
-            </Link>
-          }
-        />
-        <div className="overflow-x-auto pb-4 -mx-2 px-2">
-          <div className="flex gap-3 min-w-max">
+      <WorkspacePanel
+        title="Opportunities"
+        description={`${opportunities.length} total`}
+        actions={
+          <Link href={`/products/${id}/sales`} className="text-[13px] text-[var(--accent-blue)] hover:underline">
+            View leads
+          </Link>
+        }
+      >
+        {opportunities.length === 0 ? (
+          <div className="p-4">
+            <EmptyState
+              icon={Kanban}
+              title="No opportunities yet"
+              description="Create one manually, or run a technical eval to generate one from a qualified lead."
+              actions={[
+                { label: 'New opportunity', onClick: createManualOpp, primary: false },
+                { label: 'Run technical eval', onClick: runTechnicalEval },
+              ]}
+            />
+          </div>
+        ) : (
+          <div className={forgeStyles.kanbanBoard}>
             {OPPORTUNITY_STAGES.map((stage) => (
-              <div key={stage} className="w-52 shrink-0 rounded-[var(--radius-lg)] bg-surface p-3">
-                <p className="text-[12px] font-medium text-muted mb-3 px-1">
+              <div key={stage} className={forgeStyles.kanbanCol}>
+                <p className={forgeStyles.kanbanColTitle}>
                   {STAGE_LABELS[stage] ?? stage}
                   <span className="ml-1 opacity-60">({byStage[stage]?.length ?? 0})</span>
                 </p>
-                <div className="space-y-2 min-h-[120px]">
-                  {(byStage[stage] ?? []).map((opp) => (
-                    <div
-                      key={opp.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedOppId(opp.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') setSelectedOppId(opp.id);
-                      }}
-                      className="rounded-[var(--radius-md)] bg-background p-2.5 text-[13px] cursor-pointer hover:ring-1 hover:ring-border transition-shadow"
+                {(byStage[stage] ?? []).map((opp) => (
+                  <div
+                    key={opp.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedOppId(opp.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') setSelectedOppId(opp.id);
+                    }}
+                    className={forgeStyles.kanbanCard}
+                  >
+                    <Text className="font-medium truncate text-[13px]">{opp.name}</Text>
+                    {opp.company ? <TextSmall className="truncate">{opp.company}</TextSmall> : null}
+                    <select
+                      className="mt-2 w-full text-[12px] bg-transparent border border-border rounded-md px-1.5 py-1 focus-ring"
+                      value={opp.stage}
+                      onChange={(e) => handleStageChange(opp.id, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Stage for ${opp.name}`}
                     >
-                      <Text className="font-medium truncate text-[13px]">{opp.name}</Text>
-                      {opp.company && <TextSmall className="truncate">{opp.company}</TextSmall>}
-                      <select
-                        className="mt-2 w-full text-[12px] bg-transparent border border-border rounded-md px-1.5 py-1 focus-ring"
-                        value={opp.stage}
-                        onChange={(e) => handleStageChange(opp.id, e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Stage for ${opp.name}`}
-                      >
-                        {OPPORTUNITY_STAGES.map((s) => (
-                          <option key={s} value={s}>
-                            {STAGE_LABELS[s]}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
-                </div>
+                      {OPPORTUNITY_STAGES.map((s) => (
+                        <option key={s} value={s}>
+                          {STAGE_LABELS[s]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
-        </div>
-        {opportunities.length === 0 && (
-          <EmptyState
-            icon={Kanban}
-            title="No opportunities yet"
-            description="Create one manually, or run a technical eval to generate one from a qualified lead."
-            actions={[
-              { label: 'New opportunity', onClick: createManualOpp, primary: false },
-              { label: 'Run technical eval', onClick: runTechnicalEval },
-            ]}
-            className="mt-2"
-          />
         )}
-      </section>
+      </WorkspacePanel>
 
       <AccountHealthPanel productId={id} />
 
-      {selectedOppId && (
+      {selectedOppId ? (
         <OpportunityDetailModal
           productId={id}
           opportunityId={selectedOppId}
           onClose={() => setSelectedOppId(null)}
           onChanged={load}
         />
-      )}
-    </div>
+      ) : null}
+    </WorkspacePage>
   );
 }

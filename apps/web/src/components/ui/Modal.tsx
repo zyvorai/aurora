@@ -42,7 +42,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     >
       <div
         className={cn(
-          'bg-surface-elevated rounded-[var(--radius-lg)] w-full max-w-md shadow-[var(--shadow-card)] border border-border',
+          'bg-surface-elevated rounded-[var(--radius-lg)] w-full max-w-md border border-border shadow-[var(--shadow-elevated)]',
           open ? 'animate-glass-in' : 'animate-glass-out',
           className,
         )}

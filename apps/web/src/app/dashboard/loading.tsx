@@ -5,7 +5,7 @@ import { SkeletonHero, SkeletonCard } from '@/components/ui/Skeleton';
  * was no route-level loading UI anywhere in the app, so navigation was a blank flash. */
 export default function DashboardLoading() {
   return (
-    <div className="max-w-content mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
       <SkeletonHero />
       <div className="grid md:grid-cols-2 gap-4">
         <SkeletonCard />

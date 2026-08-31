@@ -3,13 +3,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Moon, Sun } from 'lucide-react';
-import { admin, auth, type AdminPlanInfo, type SuppressionEntry } from '@/lib/api';
+import { admin, auth, products, type AdminPlanInfo, type CrmSyncStatus, type Product, type SuppressionEntry } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 import { readStoredRole } from '@/lib/role-routing';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHero } from '@/components/layout/PageHero';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
@@ -32,7 +31,7 @@ function SettingsGroup({ label, danger, children }: { label: string; danger?: bo
       <Eyebrow className="mb-2 px-1">{label}</Eyebrow>
       <div
         className={cn(
-          'rounded-[var(--radius-lg)] bg-background divide-y divide-border overflow-hidden',
+          'apple-card divide-y divide-border overflow-hidden',
           danger && 'ring-1 ring-danger/30',
         )}
       >
@@ -72,6 +71,10 @@ export default function SettingsPage() {
   const [suppressions, setSuppressions] = useState<SuppressionEntry[]>([]);
   const [suppressEmail, setSuppressEmail] = useState('');
   const [addingSuppression, setAddingSuppression] = useState(false);
+  const [crmStatus, setCrmStatus] = useState<CrmSyncStatus | null>(null);
+  const [productList, setProductList] = useState<Product[]>([]);
+  const [syncProductId, setSyncProductId] = useState('');
+  const [syncing, setSyncing] = useState(false);
   const isAdmin = readStoredRole() === 'admin';
 
   useEffect(() => {
@@ -83,7 +86,26 @@ export default function SettingsPage() {
   useEffect(() => {
     admin.plan().then(setPlan).catch(() => {});
     admin.listSuppressions().then(setSuppressions).catch(() => {});
+    products.crmSyncStatus().then(setCrmStatus).catch(() => {});
+    products.list().then((list) => {
+      setProductList(list);
+      if (list.length > 0) setSyncProductId(list[0].id);
+    }).catch(() => {});
   }, []);
+
+  async function handleCrmSync() {
+    if (!syncProductId) return;
+    setSyncing(true);
+    try {
+      const res = await products.triggerCrmSync(syncProductId);
+      showToast('success', `CRM sync complete${res.synced != null ? ` (${String(res.synced)} records)` : ''}.`);
+      products.crmSyncStatus().then(setCrmStatus).catch(() => {});
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'CRM sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function handleAddSuppression(e: React.FormEvent) {
     e.preventDefault();
@@ -102,8 +124,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10 space-y-8 animate-fade-up">
-      <PageHero eyebrow="Account" title="Settings" description="Manage your account and workspace preferences." />
+    <div className="max-w-2xl mx-auto px-[var(--hs-gutter)] py-10 space-y-8 animate-fade-up min-h-full bg-[var(--app-canvas)]">
+      <PageHero eyebrow="Account" title="Settings" description="Manage your account and workspace preferences." variant="display" />
 
       <SettingsGroup label="Account">
         {user ? (
@@ -140,6 +162,57 @@ export default function SettingsPage() {
                 label={`Products (${plan.usage.products_used}/${plan.features.products})`}
               />
             </div>
+          </>
+        ) : (
+          <div className="px-5 py-4"><SkeletonText lines={2} /></div>
+        )}
+      </SettingsGroup>
+
+      <SettingsGroup label="GTM integrations">
+        {crmStatus ? (
+          <>
+            <SettingsRow
+              title="Enrichment"
+              description="Waterfall: Apollo → static heuristics on discover."
+              value={<Badge variant={crmStatus.enrichment_enabled ? 'success' : 'default'}>
+                {crmStatus.apollo_configured ? 'Apollo + static' : 'Static only'}
+              </Badge>}
+            />
+            <SettingsRow
+              title="CRM sync"
+              description="Push qualified leads and opportunities to an external CRM."
+              value={<Badge variant={crmStatus.enabled ? 'success' : 'warning'}>
+                {crmStatus.enabled ? (crmStatus.provider || 'enabled') : 'Disabled'}
+              </Badge>}
+            />
+            {crmStatus.enabled && productList.length > 0 ? (
+              <div className="px-5 py-4 flex flex-col sm:flex-row gap-2 sm:items-center border-t border-border">
+                <select
+                  value={syncProductId}
+                  onChange={(e) => setSyncProductId(e.target.value)}
+                  className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-[13px]"
+                >
+                  {productList.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <Button size="sm" onClick={handleCrmSync} disabled={syncing || !isAdmin}>
+                  {syncing ? 'Syncing…' : 'Sync now'}
+                </Button>
+              </div>
+            ) : null}
+            <SettingsRow
+              title="Providers"
+              description="Configure via server env: SALES_CRM_URL, HUBSPOT_ACCESS_TOKEN, APOLLO_API_KEY."
+              value={
+                <TextSmall className="text-muted">
+                  {[
+                    crmStatus.sales_crm_configured && 'sales-crm',
+                    crmStatus.hubspot_configured && 'HubSpot',
+                  ].filter(Boolean).join(' · ') || 'None configured'}
+                </TextSmall>
+              }
+            />
           </>
         ) : (
           <div className="px-5 py-4"><SkeletonText lines={2} /></div>

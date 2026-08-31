@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, LifeBuoy, Pencil, Plus } from 'lucide-react';
+import { LifeBuoy, Pencil, Plus } from 'lucide-react';
 import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
 import { PageHero } from '@/components/layout/PageHero';
+import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { SkeletonLine } from '@/components/ui/Skeleton';
-import { Card, CardBody } from '@/components/ui/Card';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -126,60 +126,69 @@ export default function CustomerHomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[var(--surface)]">
       <GlobalNav variant="portal" portalLabel="Customer Portal" onSignOut={handleSignOut} />
 
-      <main className="flex-1 max-w-content mx-auto px-6 py-8 space-y-8 animate-fade-up w-full">
-        <PageHero
-          icon={Building2}
-          accent="sky"
-          eyebrow="Account"
-          title={account.company_name || account.contact_name || account.email}
-          description="Your account status and details."
-          actions={
-            <Button variant="secondary" size="sm" onClick={openEditModal}>
-              <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
-            </Button>
-          }
-        />
+      <main className="flex-1 max-w-content mx-auto px-[var(--hs-gutter)] py-10 w-full">
+        <WorkspacePage>
+          <PageHero
+            eyebrow="Account"
+            title={account.company_name || account.contact_name || account.email}
+            description="Your account status and details."
+            actions={
+              <Button variant="secondary" size="sm" onClick={openEditModal}>
+                <Pencil className="w-4 h-4 mr-1.5" aria-hidden /> Edit profile
+              </Button>
+            }
+          />
 
-        <Card>
-          <CardBody className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Status</span>
+          <KpiStrip
+            items={[
+              { label: 'Status', value: account.status },
+              { label: 'Tickets', value: tickets.length },
+              { label: 'Member since', value: new Date(account.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) },
+              { label: 'Email', value: account.email.split('@')[0] },
+            ]}
+          />
+
+          <WorkspacePanel title="Account details" bodyClassName="divide-y divide-border">
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-muted text-[13px]">Status</span>
               <Badge variant={STATUS_VARIANT[account.status]}>{account.status}</Badge>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Email</span>
-              <span className="text-body-sm">{account.email}</span>
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-muted text-[13px]">Email</span>
+              <span className="text-[13px]">{account.email}</span>
             </div>
             {account.contact_name && (
-              <div className="flex items-center justify-between">
-                <span className="text-muted text-body-sm">Contact</span>
-                <span className="text-body-sm">{account.contact_name}</span>
+              <div className="flex items-center justify-between px-4 py-3.5">
+                <span className="text-muted text-[13px]">Contact</span>
+                <span className="text-[13px]">{account.contact_name}</span>
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <span className="text-muted text-body-sm">Member since</span>
-              <span className="text-body-sm">{new Date(account.created_at).toLocaleDateString()}</span>
+            <div className="flex items-center justify-between px-4 py-3.5">
+              <span className="text-muted text-[13px]">Member since</span>
+              <span className="text-[13px]">{new Date(account.created_at).toLocaleDateString()}</span>
             </div>
-          </CardBody>
-        </Card>
+          </WorkspacePanel>
 
-        <PortalStatusNotice status={account.status} signupHref="/portal/customer/signup" />
+          <PortalStatusNotice status={account.status} signupHref="/portal/customer/signup" />
 
-        {account.status === 'approved' && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Support</h2>
-              <Button size="sm" onClick={() => setShowTicketModal(true)}>
-                <Plus className="w-4 h-4 mr-1.5" aria-hidden /> New ticket
-              </Button>
-            </div>
-            {tickets.length === 0 ? (
-              <EmptyState icon={LifeBuoy} tone="sky" title="No tickets yet" description="Run into an issue? Open a ticket and we'll take a look." />
-            ) : (
-              <Card>
+          {account.status === 'approved' && (
+            <WorkspacePanel
+              title="Support"
+              description={`${tickets.length} ticket${tickets.length === 1 ? '' : 's'}`}
+              actions={
+                <Button size="sm" onClick={() => setShowTicketModal(true)}>
+                  <Plus className="w-4 h-4 mr-1.5" aria-hidden /> New ticket
+                </Button>
+              }
+            >
+              {tickets.length === 0 ? (
+                <div className="p-4">
+                  <EmptyState icon={LifeBuoy} tone="sky" title="No tickets yet" description="Run into an issue? Open a ticket and we'll take a look." />
+                </div>
+              ) : (
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -204,10 +213,10 @@ export default function CustomerHomePage() {
                     ))}
                   </TableBody>
                 </Table>
-              </Card>
-            )}
-          </section>
-        )}
+              )}
+            </WorkspacePanel>
+          )}
+        </WorkspacePage>
       </main>
 
       <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Edit profile">

@@ -1,4 +1,24 @@
+/* Shared Apple ID-style auth language with login.module.css */
+
 .shell {
+  /* Force light Apple auth canvas even when app chrome is dark-theme */
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #f5f5f7;
+  --surface-elevated: #ffffff;
+  --foreground: #1d1d1f;
+  --muted-foreground: #6e6e73;
+  --primary: #0071e3;
+  --primary-hover: #0077ed;
+  --border: #d2d2d7;
+  --accent-blue: #5a7ea8;
+  --hs-accent: #f77e2d;
+  --login-ink: #1d1d1f;
+  --login-mute: #6e6e73;
+  --login-line: #d2d2d7;
+  --login-blue: #5a7ea8;
+  --login-accent: #f77e2d;
+
   position: relative;
   min-height: calc(100vh - var(--nav-h, 44px));
   display: flex;
@@ -6,6 +26,9 @@
   justify-content: center;
   padding: clamp(2.5rem, 6vw, 4rem) 1.25rem;
   overflow: hidden;
+  background: #ffffff;
+  color: var(--login-ink);
+  font-family: var(--font-display);
 }
 
 .atmosphere {
@@ -16,12 +39,6 @@
   background:
     radial-gradient(ellipse 80% 50% at 50% 0%, rgba(247, 126, 45, 0.08), transparent 55%),
     linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
-}
-
-:global(html.dark-theme) .atmosphere {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 154, 77, 0.12), transparent 55%),
-    linear-gradient(180deg, #050505 0%, #0b0f14 100%);
 }
 
 .inner {
@@ -46,11 +63,11 @@
 .wordmark {
   display: inline-block;
   margin: 0 0 0.75rem;
-  font-size: clamp(2.5rem, 6vw, 3.25rem);
+  font-size: clamp(2.75rem, 7vw, 3.5rem);
   font-weight: 600;
   letter-spacing: -0.04em;
   line-height: 1.05;
-  color: var(--hs-accent);
+  color: var(--login-accent);
   text-decoration: none;
   font-family: var(--font-display);
 }
@@ -64,7 +81,7 @@
   font-size: 0.8125rem;
   font-weight: 400;
   letter-spacing: 0;
-  color: var(--muted-foreground);
+  color: var(--login-mute);
 }
 
 .title {
@@ -73,7 +90,7 @@
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.2;
-  color: var(--foreground);
+  color: var(--login-ink);
   font-family: var(--font-display);
 }
 
@@ -82,7 +99,23 @@
 }
 
 .panel :global(a) {
-  color: var(--accent-blue);
+  color: var(--login-blue);
+  text-decoration: none;
+}
+
+.panel :global(a:hover) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.panel :global(input) {
+  background: #ffffff;
+  border-color: var(--login-line);
+}
+
+.panel :global(button[type='submit']) {
+  border-radius: 980px;
+  font-weight: 400;
 }
 
 @media (prefers-reduced-motion: reduce) {

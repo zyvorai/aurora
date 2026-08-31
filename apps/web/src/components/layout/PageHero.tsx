@@ -20,22 +20,32 @@ interface PageHeroProps {
   accent?: Tone;
   stats?: HeroStat[];
   className?: string;
+  /** display = larger store-style headline (dashboard, marketing-adjacent pages) */
+  variant?: 'default' | 'display';
 }
 
-export function PageHero({ eyebrow, title, description, actions, stats, className }: PageHeroProps) {
+export function PageHero({ eyebrow, title, description, actions, stats, className, variant = 'default' }: PageHeroProps) {
   return (
-    <section className={cn('tahoe-hero space-y-6', className)}>
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2 min-w-0 max-w-2xl">
+    <section className={cn('tahoe-hero space-y-5', className)}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1.5 min-w-0 max-w-2xl">
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-          <PageTitle className="tracking-[-0.03em]">{title}</PageTitle>
-          {description && <TextLead className="text-[17px] leading-[1.47]">{description}</TextLead>}
+          {variant === 'display' ? (
+            <h1 className="text-[clamp(2rem,4.5vw,3rem)] font-semibold tracking-[-0.04em] leading-[1.05] text-foreground">
+              {title}
+            </h1>
+          ) : (
+            <PageTitle className="tracking-[-0.03em]">{title}</PageTitle>
+          )}
+          {description && (
+            <TextLead className="text-[17px] leading-[1.47] tracking-[-0.01em] max-w-[42ch]">{description}</TextLead>
+          )}
         </div>
         {actions && <div className="flex flex-wrap gap-2 shrink-0">{actions}</div>}
       </div>
 
       {stats && stats.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-2 border-t border-border">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-4 border-t border-border">
           {stats.map((stat) => (
             <div key={stat.label} className="tahoe-stat-tile">
               <p className="tahoe-stat-value">{stat.value}</p>

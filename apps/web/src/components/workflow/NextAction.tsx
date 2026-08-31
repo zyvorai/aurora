@@ -2,6 +2,8 @@
 
 import { Button } from '@/components/ui/Button';
 import type { ChainStage, ChainStageId } from '@/lib/chain';
+import forgeStyles from './forge.module.css';
+import { cn } from '@/lib/cn';
 
 interface NextActionContent {
   title: string;
@@ -74,9 +76,9 @@ export function NextAction({
 }) {
   if (!stage) {
     return (
-      <div className="rounded-[var(--radius-lg)] bg-surface px-6 py-7">
-        <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-foreground">Every stage is done</h2>
-        <p className="mt-2 text-[15px] text-muted leading-[1.47]">Nothing is waiting on you right now.</p>
+      <div className={cn(forgeStyles.spotlight, 'text-center sm:text-left')}>
+        <h2 className={forgeStyles.spotlightTitle}>Every stage is done</h2>
+        <p className={forgeStyles.spotlightBody}>Nothing is waiting on you right now.</p>
       </div>
     );
   }
@@ -85,10 +87,19 @@ export function NextAction({
   const isRunning = stage.status === 'run';
 
   return (
-    <div className="rounded-[var(--radius-lg)] bg-surface px-6 py-7 flex flex-col sm:flex-row sm:items-center gap-5">
+    <div
+      className={cn(
+        forgeStyles.spotlight,
+        'flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8',
+        isRunning && forgeStyles.spotlightRunning,
+      )}
+    >
       <div className="flex-1 min-w-0">
-        <h2 className="text-[21px] font-semibold tracking-[-0.02em] text-foreground">{content.title}</h2>
-        <p className="mt-2 text-[15px] text-muted leading-[1.47] max-w-[48ch]">{content.body}</p>
+        <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--accent-blue)] mb-1.5">
+          {isRunning ? 'In progress' : 'Next up'}
+        </p>
+        <h2 className={forgeStyles.spotlightTitle}>{content.title}</h2>
+        <p className={forgeStyles.spotlightBody}>{content.body}</p>
       </div>
       <div className="flex flex-wrap gap-2 shrink-0">
         {!isRunning && content.altLabel && onAlt && (
@@ -96,7 +107,7 @@ export function NextAction({
             {content.altLabel}
           </Button>
         )}
-        <Button onClick={onAct} disabled={loading} size="lg">
+        <Button onClick={onAct} disabled={loading}>
           {isRunning ? 'Watch run log' : content.actLabel}
         </Button>
       </div>
