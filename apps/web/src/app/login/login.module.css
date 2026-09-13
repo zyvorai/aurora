@@ -45,11 +45,28 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.03em;
   color: var(--login-ink);
   text-decoration: none;
+}
+
+.brandMark {
+  width: 22px;
+  height: 22px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.brandProduct {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: var(--login-mute);
+  margin-left: 2px;
 }
 
 .brand:hover {

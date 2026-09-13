@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { auth, products } from '@/lib/api';
 import { resolveApiBase } from '@/lib/api-base';
 import { readStoredRole, resolvePostLoginRoute, storeAuthSession } from '@/lib/role-routing';
+import { ZyvorMark } from '@/components/ZyvorMark';
 import styles from './login.module.css';
 
 type Mode = 'signin' | 'signup';
@@ -125,7 +126,9 @@ export default function LoginPage() {
 
       <header className={styles.top}>
         <Link href="/" className={styles.brand}>
-          Aurora
+          <ZyvorMark className={styles.brandMark} />
+          <span>zyvor</span>
+          <span className={styles.brandProduct}>Aurora</span>
         </Link>
         {mode === 'signin' ? (
           <button type="button" className={styles.topLink} onClick={() => switchMode('signup')}>

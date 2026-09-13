@@ -12,6 +12,7 @@ import {
   NAV_FLYOUT_TRIGGER_LABELS,
 } from '@/lib/nav-flyout';
 import { useTheme } from '@/context/ThemeContext';
+import { ZyvorMark } from '@/components/ZyvorMark';
 import styles from './GlobalNav.module.css';
 
 const CLOSE_DELAY_MS = 280;
@@ -76,8 +77,9 @@ function MoonIcon() {
 function Mark({ href }: { href: string }) {
   return (
     <Link className={styles.mark} href={href} aria-label="Aurora home">
-      <span className={styles.markBadge}>A</span>
-      <span className={styles.word}>aurora</span>
+      <ZyvorMark className={styles.markSvg} />
+      <span className={styles.word}>zyvor</span>
+      <span className={styles.productWord}>Aurora</span>
     </Link>
   );
 }
