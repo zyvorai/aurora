@@ -14,8 +14,10 @@ import { Modal } from '@/components/ui/Modal';
 import {
   Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell,
 } from '@/components/ui/Table';
-import { Eyebrow, Text, TextMuted, TextSmall } from '@/components/ui/Typography';
+import { Eyebrow, Text, TextSmall } from '@/components/ui/Typography';
+import { SkeletonTable } from '@/components/ui/Skeleton';
 import { SourceLink } from '@/components/sources/SourceLink';
+import { showToast } from '@/lib/toast';
 import forgeStyles from '@/components/workflow/forge.module.css';
 import { cn } from '@/lib/cn';
 
@@ -24,17 +26,21 @@ export default function SalesPage() {
   const router = useRouter();
   const [brief, setBrief] = useState<ExecutiveBrief | null>(null);
   const [leads, setLeads] = useState<PipelineLead[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<PipelineLead | null>(null);
   const [csvBusy, setCsvBusy] = useState(false);
 
   const loadLeads = useCallback(() => {
-    products.pipelineLeads(id).then(setLeads).catch(() => setLeads([]));
+    setLeadsLoading(true);
+    products.pipelineLeads(id)
+      .then(setLeads)
+      .catch(() => showToast('error', 'Could not load leads'))
+      .finally(() => setLeadsLoading(false));
   }, [id]);
 
   useEffect(() => {
-    products.brief(id).then(setBrief).catch(() => {});
+    products.brief(id).then(setBrief).catch(() => showToast('error', 'Could not load the executive brief'));
     loadLeads();
   }, [id, loadLeads]);
 
@@ -43,13 +49,12 @@ export default function SalesPage() {
   async function runDiscover() {
     if (!profileBuilt) return;
     setLoading(true);
-    setMessage(null);
     try {
       const res = await products.discoverLeads(id, { focus_industries: ['fintech', 'healthtech'], max_leads: 10 });
-      setMessage(`Discovered ${res.discovered_count} accounts`);
+      showToast('success', `Discovered ${res.discovered_count} accounts`);
       loadLeads();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Discovery failed');
+      showToast('error', err instanceof Error ? err.message : 'Discovery failed');
     } finally {
       setLoading(false);
     }
@@ -58,14 +63,13 @@ export default function SalesPage() {
   async function handleCsvImport(file: File) {
     if (!profileBuilt) return;
     setCsvBusy(true);
-    setMessage(null);
     try {
       const csv = await file.text();
       const res = await products.discoverLeads(id, { csv_import: csv, max_leads: 50 });
-      setMessage(`Imported ${res.discovered_count} accounts from CSV`);
+      showToast('success', `Imported ${res.discovered_count} accounts from CSV`);
       loadLeads();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'CSV import failed');
+      showToast('error', err instanceof Error ? err.message : 'CSV import failed');
     } finally {
       setCsvBusy(false);
     }
@@ -73,14 +77,13 @@ export default function SalesPage() {
 
   async function runQualify() {
     setLoading(true);
-    setMessage(null);
     try {
       const res = await products.qualifyLeads(id, { focus_industries: ['fintech'] });
-      setMessage(`Qualified ${res.qualified_count} leads · ${res.tier_a} tier A`);
+      showToast('success', `Qualified ${res.qualified_count} leads · ${res.tier_a} tier A`);
       loadLeads();
       products.brief(id).then(setBrief).catch(() => {});
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Qualification failed');
+      showToast('error', err instanceof Error ? err.message : 'Qualification failed');
     } finally {
       setLoading(false);
     }
@@ -144,8 +147,6 @@ export default function SalesPage() {
         </div>
       ) : null}
 
-      {message ? <TextMuted className="text-[15px]">{message}</TextMuted> : null}
-
       <WorkspacePanel
         title="Import accounts"
         description="Upload a CSV with company_name and domain columns to seed discovery."
@@ -175,7 +176,11 @@ export default function SalesPage() {
       </WorkspacePanel>
 
       <WorkspacePanel title="Qualified leads" description={`${leads.length} lead${leads.length === 1 ? '' : 's'}`}>
-        {leads.length > 0 ? (
+        {leadsLoading ? (
+          <div className="p-4">
+            <SkeletonTable rows={4} columns={4} />
+          </div>
+        ) : leads.length > 0 ? (
           <Table>
               <TableHead>
                 <TableRow>

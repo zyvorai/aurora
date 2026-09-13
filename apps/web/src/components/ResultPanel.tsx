@@ -5,6 +5,8 @@ import SourcesUsedPanel from './SourcesUsedPanel';
 import { SourceLink } from '@/components/sources/SourceLink';
 import { Eyebrow, Stat, SubsectionTitle, TextMuted, TextSmall } from '@/components/ui/Typography';
 import { Markdown } from '@/components/ui/Markdown';
+import { Badge } from '@/components/ui/Badge';
+import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { sanitizeWorkflowError } from '@/lib/workflow-errors';
 
 type Result = Record<string, unknown>;
@@ -26,19 +28,6 @@ function ErrorBanner({ message }: { message: string }) {
         <p className="text-sm text-danger leading-relaxed">{message}</p>
       </div>
     </Card>
-  );
-}
-
-function Badge({ children, variant = 'default' }: { children: React.ReactNode; variant?: 'success' | 'warning' | 'default' }) {
-  const styles = {
-    success: 'bg-success/10 text-success border-success/30',
-    warning: 'bg-warning/10 text-warning border-warning/30',
-    default: 'bg-gtm-accent/10 text-gtm-accent border-gtm-accent/30',
-  };
-  return (
-    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium border ${styles[variant]}`}>
-      {children}
-    </span>
   );
 }
 
@@ -278,28 +267,26 @@ function StrategyView({ data }: { data: Result }) {
       )}
       {calendar.length > 0 && (
         <Card title="Content calendar">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-muted border-b border-gtm-border">
-                  <th className="pb-2 pr-4">Week</th>
-                  <th className="pb-2 pr-4">Topic</th>
-                  <th className="pb-2 pr-4">Channel</th>
-                  <th className="pb-2">Type</th>
-                </tr>
-              </thead>
-              <tbody>
-                {calendar.map((row, i) => (
-                  <tr key={i} className="border-b border-gtm-border/50">
-                    <td className="py-2 pr-4">{String(row.week ?? i + 1)}</td>
-                    <td className="py-2 pr-4">{String(row.topic ?? '—')}</td>
-                    <td className="py-2 pr-4">{String(row.channel ?? '—')}</td>
-                    <td className="py-2">{String(row.content_type ?? '—')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Week</TableHeaderCell>
+                <TableHeaderCell>Topic</TableHeaderCell>
+                <TableHeaderCell>Channel</TableHeaderCell>
+                <TableHeaderCell>Type</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {calendar.map((row, i) => (
+                <TableRow key={i}>
+                  <TableCell>{String(row.week ?? i + 1)}</TableCell>
+                  <TableCell>{String(row.topic ?? '—')}</TableCell>
+                  <TableCell>{String(row.channel ?? '—')}</TableCell>
+                  <TableCell>{String(row.content_type ?? '—')}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Card>
       )}
     </div>

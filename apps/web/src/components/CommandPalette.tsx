@@ -114,7 +114,9 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
   return createPortal(
     <div
       className={cn(
-        'fixed inset-0 z-[100] flex items-start justify-center p-4 pt-[15vh] bg-black/60 backdrop-blur-sm',
+        // Same overlay tier/backdrop as Modal.tsx so stacking and dimming
+        // read consistently regardless of which floating surface is open.
+        'fixed inset-0 z-[200] flex items-start justify-center p-4 pt-[15vh] bg-black/45',
         open ? 'animate-fade-in' : 'animate-fade-out',
       )}
       role="dialog"
@@ -124,12 +126,14 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
     >
       <div
         className={cn(
-          'glass-strong w-full max-w-lg overflow-hidden rounded-[var(--radius-liquid-lg)]',
+          // Same panel surface as Modal.tsx (glass-strong/radius-liquid-lg
+          // diverge from it, especially in dark mode).
+          'bg-surface-elevated border border-border shadow-[var(--shadow-elevated)] w-full max-w-lg overflow-hidden rounded-[var(--radius-lg)]',
           open ? 'animate-glass-in' : 'animate-glass-out',
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 border-b border-[var(--glass-border)] px-4 py-3">
+        <div className="flex items-center gap-2 border-b border-border px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-muted" />
           <input
             ref={inputRef}
