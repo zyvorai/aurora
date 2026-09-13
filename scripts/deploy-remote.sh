@@ -79,6 +79,7 @@ _rsync() {
         --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
         --exclude='node_modules' --exclude='.next' --exclude='.venv' \
         --exclude='*.egg-info' --exclude='.pytest_cache' \
+        --exclude='secrets' \
         -e "$ssh_cmd" \
         "$@"
 }

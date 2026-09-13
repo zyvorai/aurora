@@ -2,7 +2,7 @@
 
 Shortest path from install → signed-in product → first useful result.
 
-Trial binaries ship from the public distro repo (no source in the trial). Source developers use this application repo with `make start`. Zyvor-owned labs typically use K3s + compose infra (see [`k8s/README.md`](../../k8s/README.md)).
+Clone this AGPL source repo and run `make start`. Zyvor-owned labs typically use K3s + compose infra (see [`k8s/README.md`](../../k8s/README.md)).
 
 ## What you need
 
@@ -15,7 +15,6 @@ Trial binaries ship from the public distro repo (no source in the trial). Source
 
 ## 1. Install
 
-**Trial package:** follow **GETTING-STARTED** in the tarball.  
 **Source:** `make start` → web `:3000`, API `:8000`.  
 **Zyvor lab:** `./scripts/deploy-remote.sh` (infra) + `./scripts/deploy-k8s.sh` (app). Seed suite products with `./scripts/seed-zyvor-suite.sh` (idempotent — skips existing products, sources, opportunities, and outreach campaigns).
 

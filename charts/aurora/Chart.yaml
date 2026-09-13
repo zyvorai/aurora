@@ -1,6 +1,6 @@
 apiVersion: v2
 name: aurora
-description: Aurora — AI-powered GTM orchestration (signed trial.token evaluation)
+description: Aurora — AI-powered GTM orchestration (AGPL-3.0)
 type: application
 version: 0.1.1
 appVersion: "0.1.1"
@@ -11,4 +11,4 @@ keywords:
 maintainers:
   - name: Zyvor
     email: sales@zyvor.dev
-home: https://github.com/hypersdk/aurora
+home: https://github.com/zyvorai/aurora

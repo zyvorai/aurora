@@ -27,14 +27,6 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.existingSecret | default (printf "%s-env" (include "aurora.fullname" .)) }}
-          {{- if or .Values.license.key .Values.license.existingSecret }}
-          env:
-            - name: AURORA_LICENSE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "aurora.licenseSecretName" . }}
-                  key: license.key
-          {{- end }}
           livenessProbe:
             httpGet:
               path: /health
@@ -105,13 +97,5 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.existingSecret | default (printf "%s-env" (include "aurora.fullname" .)) }}
-          {{- if or .Values.license.key .Values.license.existingSecret }}
-          env:
-            - name: AURORA_LICENSE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "aurora.licenseSecretName" . }}
-                  key: license.key
-          {{- end }}
           resources:
             {{- toYaml .Values.workers.resources | nindent 12 }}

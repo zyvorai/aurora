@@ -11,7 +11,6 @@ import { getNavGroups, getFlatNavItems } from '@/lib/nav-data';
 import CommandPalette, { type CommandPaletteItem } from '@/components/CommandPalette';
 import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
 import styles from '@/components/layout/GlobalNav/GlobalNav.module.css';
-import { LicenseBanner } from '@/components/LicenseBanner';
 import { cn } from '@/lib/cn';
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -111,7 +110,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--surface)]">
-      <LicenseBanner />
       <GlobalNav
         variant="app"
         roleInitial={role?.[0] ?? 'U'}

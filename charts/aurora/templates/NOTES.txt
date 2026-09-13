@@ -2,10 +2,7 @@ Aurora {{ .Chart.AppVersion }} installed.
 
 1. Ensure backing services (Postgres, Redis, Qdrant, Neo4j, MinIO, Ollama) are reachable
    via the env Secret values you passed.
-2. Provide a signed evaluation token (Ed25519 JWT):
-     --set license.key="<jwt>"   OR   license.existingSecret=<secret with data key license.key>
-     OR mount / set AURORA_TRIAL_TOKEN / place trial.token at /app/trial.token
-3. Check status:
-     curl -s http://{{ include "aurora.fullname" . }}-api:{{ .Values.api.service.port }}/api/v1/license/status
-4. After expiry, email sales@zyvor.dev for a renewed token, then:
-     helm upgrade {{ .Release.Name }} . --reuse-values --set license.key="<jwt>"
+2. Health check:
+     curl -s http://{{ include "aurora.fullname" . }}-api:{{ .Values.api.service.port }}/health
+3. Licensing: AGPL-3.0 open source; commercial ACL via sales@zyvor.dev
+   See COMMERCIAL_LICENSE.md / docs/LICENSING.md in the source repo.

@@ -10,7 +10,6 @@ from sqlalchemy.exc import OperationalError
 
 from gtm_api.config import get_settings
 from gtm_api.database import DB_SETUP_HINT, check_database
-from gtm_api.middleware.license import LicenseMiddleware
 from gtm_api.routers import (
     auth,
     social_auth,
@@ -25,7 +24,6 @@ from gtm_api.routers import (
     mcp,
     admin,
     portal,
-    license,
 )
 from gtm_api.services.embeddings import LLMServiceError
 from gtm_api.services.llm import check_llm_health
@@ -84,8 +82,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# After CORS so 402 responses still get CORS headers. Keyless 30-day trial then license key.
-app.add_middleware(LicenseMiddleware)
 
 
 @app.exception_handler(ConnectionRefusedError)
@@ -145,7 +141,6 @@ app.include_router(inbound.router, prefix=settings.api_prefix)
 app.include_router(mcp.router, prefix=settings.api_prefix)
 app.include_router(admin.router, prefix=settings.api_prefix)
 app.include_router(portal.router, prefix=settings.api_prefix)
-app.include_router(license.router, prefix=settings.api_prefix)
 
 
 @app.get("/health")
@@ -156,25 +151,9 @@ async def health():
     llm_ready = llm_health.get("llm_ready", False)
     llm_core_ready = llm_health.get("llm_core_ready", llm_ready)
     status = "healthy" if db_ready and llm_core_ready else "degraded"
-    out = {
+    return {
         "status": status,
         "service": settings.app_name,
         **db_health,
         **llm_health,
     }
-    if db_ready:
-        try:
-            from gtm_api.database import async_session_factory
-            from gtm_api.services import licensing
-
-            async with async_session_factory() as db:
-                lic = await licensing.status(db, settings.aurora_license_key or None)
-            out["license"] = {
-                "licensed": lic.licensed,
-                "trial_active": lic.trial_active,
-                "trial_expired": lic.trial_expired,
-                "trial_days_remaining": lic.trial_days_remaining,
-            }
-        except Exception:
-            pass
-    return out

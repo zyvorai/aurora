@@ -829,16 +829,3 @@ class CustomWorkflowStage(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-
-
-class LicenseState(Base):
-    """Singleton row recording when this deployment first started the keyless trial.
-
-    Survives pod restarts; only a fresh database resets the 30-day clock. See
-    `gtm_api.services.licensing`.
-    """
-
-    __tablename__ = "license_state"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
-    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

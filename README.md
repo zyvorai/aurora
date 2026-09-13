@@ -8,13 +8,12 @@ Multi-tenant SaaS platform where software companies onboard by providing a websi
 
 | You want to… | Use |
 |--------------|-----|
-| **Try / install Aurora** (customer, evaluator) | **[`hypersdk/aurora`](https://github.com/hypersdk/aurora)** — download the trial tarball, follow `GETTING-STARTED.md` inside |
-| **Develop Aurora from source** (this repo) | Keep reading — `make start` below |
+| **Self-host from source** (AGPL, free for home) | This repo — `make start` below |
+| **Commercial license (ACL)** | [sales@zyvor.dev](mailto:sales@zyvor.dev) · [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) |
 | Product marketing / schedule a demo | [zyvor.dev/aurora](https://zyvor.dev/aurora) |
 
-This repository is the **application source**. The public trial ships **binaries
-only** from [`hypersdk/aurora`](https://github.com/hypersdk/aurora) (no source).
-If you landed here looking for a download button, go there.
+This repository is the **open-source application** (AGPL-3.0).
+Organizations that need freedom from AGPL can buy an [Aurora Commercial License](COMMERCIAL_LICENSE.md).
 
 ## Architecture
 
@@ -44,8 +43,7 @@ Customer Sources → Product Discovery → Knowledge Extraction → AI Knowledge
 
 ## Quick Start (developers with source)
 
-**Requires Docker Desktop running.** Customers without source: use the
-[trial package](https://github.com/hypersdk/aurora/releases) instead.
+**Requires Docker Desktop running.**
 
 ```bash
 make start    # infra + DB + API + web (background)
@@ -72,7 +70,7 @@ docker compose -f infra/docker-compose.yml --profile ollama up -d
 ### Containerized / production
 
 ```bash
-cp .env.prod.example .env   # then edit secrets; set AURORA_LICENSE_ENFORCE=false for Zyvor-owned labs
+cp .env.prod.example .env   # then edit secrets
 docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
@@ -116,7 +114,7 @@ demo IdP (compose) seeds user **`demo` / `demo`**. Full walkthrough:
 
 **TLS / production entrypoint:** Aurora is an **independent product** (the live app is not
 reverse-proxied by [`hypersdk-web`](https://github.com/ssahani/hypersdk-web) /
-[zyvor.dev](https://zyvor.dev)). Product marketing and trial download live on the website:
+[zyvor.dev](https://zyvor.dev)). Product marketing lives on the website:
 
 **→ [zyvor.dev/aurora](https://zyvor.dev/aurora)**
 
@@ -125,20 +123,15 @@ Production deploy for the app itself is the K3s stack in [`k8s/`](k8s/README.md)
 `apps/web` to the remote deploy tree before rebuilding if you changed the frontend. Optional
 compose nginx overlay: [infra/nginx/certs/README.md](infra/nginx/certs/README.md).
 
-### Customer trial download (no source)
+### Licensing (AGPL + ACL)
 
 | | |
 |---|---|
-| Website | [zyvor.dev/aurora](https://zyvor.dev/aurora) |
-| Distro repo | [`hypersdk/aurora`](https://github.com/hypersdk/aurora) |
-| Current release | [`v0.1.1`](https://github.com/hypersdk/aurora/releases/tag/v0.1.1) (signed `trial.token` in archive) |
-| Package | GitHub Releases on that repo (must include signed `trial.token`) |
-| After trial | Email **sales@zyvor.dev** for a renewed JWT / `trial.token` |
-| How to install the token | [docs/LICENSING.md](docs/LICENSING.md) |
-
-Extract the archive and follow `GETTING-STARTED.md` → `INSTALL.md`. The package
-ships `trial.token`; Compose mounts it at `/app/trial.token`. Build/publish new
-packages with `./scripts/build-customer-package.sh` + `./scripts/publish-trial-release.sh`.
+| Open source | **AGPL-3.0** — free for home / self-host ([`LICENSE`](LICENSE)) |
+| Commercial | **Aurora Commercial License (ACL)** — [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) |
+| Pricing | Annual $25k · Monthly $2.5k · Major $25k · Minor $15k |
+| Contact | **sales@zyvor.dev** |
+| Full guide | [docs/LICENSING.md](docs/LICENSING.md) |
 
 ## LLM Providers
 
@@ -175,7 +168,7 @@ Multi-agent composition plan (11 specialized agents, **lean hardware / persona-f
 
 **Role-based default landing** (persona routes after login): [docs/role-based-landing.md](docs/role-based-landing.md)
 
-**Licensing** (signed `trial.token` / Ed25519 JWT — see [docs/LICENSING.md](docs/LICENSING.md)):
+**Licensing** (AGPL + ACL): [docs/LICENSING.md](docs/LICENSING.md)
 
 **SSO / OIDC / demo logins** (Keycloak `demo`/`demo`, email/password admin, BYO IdP): [docs/sso-oidc.md](docs/sso-oidc.md)
 
@@ -231,4 +224,9 @@ The product workspace (`/products/[id]/*`) keeps a left rail + top tab bar under
 
 ## License
 
-Apache License 2.0
+Dual-licensed:
+
+- **[AGPL-3.0](LICENSE)** — open source; free for home users and self-host under AGPL terms
+- **[Aurora Commercial License (ACL)](COMMERCIAL_LICENSE.md)** — proprietary integrations, freedom from AGPL obligations, support
+
+See [docs/LICENSING.md](docs/LICENSING.md).

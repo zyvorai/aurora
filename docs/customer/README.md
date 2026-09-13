@@ -29,4 +29,4 @@ Output lands in [`pdf/`](pdf/).
   Agents               →  Marketing / Sales / Solution
 ```
 
-Default login (source / lab seed): see [Getting Started](getting-started.md). Zyvor-owned labs use Groq chat (`LLM_PROVIDER=openai`) and `AURORA_LICENSE_ENFORCE=false`.
+Default login (source / lab seed): see [Getting Started](getting-started.md). Licensing: [LICENSING.md](../LICENSING.md) (AGPL + ACL).

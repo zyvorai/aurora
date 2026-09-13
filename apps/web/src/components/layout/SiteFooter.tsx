@@ -91,7 +91,10 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] py-3.5 flex flex-wrap items-center justify-between gap-2">
           <span className="text-[11px] text-[var(--hs-text-subtle)]">
-            Copyright © {new Date().getFullYear()} Aurora. All rights reserved.
+            Copyright © {new Date().getFullYear()} Aurora · AGPL-3.0 ·{' '}
+            <a href="mailto:sales@zyvor.dev" className="hover:text-foreground transition-colors">
+              Commercial (ACL)
+            </a>
           </span>
         </div>
       </div>

@@ -14,15 +14,13 @@ IdP, or **your own OIDC provider** (Auth0, Okta, Azure AD, existing Keycloak, �
 Open the web UI → **Sign in** (two-step: email → **Continue** → password). For SSO, use
 **Continue with SSO** (when `SSO_ENABLED=true`); for local auth, use the email/password form.
 
-## Option A — Email/password only (default trial / compose)
+## Option A — Email/password only (default compose)
 
-No Keycloak required. After install (see package `INSTALL.md` or `make start`):
+No Keycloak required. After `make start`:
 
 1. Open the web UI.
 2. Sign in as `marketing@zyvor.dev` / `Admin@321`.
 3. Change that password (or recreate with a real admin) before any real use.
-
-This is what the customer trial package uses by default.
 
 ## Option B — Bundled Keycloak demo IdP (compose)
 
@@ -87,14 +85,11 @@ apply — use accounts from your IdP. The IdP user's email must already exist as
 an Aurora user in the tenant (or you register/seed that email first); see the
 SSO notes in [`gtm-platform-phases.md`](gtm-platform-phases.md).
 
-## Helm / trial package
+## Helm
 
-The public trial package ([`hypersdk/aurora`](https://github.com/hypersdk/aurora))
-defaults to email/password (`marketing@zyvor.dev` / `Admin@321`). To enable SSO
-after install, set the `SSO_*` variables on the API (compose `.env` or Helm
+To enable SSO after install, set the `SSO_*` variables on the API (compose `.env` or Helm
 `env.*` values) and point them at your IdP. Bundled Keycloak is part of the
-**source** compose stack, not the slim trial image set — bring your own IdP for
-most customer deploys.
+source compose stack — bring your own IdP for most production deploys.
 
 ## Troubleshooting
 
@@ -109,7 +104,6 @@ most customer deploys.
 
 ## Related
 
-- Package install: `INSTALL.md` (customer archive) / [`packaging/INSTALL.md.tmpl`](../packaging/INSTALL.md.tmpl)
 - Env examples: [`.env.example`](../.env.example), [`.env.prod.example`](../.env.prod.example)
 - Realm import: [`infra/keycloak/aurora-realm.json`](../infra/keycloak/aurora-realm.json)
 - K3s deploy notes: [`k8s/README.md`](../k8s/README.md)

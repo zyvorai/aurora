@@ -46,7 +46,6 @@ infra/nginx/certs/*
 !infra/nginx/certs/.gitkeep
 !infra/nginx/certs/README.md
 
-# Trial signing private keys (never ship)
+# Local secrets (never commit)
 secrets/
-trial.token
 .docs-tools/

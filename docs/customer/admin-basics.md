@@ -15,11 +15,9 @@ Use `https://<host>:30443` when the K3s stack is deployed; otherwise `http://<ho
 
 - Email/password — **2-step** UI at `/login` (seeded lab admin — rotate immediately; disable with `SEED_DEFAULT_ADMIN=false`)
 - SSO via `SSO_ENABLED` + OIDC (realm **`aurora`**, never legacy `emissary`)
-- Zyvor-owned labs: `AURORA_LICENSE_ENFORCE=false` (see [LICENSING.md](../LICENSING.md))
 
 ## Install sketch
 
-**Trial:** download release tarball → load images → `docker-compose.infra.trial.yml` then `docker-compose.trial.yml`.  
 **Source:** `make start`.  
 **Lab K3s:** `deploy-remote.sh` + `deploy-k8s.sh`; seed zyvor.dev products with `seed-zyvor-suite.sh`.
 
