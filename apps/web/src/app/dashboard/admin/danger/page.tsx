@@ -59,7 +59,7 @@ export default function AdminDangerZonePage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-10 space-y-8">
+      <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-10 space-y-8">
         <SkeletonHero />
         <SkeletonText lines={3} />
       </div>
@@ -68,7 +68,7 @@ export default function AdminDangerZonePage() {
 
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-10">
+      <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-10">
         <EmptyState
           icon={ShieldAlert}
           title="Admin access required"
@@ -79,7 +79,7 @@ export default function AdminDangerZonePage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-10 space-y-10 animate-fade-up">
+    <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-10 space-y-10 animate-fade-up">
       <WorkspacePage>
       <PageHero
         eyebrow="Admin"

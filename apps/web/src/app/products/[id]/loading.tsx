@@ -5,7 +5,7 @@ import { SkeletonHero } from '@/components/ui/Skeleton';
  * loading.tsx -- see apps/web/src/app/dashboard/loading.tsx for the same pattern. */
 export default function ProductLoading() {
   return (
-    <div className="max-w-content mx-auto px-6 py-8">
+    <div className="max-w-container-app mx-auto px-6 py-8">
       <SkeletonHero />
     </div>
   );

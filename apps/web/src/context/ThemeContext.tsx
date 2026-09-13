@@ -22,10 +22,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light');
 
   useEffect(() => {
+    // Light-first: dark mode is a deliberate, explicit opt-in via the in-app
+    // toggle only. Do not fall back to `prefers-color-scheme` — most visitors
+    // have OS dark mode on, which made "dark by default" an accident, not a
+    // design decision.
     const storedTheme = localStorage.getItem(STORAGE_KEY);
-    const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-    const initialTheme: Theme =
-      storedTheme === 'dark' || (!storedTheme && systemPrefersDark) ? 'dark' : 'light';
+    const initialTheme: Theme = storedTheme === 'dark' ? 'dark' : 'light';
     setThemeState(initialTheme);
     applyTheme(initialTheme);
   }, []);
@@ -57,7 +59,6 @@ export function useTheme(): ThemeContextValue {
 export const THEME_INIT_SCRIPT = `
 try {
   var t = localStorage.getItem('${STORAGE_KEY}');
-  var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (t === 'dark' || (!t && systemDark)) document.documentElement.classList.add('dark-theme');
+  if (t === 'dark') document.documentElement.classList.add('dark-theme');
 } catch (e) {}
 `;

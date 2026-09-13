@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Container } from '@/components/layout/Container';
 
 const FOOTER_COLUMNS_PUBLIC = [
   {
@@ -63,7 +64,7 @@ export function SiteFooter() {
 
   return (
     <footer className="bg-[var(--hs-bg-alt)] border-t border-border mt-auto">
-      <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] pt-14 pb-10 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10">
+      <Container tier="marketing" className="pt-14 pb-10 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10">
         <div className="col-span-2 md:col-span-1">
           <p className="text-[19px] font-semibold tracking-[-0.03em] text-foreground mb-1.5">Aurora</p>
           <p className="text-[12px] text-[var(--hs-text-subtle)] leading-relaxed max-w-[18ch]">
@@ -87,16 +88,16 @@ export function SiteFooter() {
             </ul>
           </div>
         ))}
-      </div>
+      </Container>
       <div className="border-t border-border">
-        <div className="mx-auto max-w-[var(--hs-max-width)] px-[var(--hs-gutter)] py-3.5 flex flex-wrap items-center justify-between gap-2">
+        <Container tier="marketing" className="py-3.5 flex flex-wrap items-center justify-between gap-2">
           <span className="text-[11px] text-[var(--hs-text-subtle)]">
             Copyright © {new Date().getFullYear()} Aurora · AGPL-3.0 ·{' '}
             <a href="mailto:sales@zyvor.dev" className="hover:text-foreground transition-colors">
               Commercial (ACL)
             </a>
           </span>
-        </div>
+        </Container>
       </div>
     </footer>
   );

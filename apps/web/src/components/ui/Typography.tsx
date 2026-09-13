@@ -16,10 +16,7 @@ export function DisplayTitle({ children, className, as: Tag = 'h1', id }: Typogr
   return (
     <Tag
       id={id}
-      className={cn(
-        'text-display md:text-[clamp(2.5rem,5vw,4rem)] font-semibold tracking-tight leading-tight',
-        className,
-      )}
+      className={cn('text-display font-semibold tracking-tight leading-tight', className)}
     >
       {children}
     </Tag>
@@ -30,10 +27,7 @@ export function PageTitle({ children, className, as: Tag = 'h1', id }: Typograph
   return (
     <Tag
       id={id}
-      className={cn(
-        'text-[clamp(1.75rem,3vw,2.125rem)] font-semibold tracking-[-0.03em] leading-[1.1]',
-        className,
-      )}
+      className={cn('text-page-title font-semibold tracking-[-0.03em] leading-tight', className)}
     >
       {children}
     </Tag>
@@ -42,7 +36,7 @@ export function PageTitle({ children, className, as: Tag = 'h1', id }: Typograph
 
 export function SectionTitle({ children, className, as: Tag = 'h2', id }: TypographyProps) {
   return (
-    <Tag id={id} className={cn('text-[clamp(1.5rem,2.5vw,1.75rem)] font-semibold text-foreground tracking-tight', className)}>
+    <Tag id={id} className={cn('text-tile font-semibold text-foreground tracking-tight', className)}>
       {children}
     </Tag>
   );
@@ -88,6 +82,54 @@ export function Stat({ label, value, className, highlight }: StatProps) {
     <div className={className}>
       <p className="text-stat-label">{label}</p>
       <p className={cn('text-stat-value mt-1', highlight && 'text-primary')}>{value}</p>
+    </div>
+  );
+}
+
+interface StatGridItem {
+  label: string;
+  value: string | number;
+  /** CSS color for the value (e.g. `var(--accent-sage)`) — for the 'strip' variant's per-stat coloring. */
+  color?: string;
+}
+
+interface StatGridProps {
+  items: StatGridItem[];
+  /** 'strip' — the bordered top-level dashboard strip. 'plain' — a borderless
+   *  grid for stats nested inside another panel (e.g. an attribution
+   *  breakdown). There is no shared 'panel'/KPI-strip variant yet — that
+   *  call site (WorkspacePanel's KpiStrip, ExecutiveBriefView) is a larger,
+   *  separate migration and still uses its own markup. */
+  variant?: 'strip' | 'plain';
+  className?: string;
+}
+
+export function StatGrid({ items, variant = 'strip', className }: StatGridProps) {
+  if (variant === 'strip') {
+    return (
+      <div className={cn('apple-stat-strip', className)}>
+        {items.map((item) => (
+          <div key={item.label}>
+            <p className="apple-stat-value" style={item.color ? { color: item.color } : undefined}>
+              {item.value}
+            </p>
+            <p className="apple-stat-label">{item.label}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('grid grid-cols-2 sm:grid-cols-3 gap-4', className)}>
+      {items.map((item) => (
+        <div key={item.label}>
+          <p className="text-[20px] font-semibold tabular-nums" style={item.color ? { color: item.color } : undefined}>
+            {item.value}
+          </p>
+          <p className="text-[12px] text-muted capitalize">{item.label}</p>
+        </div>
+      ))}
     </div>
   );
 }

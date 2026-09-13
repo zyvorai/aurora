@@ -111,7 +111,7 @@ export default function ResellerHomePage() {
     <div className="min-h-screen flex flex-col bg-[var(--surface)]">
       <GlobalNav variant="portal" portalLabel="Reseller Portal" onSignOut={handleSignOut} />
 
-      <main className="flex-1 max-w-content mx-auto px-[var(--hs-gutter)] py-10 w-full">
+      <main className="flex-1 max-w-container-app mx-auto px-[var(--hs-gutter)] py-10 w-full">
         <WorkspacePage>
           <PageHero
             eyebrow="Account"

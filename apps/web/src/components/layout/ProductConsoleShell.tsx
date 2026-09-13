@@ -17,6 +17,7 @@ import { deriveChain, chainStageHref, type ChainStage, type ChainStageId } from 
 import { RunLogDock } from '@/components/workflow/RunLogDock';
 import CommandPalette, { type CommandPaletteItem } from '@/components/CommandPalette';
 import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
+import { Container } from '@/components/layout/Container';
 import navStyles from '@/components/layout/GlobalNav/GlobalNav.module.css';
 import { cn } from '@/lib/cn';
 import { TONE_CLASSES, toneFromKey } from '@/lib/tone';
@@ -341,7 +342,7 @@ export function ProductConsoleShell({
       <div className="flex-1 min-w-0 flex flex-col min-h-0">
         <div className="flex flex-1 min-w-0 min-h-0">
           <main className="flex-1 min-w-0 bg-[var(--app-canvas)] overflow-y-auto">
-            <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 lg:px-8 lg:py-10">{children}</div>
+            <Container tier="app" className="py-8 lg:px-8 lg:py-10">{children}</Container>
           </main>
           <RunLogDock productId={productId} />
         </div>

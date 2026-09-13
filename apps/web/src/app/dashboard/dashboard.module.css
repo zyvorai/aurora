@@ -21,34 +21,18 @@
   }
 }
 
+/* Surface (radius/border/background/shadow/hover-lift/accent-bar) now comes from
+   the shared Card primitive (.glass / .glass-hover-lift / .card-accent-bar in
+   globals.css) — this class only carries this grid item's layout. */
 .card {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
   padding: 1.125rem 1.25rem;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface-elevated);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--card-accent, var(--accent-blue));
-  opacity: 0.85;
 }
 
 .card:hover {
   border-color: color-mix(in srgb, var(--accent-blue) 35%, var(--border));
-  box-shadow: var(--shadow-elevated);
-  transform: translateY(-1px);
 }
 
 .toolbar {
@@ -159,17 +143,3 @@
   color: var(--danger);
 }
 
-.statusReady {
-  background: color-mix(in srgb, var(--accent-sage) 18%, white);
-  color: #3d4f2e;
-}
-
-.statusPending {
-  background: color-mix(in srgb, var(--primary) 14%, white);
-  color: var(--primary-hover);
-}
-
-.statusOther {
-  background: color-mix(in srgb, var(--accent-blue) 12%, white);
-  color: var(--accent-blue);
-}

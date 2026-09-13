@@ -41,13 +41,20 @@
 }
 
 .gnavInner {
-  max-width: var(--hs-max-width);
+  max-width: var(--container-marketing);
   margin: 0 auto;
   padding: 0 var(--hs-gutter);
   height: var(--hs-nav-h);
   display: flex;
   align-items: center;
   gap: var(--hs-s1);
+}
+
+/* App/portal content is the wider container tier — the nav bar above it should
+   share that edge instead of always matching marketing's narrower width. */
+.gnav[data-variant='app'] .gnavInner,
+.gnav[data-variant='portal'] .gnavInner {
+  max-width: var(--container-app);
 }
 
 .mark {
@@ -398,7 +405,7 @@
 }
 
 .flyInner {
-  max-width: var(--hs-max-width);
+  max-width: var(--container-marketing);
   margin: 0 auto;
   padding: var(--hs-s8) var(--hs-gutter) var(--hs-s9);
 }
@@ -515,7 +522,8 @@
 }
 
 .subnavInner {
-  max-width: var(--hs-max-width);
+  /* Always rendered under variant="app" (AppShell/ProductConsoleShell) — app tier width. */
+  max-width: var(--container-app);
   margin: 0 auto;
   padding: 0 var(--hs-gutter);
   display: flex;

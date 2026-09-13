@@ -12,10 +12,11 @@ import { PageHero } from '@/components/layout/PageHero';
 import { WorkspacePage } from '@/components/layout/WorkspacePanel';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import OnboardingChecklist from '@/components/OnboardingChecklist';
-import { TextSmall } from '@/components/ui/Typography';
+import { TextSmall, StatGrid } from '@/components/ui/Typography';
 import { SkeletonHero, SkeletonCard } from '@/components/ui/Skeleton';
 import { SourceLink } from '@/components/sources/SourceLink';
 import { TONE_CLASSES, TONE_ROTATION } from '@/lib/tone';
@@ -134,7 +135,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className={cn(styles.page, 'max-w-content mx-auto px-[var(--hs-gutter)] py-10 space-y-8 lg:px-8')}>
+      <div className={cn(styles.page, 'max-w-container-app mx-auto px-[var(--hs-gutter)] py-10 space-y-8 lg:px-8')}>
         <SkeletonHero />
         <div className={styles.grid}>
           <SkeletonCard />
@@ -167,7 +168,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className={cn(styles.page, 'max-w-content mx-auto px-[var(--hs-gutter)] py-10 lg:px-8')}>
+    <div className={cn(styles.page, 'max-w-container-app mx-auto px-[var(--hs-gutter)] py-10 lg:px-8')}>
       <WorkspacePage>
         <PageHero
           variant="display"
@@ -193,20 +194,14 @@ export default function DashboardPage() {
 
         {!isEmpty && (
           <section>
-            <div className="apple-stat-strip mb-8">
-              <div>
-                <p className="apple-stat-value">{productList.length}</p>
-                <p className="apple-stat-label">Products</p>
-              </div>
-              <div>
-                <p className="apple-stat-value" style={{ color: 'var(--accent-sage)' }}>{readyCount}</p>
-                <p className="apple-stat-label">Ready to sell</p>
-              </div>
-              <div>
-                <p className="apple-stat-value" style={{ color: 'var(--accent-blue)' }}>{setupCount}</p>
-                <p className="apple-stat-label">Need ingest</p>
-              </div>
-            </div>
+            <StatGrid
+              className="mb-8"
+              items={[
+                { label: 'Products', value: productList.length },
+                { label: 'Ready to sell', value: readyCount, color: 'var(--accent-sage)' },
+                { label: 'Need ingest', value: setupCount, color: 'var(--accent-blue)' },
+              ]}
+            />
 
             <div className={styles.toolbar}>
               {productList.length > 6 ? (
@@ -258,8 +253,11 @@ export default function DashboardPage() {
                 const isReady = p.profile_status === 'ready';
 
                 return (
-                  <article
+                  <Card
                     key={p.id}
+                    as="article"
+                    accent
+                    hover
                     className={styles.card}
                     style={{ '--card-accent': TONE_ACCENT[tone] } as React.CSSProperties}
                   >
@@ -275,10 +273,7 @@ export default function DashboardPage() {
                           <h2 className={styles.name}>{p.name}</h2>
                           <Badge
                             variant={isReady ? 'success' : 'warning'}
-                            className={cn(
-                              'shrink-0 capitalize text-[11px]',
-                              isReady ? styles.statusReady : styles.statusPending,
-                            )}
+                            className="shrink-0 capitalize text-[11px]"
                           >
                             {statusLabel(p.profile_status)}
                           </Badge>
@@ -316,7 +311,7 @@ export default function DashboardPage() {
                         </button>
                       )}
                     </div>
-                  </article>
+                  </Card>
                 );
               })}
             </div>

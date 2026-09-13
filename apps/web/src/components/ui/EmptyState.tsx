@@ -24,12 +24,12 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon, title, description, actions, tone, className }: EmptyStateProps) {
   const toneClasses = tone ? TONE_CLASSES[tone] : null;
   return (
-    <div className={cn('tahoe-empty animate-fade-up py-20 px-6 text-center', className)}>
+    <div className={cn('empty-panel animate-fade-up py-20 px-6 text-center', className)}>
       <div className="relative mx-auto max-w-lg">
         {Icon && (
           <div
             className={cn(
-              'tahoe-empty-icon mx-auto mb-5 flex h-11 w-11 items-center justify-center rounded-full',
+              'empty-icon-tile mx-auto mb-5 flex h-11 w-11 items-center justify-center rounded-full',
               toneClasses ? toneClasses.text : 'text-primary',
             )}
           >

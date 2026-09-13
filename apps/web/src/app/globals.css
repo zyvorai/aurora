@@ -5,18 +5,6 @@
 /* ---- Apple.com visual system: light-first default, .dark-theme on html for dark ---- */
 
 :root {
-  /* iPhone 17 / 17 Pro finishes (approx hex for UI; Cosmic Orange is brand primary) */
-  --iphone-black: #353839;
-  --iphone-white: #f5f5f5;
-  --iphone-lavender: #dfceea;
-  --iphone-mist-blue: #96aed1;
-  --iphone-sage: #a9b689;
-  --iphone-cosmic-orange: #f77e2d;
-  --iphone-deep-blue: #32374a;
-  --iphone-silver: #f5f5f5;
-  --iphone-sky-blue: #a8c5e2;
-  --iphone-light-gold: #e8dcc8;
-
   --background: #ffffff;
   --surface: #f5f5f7;
   --surface-elevated: #ffffff;
@@ -54,8 +42,15 @@
   --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-pill: 980px;
+  /* Canonical card radius — shared by .glass/.apple-card/Card.tsx so every
+     "card" implementation agrees on one shape instead of 12px vs. 14px. */
+  --radius-card: 14px;
   --section-gap: 1.5rem;
   --content-max-width: 88rem;
+  /* Container tiers — one named system instead of two same-looking-but-different
+     widths (marketing nav/footer vs. app/portal page content). */
+  --container-marketing: var(--hs-max-width);
+  --container-app: var(--content-max-width);
   --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.8125rem;
@@ -63,8 +58,16 @@
   --font-size-lg: 1.1875rem;
   --font-size-xl: 1.3125rem;
   --font-size-2xl: 1.75rem;
-  --font-size-3xl: 2rem;
-  --font-size-display: 2.5rem;
+  /* Heading scale — single source for both the marketing .h-* utilities and
+     Typography.tsx's app components. Values match what was already hardcoded
+     at each call site, so wiring these in is not meant to change rendering. */
+  --font-size-hero: clamp(48px, 6vw, 80px);      /* .h-hero */
+  --font-size-sec: clamp(32px, 4vw, 48px);       /* .h-sec */
+  --font-size-tile: clamp(24px, 2.5vw, 28px);    /* .h-tile + SectionTitle (merged: was 22-28px / 24-28px) */
+  --font-size-card: 19px;                        /* .h-card */
+  --font-size-sub: 15px;                         /* .h-sub */
+  --font-size-3xl: clamp(1.75rem, 3vw, 2.125rem); /* PageTitle */
+  --font-size-display: clamp(2.5rem, 5vw, 4rem);  /* DisplayTitle */
   --leading-tight: 1.1;
   --leading-normal: 1.47;
   --leading-relaxed: 1.47;
@@ -124,12 +127,12 @@
 html.dark-theme {
   --background: #050505;
   --surface: #0b0f14;
-  --surface-elevated: #12161c;
+  --surface-elevated: #161b22;
   --foreground: #fafafa;
   --muted-foreground: #a1a1a6;
   --primary: #2997ff;
   --primary-hover: #40a6ff;
-  --border: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.09);
   --ring: #2997ff;
   --success: #a9b689;
   --warning: #ff9a4d;
@@ -143,8 +146,10 @@ html.dark-theme {
   --accent-sage: #a9b689;
   --accent-lavender: #dfceea;
   --accent-deep-blue: #96aed1;
-  --shadow-card: none;
-  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.4);
+  /* Real elevation in dark mode — a flat hairline on near-black read as cheap;
+     elevated surfaces now get a lighter fill plus an actual shadow. */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.35);
   --nav-bg: rgba(5, 5, 5, 0.72);
   --nav-bg-open: rgba(5, 5, 5, 0.96);
   --nav-border: rgba(255, 255, 255, 0.06);
@@ -241,11 +246,11 @@ code, pre {
   font-family: var(--hs-font-mono);
 }
 
-.h-hero { font-size: clamp(48px, 6vw, 80px); line-height: 1.05; }
-.h-sec { font-size: clamp(32px, 4vw, 48px); line-height: 1.08; }
-.h-tile { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.15; }
-.h-card { font-size: 19px; line-height: 1.2; }
-.h-sub { font-size: 15px; line-height: 1.3; font-weight: 500; }
+.h-hero { font-size: var(--font-size-hero); line-height: 1.05; }
+.h-sec { font-size: var(--font-size-sec); line-height: 1.08; }
+.h-tile { font-size: var(--font-size-tile); line-height: 1.15; }
+.h-card { font-size: var(--font-size-card); line-height: 1.2; }
+.h-sub { font-size: var(--font-size-sub); line-height: 1.3; font-weight: 500; }
 
 @keyframes fade-up {
   from { opacity: 0; }
@@ -357,33 +362,24 @@ code, pre {
 .stagger-5 { animation-delay: 0.25s; }
 .stagger-6 { animation-delay: 0.3s; }
 
-@keyframes tahoe-orb-pulse {
-  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
-}
-
-/* ---- Apple flat panels (.glass / .tahoe-* kept as aliases for call sites) ---- */
+/* ---- Apple flat panels ---- */
 
 .glass {
   background-color: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: none;
-  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-card);
   transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .glass-elevated {
   background-color: var(--glass-bg-elevated);
-  box-shadow: none;
+  box-shadow: var(--shadow-card);
 }
 
 .glass-strong {
   background-color: var(--glass-bg-strong);
-  box-shadow: none;
-}
-
-.glass:hover, .glass-elevated:hover {
-  box-shadow: none;
+  box-shadow: var(--shadow-card);
 }
 
 .glass-hover-lift {
@@ -393,108 +389,63 @@ code, pre {
 .glass-hover-lift:hover {
   box-shadow: var(--shadow-elevated);
   border-color: var(--glass-border-strong);
+  transform: translateY(-1px);
 }
 
-.tahoe-hero {
+/* Composable accent top-bar — set --card-accent on the element to color it. */
+.card-accent-bar {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-accent-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent, var(--accent-blue));
+  opacity: 0.85;
+}
+
+/* Compact density — workspace/App-Store-Connect-style information-dense panels. */
+.card-compact {
+  border-radius: var(--radius-md);
+}
+
+.panel-flat {
   background: transparent;
   border: none;
   padding: 0;
 }
 
-.tahoe-hero-shine { display: none; }
-
-.tahoe-icon-badge {
-  display: none;
-}
-
-.tahoe-icon-badge-sky,
-.tahoe-icon-badge-violet,
-.tahoe-icon-badge-emerald,
-.tahoe-icon-badge-amber,
-.tahoe-icon-badge-pink,
-.tahoe-icon-badge-teal,
-.tahoe-icon-badge-rust { display: none; }
-
-.tahoe-stat-tile {
+.hero-stat-tile {
   padding: 1rem 0;
   border: none;
   background: transparent;
 }
 
-.tahoe-stat-value {
+.hero-stat-value {
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--foreground);
 }
 
-.tahoe-stat-label {
+.hero-stat-label {
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--muted-foreground);
 }
 
-.tahoe-stat-sky .tahoe-stat-value,
-.tahoe-stat-violet .tahoe-stat-value,
-.tahoe-stat-emerald .tahoe-stat-value,
-.tahoe-stat-amber .tahoe-stat-value,
-.tahoe-stat-pink .tahoe-stat-value,
-.tahoe-stat-teal .tahoe-stat-value,
-.tahoe-stat-rust .tahoe-stat-value {
-  color: var(--foreground);
-}
-
-.tahoe-glyph-tile {
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--primary);
-  border: 1px solid var(--border);
-}
-
-.tahoe-glyph-tile-sky,
-.tahoe-glyph-tile-violet,
-.tahoe-glyph-tile-emerald,
-.tahoe-glyph-tile-amber,
-.tahoe-glyph-tile-pink,
-.tahoe-glyph-tile-teal,
-.tahoe-glyph-tile-rust {
-  background: var(--surface);
-  color: var(--primary);
-  box-shadow: none;
-}
-
-.tahoe-card-edge::before { display: none; }
-
-.tahoe-stat-value-gradient {
-  background: none;
-  color: var(--foreground);
-}
-
-.tahoe-glass-card {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  box-shadow: none;
-}
-
-.tahoe-glass-card:hover {
-  box-shadow: var(--shadow-elevated);
-}
-
-.tahoe-empty {
+.empty-panel {
   background: transparent;
   border: none;
   border-radius: 0;
 }
 
-.tahoe-empty-orb { display: none; }
-
-.tahoe-empty-icon {
+.empty-icon-tile {
   background: var(--surface-elevated);
   border: 1px solid var(--border);
 }
@@ -515,7 +466,6 @@ code, pre {
 
 @media (prefers-reduced-motion: reduce) {
   .glass-hover-lift:hover { transform: none; }
-  .tahoe-empty-orb { animation: none; }
   .login-shake { animation: none; }
   .animate-fade-up, .animate-slide-in, .animate-glass-in, .animate-fade-in,
   .animate-fade-out, .animate-slide-out, .animate-glass-out {
@@ -553,10 +503,10 @@ code, pre {
   }
 
   .apple-card {
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     border: 1px solid var(--border);
     background: var(--surface-elevated);
-    box-shadow: none;
+    box-shadow: var(--shadow-card);
   }
 
   .apple-card-hover {
@@ -566,6 +516,7 @@ code, pre {
   .apple-card-hover:hover {
     border-color: color-mix(in srgb, var(--accent-blue) 28%, var(--border));
     box-shadow: var(--shadow-elevated);
+    transform: translateY(-1px);
   }
 
   .apple-segments {

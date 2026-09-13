@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { MarketingLayout } from '@/components/layout/MarketingLayout';
-import { MarketingBottomCta, MarketingHeroActions } from '@/components/marketing/MarketingHeroActions';
+import { MarketingHeroActions } from '@/components/marketing/MarketingHeroActions';
+import { PipelineSteps } from '@/components/marketing/PipelineSteps';
+import { InkCta } from '@/components/marketing/InkCta';
 import { Reveal } from '@/components/ui/Reveal';
-import { ProgressBar } from '@/components/ui/ProgressBar';
 import styles from '@/components/marketing/marketing.module.css';
 
 export const metadata: Metadata = {
@@ -10,29 +12,6 @@ export const metadata: Metadata = {
   description:
     'Turn your technical product into an AI-powered salesperson: auto-discovery, a grounded knowledge graph, and background marketing/sales/solution agents.',
 };
-
-const PIPELINE_STEPS = [
-  {
-    step: '01',
-    title: 'Discover',
-    description: 'Point at a URL or docs — agents crawl and build a product profile automatically.',
-  },
-  {
-    step: '02',
-    title: 'Extract',
-    description: 'A searchable knowledge graph and RAG store ground every downstream answer.',
-  },
-  {
-    step: '03',
-    title: 'Orchestrate',
-    description: 'A supervisor routes work across dedicated Marketing, Sales, and Solution agents.',
-  },
-  {
-    step: '04',
-    title: 'Publish & learn',
-    description: 'Omnichannel publishing and analytics close the loop, feeding continuous learning.',
-  },
-];
 
 const CORE_FEATURES = [
   {
@@ -103,25 +82,7 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <Reveal>
-        <section id="discover" className={`${styles.section} ${styles.sectionTint}`}>
-          <div className={styles.wrap}>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.hSec}>How it works</h2>
-              <p className={styles.sectionLede}>From a URL to live GTM agents — one continuous chain.</p>
-            </div>
-            <div id="orchestrate" className={styles.pipelineList}>
-              {PIPELINE_STEPS.map((step) => (
-                <article key={step.title} className={styles.pipelineStep}>
-                  <p className={styles.tileStep}>{step.step}</p>
-                  <h3 className={styles.tileTitle}>{step.title}</h3>
-                  <p className={styles.tileBody}>{step.description}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      </Reveal>
+      <PipelineSteps id="discover" innerId="orchestrate" />
 
       <Reveal>
         <section id="grounded" className={styles.featureBand}>
@@ -144,41 +105,15 @@ export default function FeaturesPage() {
                   ))}
                 </ul>
               </div>
-              <div className={styles.demoPanel} aria-hidden>
-                <p className={styles.proofLabel} style={{ marginBottom: 16 }}>
-                  Sales Chat
-                </p>
-                <div
-                  style={{
-                    marginLeft: 'auto',
-                    maxWidth: '85%',
-                    borderRadius: 18,
-                    borderTopRightRadius: 4,
-                    background: 'var(--hs-bg-alt)',
-                    padding: '10px 16px',
-                    fontSize: 14,
-                    marginBottom: 12,
-                  }}
-                >
-                  What&apos;s included in the enterprise tier?
-                </div>
-                <div
-                  style={{
-                    maxWidth: '90%',
-                    borderRadius: 18,
-                    borderTopLeftRadius: 4,
-                    background: 'var(--surface-elevated)',
-                    border: '1px solid var(--hs-border)',
-                    padding: '12px 16px',
-                    fontSize: 14,
-                    lineHeight: 1.47,
-                  }}
-                >
-                  Enterprise includes SSO, multi-tenant workspaces, and priority support.
-                  <div className="mt-2 text-xs text-primary">
-                    pricing.md · docs/enterprise
-                  </div>
-                </div>
+              <div className={styles.demoPanel}>
+                <Image
+                  src="/screenshots/brief.png"
+                  alt="Executive Brief — real product metrics computed from ingested sources, not a generic model's guess"
+                  fill
+                  sizes="(min-width: 900px) 50vw, 100vw"
+                  className={styles.demoPanelImage}
+                  style={{ objectPosition: '50% 55%' }}
+                />
               </div>
             </div>
           </div>
@@ -189,32 +124,15 @@ export default function FeaturesPage() {
         <section id="agents" className={styles.featureBandAlt}>
           <div className={styles.wrap}>
             <div className={styles.featureSplit}>
-              <div className={styles.demoPanel} aria-hidden>
-                <p className={styles.proofLabel} style={{ marginBottom: 16 }}>
-                  Background agents
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {[
-                    { name: 'Outbound sprint — TechCorp', percent: 72 },
-                    { name: 'Technical eval — DataFlow', percent: 100 },
-                    { name: 'Proposal draft — Acme', percent: 35 },
-                  ].map((task) => (
-                    <div key={task.name}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          marginBottom: 6,
-                          fontSize: 14,
-                        }}
-                      >
-                        <span>{task.name}</span>
-                        <span style={{ color: 'var(--hs-text-subtle)' }}>{task.percent}%</span>
-                      </div>
-                      <ProgressBar percent={task.percent} showPercent={false} />
-                    </div>
-                  ))}
-                </div>
+              <div className={styles.demoPanel}>
+                <Image
+                  src="/screenshots/workspace.png"
+                  alt="Workspace run log — a background agent job (build_profile) completed while the pipeline rail continues to the next stage"
+                  fill
+                  sizes="(min-width: 900px) 50vw, 100vw"
+                  className={styles.demoPanelImage}
+                  style={{ objectPosition: '85% 20%' }}
+                />
               </div>
               <div>
                 <h2 className={styles.hSec}>Long-running work doesn&apos;t block your UI</h2>
@@ -291,17 +209,7 @@ export default function FeaturesPage() {
         </section>
       </Reveal>
 
-      <Reveal>
-        <section className={styles.inkSection}>
-          <div className={styles.wrap}>
-            <h2 className={styles.inkHeadline}>Ready when you are.</h2>
-            <p className={styles.inkLede}>
-              Onboard your first product and generate a GTM strategy in minutes.
-            </p>
-            <MarketingBottomCta />
-          </div>
-        </section>
-      </Reveal>
+      <InkCta />
     </MarketingLayout>
   );
 }

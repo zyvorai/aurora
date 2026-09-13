@@ -12,7 +12,7 @@ import ExecutiveBriefView from '@/components/ExecutiveBriefView';
 import InsightsPanel from '@/components/InsightsPanel';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
-import { TextSmall } from '@/components/ui/Typography';
+import { TextSmall, StatGrid } from '@/components/ui/Typography';
 import { SkeletonText } from '@/components/ui/Skeleton';
 
 export default function BriefPage() {
@@ -99,14 +99,14 @@ export default function BriefPage() {
 
       {attribution && attribution.total_touchpoints > 0 ? (
         <WorkspacePanel title="Attribution" description={`${attribution.total_touchpoints} touchpoints · ${attribution.unique_leads} leads`}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 sm:p-5">
-            {Object.entries(attribution.by_channel).map(([channel, count]) => (
-              <div key={channel}>
-                <p className="text-[20px] font-semibold tabular-nums">{count}</p>
-                <p className="text-[12px] text-muted capitalize">{channel}</p>
-              </div>
-            ))}
-          </div>
+          <StatGrid
+            variant="plain"
+            className="p-4 sm:p-5"
+            items={Object.entries(attribution.by_channel).map(([channel, count]) => ({
+              label: channel,
+              value: count,
+            }))}
+          />
         </WorkspacePanel>
       ) : null}
 

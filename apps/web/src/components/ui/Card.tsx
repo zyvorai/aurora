@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/cn';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ElementType, ReactNode } from 'react';
 
 interface CardProps {
   children: ReactNode;
@@ -9,21 +9,40 @@ interface CardProps {
   elevated?: boolean;
   strong?: boolean;
   hover?: boolean;
+  /** Colored 3px top bar — pass a CSS color via `style={{ '--card-accent': ... }}` to customize it. */
+  accent?: boolean;
+  /** Denser radius/spacing for information-dense surfaces (workspace panels, tables). */
+  density?: 'default' | 'compact';
+  as?: ElementType;
+  style?: CSSProperties;
 }
 
-export function Card({ children, className, elevated, strong, hover }: CardProps) {
+export function Card({
+  children,
+  className,
+  elevated,
+  strong,
+  hover,
+  accent,
+  density = 'default',
+  as: Tag = 'div',
+  style,
+}: CardProps) {
   return (
-    <div
+    <Tag
       className={cn(
         'glass',
         elevated && 'glass-elevated',
         strong && 'glass-strong',
         hover && 'glass-hover-lift',
+        accent && 'card-accent-bar',
+        density === 'compact' && 'card-compact',
         className,
       )}
+      style={style}
     >
       {children}
-    </div>
+    </Tag>
   );
 }
 

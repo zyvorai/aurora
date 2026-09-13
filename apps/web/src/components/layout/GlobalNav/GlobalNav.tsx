@@ -219,6 +219,7 @@ export function GlobalNav({
         className={styles.gnav}
         aria-label="Global"
         data-open={String(navOpen)}
+        data-variant={variant}
         onMouseLeave={showFlyout ? scheduleClose : undefined}
       >
         <div className={styles.gnavInner}>
@@ -303,7 +304,7 @@ export function GlobalNav({
               )
             ) : null}
 
-            {variant === 'marketing' || variant === 'app' || variant === 'portal' ? (
+            {variant === 'app' ? (
               <button
                 type="button"
                 className={styles.icon}

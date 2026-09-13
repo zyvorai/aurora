@@ -428,11 +428,15 @@
 }
 
 .panel {
-  border-radius: 14px;
+  /* Compact-density card: same radius/surface tokens as the shared Card
+     primitive, kept as its own rule (not the Card component) since this is a
+     denser "Apple Settings / App Store Connect" pattern used across dozens of
+     workspace call sites this pass can't visually verify without a live backend. */
+  border-radius: var(--radius-card);
   border: 1px solid var(--border);
   background: var(--surface-elevated);
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-card);
 }
 
 .panelHeader {

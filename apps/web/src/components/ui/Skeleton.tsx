@@ -48,7 +48,7 @@ export function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; column
 /** Placeholder shaped like PageHero (icon badge + title + description). */
 export function SkeletonHero() {
   return (
-    <div className="tahoe-hero p-5 lg:p-6 space-y-3" aria-hidden>
+    <div className="panel-flat p-5 lg:p-6 space-y-3" aria-hidden>
       <div className="flex items-start gap-4">
         <SkeletonLine className="w-[3.25rem] h-[3.25rem] rounded-[var(--radius-liquid)] shrink-0" />
         <div className="space-y-2 flex-1 max-w-md pt-1">

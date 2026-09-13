@@ -6,18 +6,23 @@ export type BadgeVariant =
   | 'default' | 'success' | 'warning' | 'danger' | 'tier-a' | 'tier-b' | 'tier-c'
   | 'blue' | 'pink' | 'teal' | 'purple';
 
+// Tints mix each semantic color against the theme-aware elevated-surface token
+// (not literal `white`), so pills read as soft-tinted chips — not flat/monochrome
+// — and stay correct in dark mode instead of washing out.
+const tint = (color: string) => `bg-[color-mix(in_srgb,var(${color})_16%,var(--surface-elevated))] border-transparent`;
+
 const variants: Record<BadgeVariant, string> = {
   default: 'bg-surface text-muted border-border',
-  success: 'bg-surface text-success border-border',
-  warning: 'bg-surface text-warning border-border',
-  danger: 'bg-surface text-danger border-border',
-  'tier-a': 'bg-surface text-success border-border',
-  'tier-b': 'bg-surface text-warning border-border',
+  success: `${tint('--success')} text-success`,
+  warning: `${tint('--warning')} text-warning`,
+  danger: `${tint('--danger')} text-danger`,
+  'tier-a': `${tint('--success')} text-success`,
+  'tier-b': `${tint('--warning')} text-warning`,
   'tier-c': 'bg-surface text-muted border-border',
-  blue: 'bg-surface text-primary border-border',
-  pink: 'bg-surface text-accent-pink border-border',
-  teal: 'bg-surface text-accent-teal border-border',
-  purple: 'bg-surface text-accent-purple border-border',
+  blue: `${tint('--primary')} text-primary`,
+  pink: `${tint('--accent-pink')} text-accent-pink`,
+  teal: `${tint('--accent-teal')} text-accent-teal`,
+  purple: `${tint('--accent-purple')} text-accent-purple`,
 };
 
 export function Badge({

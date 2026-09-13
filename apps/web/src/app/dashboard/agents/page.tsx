@@ -43,7 +43,7 @@ export default function AgentRegistryPage() {
   }, [entries]);
 
   return (
-    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-10">
+    <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-10">
       <WorkspacePage>
         <PageHero
           eyebrow="Platform"

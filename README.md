@@ -209,16 +209,17 @@ Multi-agent composition plan (11 specialized agents, **lean hardware / persona-f
 
 ## Design system
 
-Light-first **Apple.com-style** system keyed to **iPhone 17** finishes: Cosmic Orange
-primary (`--primary` `#f77e2d`), Mist Blue / Sage / Lavender / Deep Blue accents, SF/system
-typography, and pill CTAs in `apps/web/src/app/globals.css`. Informational text links use
-Mist Blue (`--accent-blue`). Dark mode is opt-in via `html.dark-theme` (`ThemeContext`).
-Legacy `.glass*` / `.tahoe-*` class names remain as **aliases** for flat Apple panels
-(hairline border, no decorative shadow by default).
+Light-first **Apple.com-style** system: Apple-blue primary (`--primary` `#0071e3`),
+Mist Blue / Sage / Lavender / Deep Blue accents, SF/system typography, and pill CTAs in
+`apps/web/src/app/globals.css`. Dark mode is a real, explicit opt-in (toggle lives only in
+the app-shell nav; marketing and portal auth stay light regardless of the visitor's OS
+preference or the toggle's stored state) via `html.dark-theme` (`ThemeContext`). Legacy
+`.glass*` / `.tahoe-*` class names remain as **aliases** for flat Apple panels (hairline
+border, no decorative shadow by default).
 
 **Chrome:** `GlobalNav` (mega-menu flyouts) sits on marketing (`MarketingLayout`), app
 (`AppShell`), product console (`ProductConsoleShell`), and portal auth pages. Marketing
-home is `/` (`HomeSections`); sign-up/sign-in live at `/login` with the same Cosmic Orange
+home is `/` (`HomeSections`); sign-up/sign-in live at `/login` with the same Apple-blue
 auth language as `PortalAuthShell`. New tenants get an
 `OnboardingChecklist` on `/dashboard` and Workspace until sources are ingested and an
 agent has run.

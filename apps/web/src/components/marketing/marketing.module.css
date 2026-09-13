@@ -1,5 +1,5 @@
 .wrap {
-  max-width: var(--hs-max-width);
+  max-width: var(--container-marketing);
   margin: 0 auto;
   padding: 0 var(--hs-gutter);
 }
@@ -247,74 +247,14 @@
 }
 
 .productFrameBody {
+  position: relative;
   flex: 1;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.productFrameBar {
-  height: 10px;
-  border-radius: 6px;
+  min-height: 220px;
   background: #f5f5f7;
 }
 
-.productFrameBarShort {
-  width: 42%;
-}
-
-.productFrameBarMid {
-  width: 68%;
-}
-
-.productFrameRow {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.productFrameTile {
-  flex: 1;
-  height: 72px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fff7f0 0%, #f5f5f7 100%);
-  border: 1px solid #ebebeb;
-}
-
-.productFrameTileAlt {
-  background: linear-gradient(180deg, #f0f4f9 0%, #f5f5f7 100%);
-}
-
-.productFrameChat {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.productFrameBubble {
-  align-self: flex-end;
-  max-width: 78%;
-  padding: 8px 12px;
-  border-radius: 14px 14px 4px 14px;
-  background: #f5f5f7;
-  font-size: 12px;
-  color: var(--hs-text-muted);
-  line-height: 1.4;
-}
-
-.productFrameBubbleReply {
-  align-self: flex-start;
-  border-radius: 14px 14px 14px 4px;
-  background: #ffffff;
-  border: 1px solid var(--hs-border);
-}
-
-.productFrameCite {
-  font-size: 11px;
-  color: var(--hs-accent);
-  margin-top: 4px;
+.productFrameImage {
+  object-fit: cover;
 }
 
 /* ---- Sections / pipeline ---- */
@@ -526,11 +466,17 @@
 }
 
 .demoPanel {
-  padding: var(--hs-s5);
+  position: relative;
+  min-height: 320px;
   border-radius: var(--radius-lg);
   background: #ffffff;
   border: 1px solid var(--hs-border);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.demoPanelImage {
+  object-fit: cover;
 }
 
 .llmGrid {

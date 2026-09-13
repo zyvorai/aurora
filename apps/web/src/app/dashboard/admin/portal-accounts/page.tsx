@@ -123,7 +123,7 @@ export default function PortalAccountsAdminPage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
+      <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
         <SkeletonHero />
         <SkeletonTable />
       </div>
@@ -134,7 +134,7 @@ export default function PortalAccountsAdminPage() {
   // queue render at all, not just fail on submit.
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
+      <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-8">
         <EmptyState
           icon={ShieldAlert}
           title="Admin access required"
@@ -145,7 +145,7 @@ export default function PortalAccountsAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
+    <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-8">
       <WorkspacePage>
         <PageHero
           icon={Users}

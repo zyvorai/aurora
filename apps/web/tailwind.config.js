@@ -41,7 +41,8 @@ module.exports = {
         lg: 'var(--radius-lg)',
       },
       maxWidth: {
-        content: 'var(--content-max-width)',
+        'container-app': 'var(--container-app)',
+        'container-marketing': 'var(--container-marketing)',
       },
       fontFamily: {
         sans: [
@@ -79,6 +80,7 @@ module.exports = {
         'body-lg': ['var(--font-size-lg)', { lineHeight: 'var(--leading-relaxed)' }],
         title: ['var(--font-size-xl)', { lineHeight: 'var(--leading-tight)' }],
         'page-title': ['var(--font-size-3xl)', { lineHeight: 'var(--leading-tight)' }],
+        tile: 'var(--font-size-tile)',
         display: ['var(--font-size-display)', { lineHeight: 'var(--leading-tight)' }],
         'stat-value': ['var(--font-size-2xl)', { lineHeight: 'var(--leading-tight)' }],
       },

@@ -29,7 +29,7 @@ export default function SalesActivityAdminPage() {
 
   if (!ready) {
     return (
-      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
+      <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-8 space-y-8">
         <SkeletonHero />
         <SkeletonTable />
       </div>
@@ -40,7 +40,7 @@ export default function SalesActivityAdminPage() {
   // all, not just fail on submit.
   if (role !== 'admin') {
     return (
-      <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
+      <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-8">
         <EmptyState
           icon={ShieldAlert}
           title="Admin access required"
@@ -51,7 +51,7 @@ export default function SalesActivityAdminPage() {
   }
 
   return (
-    <div className="max-w-content mx-auto px-[var(--hs-gutter)] py-8">
+    <div className="max-w-container-app mx-auto px-[var(--hs-gutter)] py-8">
       <WorkspacePage>
         <PageHero
           icon={TrendingUp}
