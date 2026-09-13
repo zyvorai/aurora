@@ -6,14 +6,17 @@
   --border: #2a3548;
   --text: #e8eef7;
   --muted: #8b9bb4;
-  --primary: #c1503c;
-  --primary-hover: #d9694f;
+  /* Same Apple-blue brand primary as the main Aurora app (apps/web) --
+     --hot stays its own orange, a distinct "urgent lead" semantic, not the
+     brand color. */
+  --primary: #2997ff;
+  --primary-hover: #40a6ff;
   --danger: #ef4444;
   --success: #22c55e;
   --warn: #f59e0b;
   --hot: #f97316;
-  --font: "IBM Plex Sans", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, monospace;
 
   /* Spacing scale */
   --space-1: 4px;
@@ -54,8 +57,8 @@
   --border: #dde3ec;
   --text: #0f172a;
   --muted: #64748b;
-  --primary: #c1503c;
-  --primary-hover: #a43f2e;
+  --primary: #0071e3;
+  --primary-hover: #0077ed;
   --danger: #dc2626;
   --success: #059669;
   --warn: #d97706;
@@ -76,7 +79,7 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(193,80,60,0.12), transparent);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(41,151,255,0.12), transparent);
 }
 
 a { color: var(--primary); text-decoration: none; }
@@ -199,7 +202,7 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
   transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .stat-card:hover { transform: translateY(-2px); border-color: var(--surface3); box-shadow: var(--shadow); }
-.stat-card.accent { border-color: rgba(193,80,60,0.4); background: linear-gradient(135deg, var(--surface), rgba(193,80,60,0.08)); }
+.stat-card.accent { border-color: rgba(41,151,255,0.4); background: linear-gradient(135deg, var(--surface), rgba(41,151,255,0.08)); }
 .stat-card.alert { border-color: rgba(239,68,68,0.35); }
 .stat-card.warn { border-color: rgba(245,158,11,0.35); }
 .stat-card.hot { border-color: rgba(249,115,22,0.4); background: linear-gradient(135deg, var(--surface), rgba(249,115,22,0.08)); }
@@ -323,7 +326,7 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
 }
 .score-bar div {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #d9694f);
+  background: linear-gradient(90deg, var(--primary), var(--primary-hover));
   border-radius: 2px;
   transition: width 0.3s;
 }
@@ -438,7 +441,7 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
   height: 8px;
   border-radius: 50%;
   background: var(--primary);
-  box-shadow: 0 0 0 3px rgba(193,80,60,0.2);
+  box-shadow: 0 0 0 3px rgba(41,151,255,0.2);
 }
 .tl-type { font-size: 0.7rem; text-transform: uppercase; color: var(--primary); font-weight: 700; letter-spacing: 0.04em; }
 .tl-body { margin: 0.15rem 0; }
@@ -465,7 +468,7 @@ h3 { font-size: 0.95rem; margin: 1.1rem 0 0.5rem; }
 }
 .kanban-col.drag-over {
   border-color: var(--primary);
-  background: rgba(193,80,60,0.06);
+  background: rgba(41,151,255,0.06);
 }
 .kanban-header {
   padding: 0.7rem 0.9rem;

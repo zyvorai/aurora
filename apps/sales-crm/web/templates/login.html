@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login · SalesPulse CRM</title>
   <script>(function(){try{var t=localStorage.getItem('crm-theme');var systemDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='light'||(!t&&!systemDark))document.documentElement.classList.add('light-theme')}catch(e){}})()</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
   <link rel="stylesheet" href="/static/css/app.css">
   <style>
     /* Login is a fixed dark/cream editorial skin, independent of the app's own
@@ -55,14 +52,14 @@
       width: 200%;
       height: 100%;
       animation: pulse-scroll 7s linear infinite;
-      filter: drop-shadow(0 0 8px rgba(217,105,79,0.55));
+      filter: drop-shadow(0 0 8px rgba(41,151,255,0.55));
     }
-    .login-pulse path { fill: none; stroke: #D9694F; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .login-pulse path { fill: none; stroke: #2997FF; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     @keyframes pulse-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     @media (prefers-reduced-motion: reduce) { .login-pulse svg { animation: none; } }
 
     .login-logo { position: relative; z-index: 1; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em; color: #fff; display: inline-block; }
-    .login-logo span { color: #D9694F; }
+    .login-logo span { color: #2997FF; }
 
     .login-hero-title {
       position: relative; z-index: 1;
@@ -72,7 +69,7 @@
       line-height: 1.06;
       color: #fff;
     }
-    .login-hero-title em { font-style: normal; color: #D9694F; }
+    .login-hero-title em { font-style: normal; color: #2997FF; }
     .login-hero-sub { position: relative; z-index: 1; color: rgba(242,239,230,0.68); font-size: 1rem; max-width: 460px; }
 
     .login-features {
@@ -96,15 +93,15 @@
       border-radius: 10px;
       transition: border-color 0.2s ease, background 0.2s ease;
     }
-    .login-feature:hover { border-color: rgba(217,105,79,0.4); background: rgba(242,239,230,0.06); }
+    .login-feature:hover { border-color: rgba(41,151,255,0.4); background: rgba(242,239,230,0.06); }
     .login-feature-icon {
       flex-shrink: 0;
       width: 2rem; height: 2rem;
       display: flex; align-items: center; justify-content: center;
       font-size: 1.05rem;
       border-radius: 8px;
-      background: rgba(217,105,79,0.16);
-      border: 1px solid rgba(217,105,79,0.3);
+      background: rgba(41,151,255,0.16);
+      border: 1px solid rgba(41,151,255,0.3);
     }
     .login-feature-title { font-weight: 700; font-size: 0.82rem; color: #fff; }
     .login-feature-desc { color: rgba(242,239,230,0.55); font-size: 0.76rem; margin-top: 0.1rem; }
@@ -129,7 +126,7 @@
       box-shadow: 0 1px 2px rgba(26,31,31,0.06);
     }
     .login-card .login-logo { color: #1A1F1F; margin-bottom: 1.25rem; }
-    .login-card .login-logo span { color: #C1503C; }
+    .login-card .login-logo span { color: #0071E3; }
     .login-card h1 { margin-bottom: 0.25rem; color: #1A1F1F; }
     .login-card .subtitle { margin-bottom: 1.5rem; color: rgba(26,31,31,0.6); }
     .login-card label { color: rgba(26,31,31,0.6); }
@@ -140,14 +137,14 @@
     }
     .login-card input[type="password"]:focus {
       outline: none;
-      border-color: #C1503C;
-      box-shadow: 0 0 0 3px rgba(193,80,60,0.15);
+      border-color: #0071E3;
+      box-shadow: 0 0 0 3px rgba(0,113,227,0.15);
     }
     .login-card .btn-primary {
-      background: #C1503C;
-      border-color: #C1503C;
+      background: #0071E3;
+      border-color: #0071E3;
     }
-    .login-card .btn-primary:hover { background: #A43F2E; }
+    .login-card .btn-primary:hover { background: #0077ED; }
     .login-error {
       background: rgba(220,38,38,0.08);
       border: 1px solid rgba(220,38,38,0.3);
