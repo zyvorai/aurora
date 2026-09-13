@@ -3,6 +3,8 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![CI](https://github.com/zyvorai/aurora/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/aurora/actions/workflows/ci.yml)
 
+![Aurora — turn your technical product into an AI-powered salesperson](docs/social/aurora-share-card.png)
+
 **Turn your technical product into an AI-powered salesperson.**
 
 Multi-tenant SaaS platform where software companies onboard by providing a
