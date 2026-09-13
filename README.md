@@ -213,9 +213,11 @@ Light-first **Apple.com-style** system: Apple-blue primary (`--primary` `#0071e3
 Mist Blue / Sage / Lavender / Deep Blue accents, SF/system typography, and pill CTAs in
 `apps/web/src/app/globals.css`. Dark mode is a real, explicit opt-in (toggle lives only in
 the app-shell nav; marketing and portal auth stay light regardless of the visitor's OS
-preference or the toggle's stored state) via `html.dark-theme` (`ThemeContext`). Legacy
-`.glass*` / `.tahoe-*` class names remain as **aliases** for flat Apple panels (hairline
-border, no decorative shadow by default).
+preference or the toggle's stored state) via `html.dark-theme` (`ThemeContext`). One
+shared `Card`/`Badge`/`StatGrid`/`Container` primitive set backs cards, status pills,
+metric tiles, and page-width containers app-wide — legacy `.glass*` class names remain as
+thin **aliases** for the same flat Apple panels (hairline border, no decorative shadow by
+default); the earlier `.tahoe-*` glass-morphism direction has been fully removed.
 
 **Chrome:** `GlobalNav` (mega-menu flyouts) sits on marketing (`MarketingLayout`), app
 (`AppShell`), product console (`ProductConsoleShell`), and portal auth pages. Marketing
