@@ -8,12 +8,15 @@
 3. **Before opening a PR**, run the same checks CI runs:
 
    ```bash
-   cd apps/web && npm ci && npm run lint && npm run build
+   cd apps/web && npm ci && npm run build
 
    make install-api   # once
    make test          # apps/api pytest suite
    cd apps/api && .venv/bin/ruff check .
    ```
+
+   (`npm run lint` isn't wired up yet — no ESLint config in `apps/web` — so
+   it's not part of the check list until that's set up.)
 
 4. **Update [`CHANGELOG.md`](CHANGELOG.md)** under `Unreleased` for any
    user-visible change.

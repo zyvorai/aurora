@@ -1,8 +1,14 @@
 # Aurora
 
-Turn your technical product into an AI-powered salesperson.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![CI](https://github.com/zyvorai/aurora/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/aurora/actions/workflows/ci.yml)
 
-Multi-tenant SaaS platform where software companies onboard by providing a website or documentation. The platform automatically discovers the product, builds a searchable knowledge graph + RAG store, then runs AI marketing, sales, and solution agents.
+**Turn your technical product into an AI-powered salesperson.**
+
+Multi-tenant SaaS platform where software companies onboard by providing a
+website or documentation. The platform automatically discovers the product,
+builds a searchable knowledge graph + RAG store, then runs AI marketing,
+sales, and solution agents.
 
 ## Which repo am I in?
 
@@ -15,9 +21,75 @@ Multi-tenant SaaS platform where software companies onboard by providing a websi
 This repository is the **open-source application** (AGPL-3.0).
 Organizations that need freedom from AGPL can buy an [Aurora Commercial License](COMMERCIAL_LICENSE.md).
 
+## Contents
+
+- [Dashboard gallery](#dashboard-gallery)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Stack](#stack)
+- [Repository](#repository)
+- [Quick Start](#quick-start-developers-with-source)
+- [LLM Providers](#llm-providers)
+- [API Endpoints](#api-endpoints)
+- [Design system](#design-system)
+- [Important boundaries](#important-boundaries)
+- [License](#license)
+
+## Dashboard gallery
+
+![Aurora marketing home — turn your product into an AI salesperson](docs/ux/00-home.png)
+
+![Aurora sign in — two-step email/password or SSO](docs/ux/01-login.png)
+
+![GTM workspace — product portfolio with onboarding, search, and ready/setup filters](docs/ux/02-dashboard.png)
+
+![Full Forge — the 9-stage GTM pipeline (Sources → Ingest → Strategy → … → Publish) with the run log dock](docs/ux/03-workspace.png)
+
+![Executive Brief — accounts, qualified leads, conversations, and GTM readiness, computed without an LLM call](docs/ux/04-brief.png)
+
+![Sales Action — Discover/Qualify/Outreach/Pipeline tabs for account discovery and CSV import](docs/ux/05-sales.png)
+
+![Admin — Workflow Stages, an Enterprise-plan feature for tenant-defined pipeline stages](docs/ux/06-admin.png)
+
+## Features
+
+### Knowledge & discovery
+
+- Onboard a product from a website, docs, CSV, YouTube, GitHub, or an
+  OpenAPI spec — see [docs/source-management.md](docs/source-management.md).
+- Automatic knowledge graph (Neo4j) + RAG store (Qdrant) built from ingested
+  sources, with grounded Q&A (`POST /products/{id}/query`).
+
+### AI sales & marketing agents
+
+- Marketing strategy and content generation, sales chat, personalized
+  outreach (suppression-aware publish), solution-architect Q&A, and proposal
+  generation — one LLM factory, swap Ollama ↔ OpenAI-compatible per agent.
+  See [docs/ollama-llm-integration.md](docs/ollama-llm-integration.md).
+- 11 specialized agents behind a supervisor, lean-hardware-first design. See
+  [docs/multi-agent-composition-plan.md](docs/multi-agent-composition-plan.md).
+- Campaign management and channel publishing across email, LinkedIn, X,
+  Medium, dev.to, and Reddit adapters.
+
+### Workspace & admin
+
+- Persona-based default landing after login (exec / sales / marketing). See
+  [docs/role-based-landing.md](docs/role-based-landing.md).
+- Executive Brief with a 9-signal `gtm_readiness` status — computed without
+  an LLM call on load.
+- Admin: plan/usage, suppression list, tenant data export, tenant purge,
+  and Enterprise-plan custom workflow stages.
+- Customer / reseller / salesperson external portals.
+- Optional standalone Sales CRM microservice
+  ([`apps/sales-crm`](apps/sales-crm/README.md)) — Kanban pipeline, SLA
+  timers, round-robin owners; independent of the built-in opportunities
+  pipeline.
+- SSO/OIDC — bundled Keycloak demo IdP or bring your own IdP. See
+  [docs/sso-oidc.md](docs/sso-oidc.md).
+
 ## Architecture
 
-```
+```text
 Customer Sources → Product Discovery → Knowledge Extraction → AI Knowledge Graph
                                                                     ↓
                     Marketing AI ← Supervisor → Sales AI → Solution AI
@@ -41,6 +113,23 @@ Customer Sources → Product Discovery → Knowledge Extraction → AI Knowledge
 | Cache/Queue | Redis |
 | Object Storage | MinIO |
 
+## Repository
+
+| Path | What's there |
+|------|---------------|
+| [`apps/web`](apps/web) | Next.js/React frontend — marketing site, dashboard, product workspace. |
+| `apps/api` | FastAPI backend — agents, knowledge graph/RAG, admin APIs. |
+| [`apps/sales-crm`](apps/sales-crm/README.md) | Standalone Go lead/deal-pipeline CRM microservice — own SQLite DB, not wired to the platform pipeline. |
+| [`docs/`](docs/README.md) | Operator/developer docs — dev guide, licensing, LLM integration, SSO, test cases. |
+| [`docs/customer/`](docs/customer/README.md) | Customer-facing docs: getting started, page-by-page guides, printable PDFs. |
+| [`k8s/`](k8s/README.md) | K3s manifests for the standalone production deploy (HTTPS `:30443`). |
+| `infra/` | Docker Compose stack, Keycloak realm, optional nginx TLS overlay. |
+| `scripts/` | Remote/K8s deploy, demo-suite seeding, and `docs/customer/` generation scripts. |
+
+The public docs site at [zyvor.dev/aurora](https://zyvor.dev/aurora) is
+synced from `docs/customer/` via `scripts/customer-docs/sync-to-website.mjs`
+— edit the markdown here, not the live site.
+
 ## Quick Start (developers with source)
 
 **Requires Docker Desktop running.**
@@ -53,85 +142,9 @@ make start    # infra + DB + API + web (background)
 make stop     # when done
 ```
 
-**First useful thing after login:** add a product URL → ingest a source → **Build profile** → run
-strategy or Q&A. UI uses Apple-blue accent (`#0071e3`), viewport-centered modals, and
-compact source links (`zyvor.dev/path`). Operator SSO guide: [docs/sso-oidc.md](docs/sso-oidc.md).
-Full local setup: [docs/dev-guide.md](docs/dev-guide.md).
-
-```bash
-# Optional local LLM (not required when OPENAI_* / Groq is configured)
-docker compose -f infra/docker-compose.yml --profile ollama up -d
-# Or: brew install ollama && ollama serve && make ollama-pull
-
-# Lab / owned: LLM_PROVIDER=openai + OPENAI_BASE_URL + OPENAI_API_KEY in .env
-# (Groq works for chat; embeddings fall back locally when base URL is groq.com)
-```
-
-### Containerized / production
-
-```bash
-cp .env.prod.example .env   # then edit secrets
-docker compose --project-directory . -f infra/docker-compose.yml -f docker-compose.prod.yml up -d --build
-```
-
-Deploy to a remote Docker host over SSH. If K8s namespace `aurora` already exists,
-this starts **infra only** (postgres/redis/…) — app pods stay in Kubernetes:
-
-```bash
-./scripts/deploy-remote.sh <host> <user>
-./scripts/deploy-k8s.sh <host> <user>          # api/web/workers + TLS :30443
-./scripts/seed-zyvor-suite.sh                   # seed zyvor.dev suite products + CRM + mail follow-ups
-./scripts/test-deploy-remote-e2e.sh <host> <user> --skip-deploy   # compose smoke only
-```
-
-Seed suite (Axiom, Aurora, Forge, Ragnarok, Haven) against the TLS entrypoint:
-
-```bash
-API_BASE=https://<host>:30443/api/v1 CURL_OPTS=-k ./scripts/seed-zyvor-suite.sh
-```
-
-### Sales CRM (`apps/sales-crm`)
-
-A standalone Go lead/deal-pipeline CRM microservice (Kanban pipeline, SLA timers,
-round-robin owners, `POST /api/leads` ingestion) — see **[apps/sales-crm/README.md](apps/sales-crm/README.md)**.
-It's independent of the platform's built-in opportunities pipeline
-(`apps/api/gtm_api/routers/crm.py`) and not wired to it — its own SQLite DB and env vars.
-
-```bash
-make crm                                       # dev: go run ., → http://localhost:8080
-cd apps/sales-crm && docker compose up -d --build   # or standalone container
-```
-
-**First login:** every deployment seeds a default admin account on startup if one doesn't
-already exist — `marketing@zyvor.dev` / `Admin@321` (change this password immediately in any
-real deployment; disable entirely with `SEED_DEFAULT_ADMIN=false`). `NEXT_PUBLIC_API_URL` in
-`.env` must be an address a **visitor's browser** can reach (not `localhost`) —
-`deploy-remote.sh` refuses to build with that left unset.
-
-**SSO / Keycloak:** optional OIDC via `SSO_ENABLED` + `SSO_*` env vars. Bundled Keycloak
-demo IdP (compose) seeds user **`demo` / `demo`**. Full walkthrough:
-**[docs/sso-oidc.md](docs/sso-oidc.md)** (also shipped as `SSO.md` in the customer package).
-
-**TLS / production entrypoint:** Aurora is an **independent product** (the live app is not
-reverse-proxied by [`hypersdk-web`](https://github.com/ssahani/hypersdk-web) /
-[zyvor.dev](https://zyvor.dev)). Product marketing lives on the website:
-
-**→ [zyvor.dev/aurora](https://zyvor.dev/aurora)**
-
-Production deploy for the app itself is the K3s stack in [`k8s/`](k8s/README.md):
-`./scripts/deploy-k8s.sh <host> <user>` → HTTPS on **`https://<host>:30443`**. Sync local
-`apps/web` to the remote deploy tree before rebuilding if you changed the frontend. Optional
-compose nginx overlay: [infra/nginx/certs/README.md](infra/nginx/certs/README.md).
-
-### Licensing (AGPL + ACL)
-
-| | |
-|---|---|
-| Open source | **AGPL-3.0** — free for home / self-host ([`LICENSE`](LICENSE)) |
-| Commercial | **Aurora Commercial License (ACL)** — [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) |
-| Pricing | Annual $25k · Monthly $2.5k · Major $25k · Minor $15k |
-| Contact | **sales@zyvor.dev** |
-| Full guide | [docs/LICENSING.md](docs/LICENSING.md) |
+Full install paths (containerized/production, remote K3s, sales CRM), demo
+logins, and a page-by-page nav table: **[QUICKSTART.md](QUICKSTART.md)**.
+Full local setup and troubleshooting: [docs/dev-guide.md](docs/dev-guide.md).
 
 ## LLM Providers
 
@@ -165,14 +178,6 @@ Full plan, architecture, unit tests, and integration test guide: [docs/ollama-ll
 12-phase implementation status, acceptance criteria, and test matrix: [docs/gtm-platform-phases.md](docs/gtm-platform-phases.md)
 
 Multi-agent composition plan (11 specialized agents, **lean hardware / persona-first**): [docs/multi-agent-composition-plan.md](docs/multi-agent-composition-plan.md)
-
-**Role-based default landing** (persona routes after login): [docs/role-based-landing.md](docs/role-based-landing.md)
-
-**Licensing** (AGPL + ACL): [docs/LICENSING.md](docs/LICENSING.md)
-
-**SSO / OIDC / demo logins** (Keycloak `demo`/`demo`, email/password admin, BYO IdP): [docs/sso-oidc.md](docs/sso-oidc.md)
-
-Local dev setup, start/stop scripts, Makefile, and troubleshooting: [docs/dev-guide.md](docs/dev-guide.md)
 
 ## API Endpoints
 
@@ -221,6 +226,23 @@ agent has run.
 The product workspace (`/products/[id]/*`) keeps a left rail + top tab bar under that same
 `GlobalNav`, built around a derived 9-stage pipeline chain. See
 [Frontend workspace](docs/gtm-platform-phases.md#frontend-workspace).
+
+## Important boundaries
+
+What's free under AGPL vs. what needs a commercial license
+([full guide](docs/LICENSING.md)):
+
+| Use case | Allowed under AGPL? |
+| --- | --- |
+| Self-host for home or your own operations | Yes, free |
+| Modify for internal use | Yes, free |
+| Build and publish your own AGPL extensions | Yes, free |
+| Deploy modified Aurora as public SaaS without releasing changes | No — needs ACL |
+| Embed Aurora in a closed-source product | No — needs ACL |
+| White-label proprietary customizations without AGPL | No — needs ACL |
+
+`apps/sales-crm` and the platform's built-in opportunities pipeline are
+deliberately independent services — don't assume one implies the other.
 
 ## License
 
