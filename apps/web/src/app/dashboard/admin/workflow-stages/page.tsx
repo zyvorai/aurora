@@ -289,7 +289,7 @@ export default function WorkflowStagesAdminPage() {
                       </div>
                       <div className="flex gap-2 shrink-0">
                         <Button size="sm" variant="secondary" onClick={() => openEdit(stage)}>Edit</Button>
-                        <Button size="sm" variant="danger" onClick={() => handleDelete(stage)}>
+                        <Button size="sm" variant="danger" onClick={() => handleDelete(stage)} aria-label={`Delete ${stage.label}`}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
@@ -328,8 +328,10 @@ export default function WorkflowStagesAdminPage() {
                     key={key}
                     type="button"
                     onClick={() => setForm({ ...form, icon: key })}
+                    aria-label={key}
+                    aria-pressed={form.icon === key}
                     className={cn(
-                      'w-9 h-9 flex items-center justify-center rounded-[var(--radius-sm)] border transition-colors',
+                      'w-9 h-9 flex items-center justify-center rounded-[var(--radius-sm)] border transition-colors focus-ring',
                       form.icon === key ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted hover:text-foreground',
                     )}
                   >

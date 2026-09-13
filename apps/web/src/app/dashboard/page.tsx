@@ -26,14 +26,17 @@ import styles from './dashboard.module.css';
 
 type ProductFilter = 'all' | 'ready' | 'setup';
 
+// Matches TONE_CLASSES' accent per tone (lib/tone.ts) so the card's top accent
+// bar uses the same theme-aware tokens as the avatar badge next to it, instead
+// of hardcoded hex that doesn't adapt for dark mode.
 const TONE_ACCENT: Record<Tone, string> = {
-  sky: '#0071e3',
-  violet: '#8b6fa0',
-  emerald: '#6b7f52',
-  amber: '#f77e2d',
-  pink: '#c45c8a',
-  teal: '#32374a',
-  rust: '#e06a1c',
+  sky: 'var(--accent-blue)',
+  violet: 'var(--accent-purple)',
+  emerald: 'var(--accent-teal)',
+  amber: 'var(--primary)',
+  pink: 'var(--accent-pink)',
+  teal: 'var(--accent-deep-blue)',
+  rust: 'var(--primary)',
 };
 
 function productSubline(product: Product): string {

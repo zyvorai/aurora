@@ -237,7 +237,7 @@ export function GlobalNav({
                     triggerRefs.current[panel.key] = el;
                   }}
                   type="button"
-                  className={styles.link}
+                  className={`${styles.link} focus-ring`}
                   aria-expanded={openKey === panel.key}
                   aria-controls="fly"
                   onClick={() => handleTriggerClick(panel.key)}
@@ -249,7 +249,7 @@ export function GlobalNav({
               {directLinks.map((link) => (
                 <Link
                   key={`${link.to}-${link.label}`}
-                  className={styles.link}
+                  className={`${styles.link} focus-ring`}
                   href={link.to}
                   aria-current={pathname === link.to ? 'page' : undefined}
                 >
@@ -260,21 +260,21 @@ export function GlobalNav({
           ) : variant === 'app' ? (
             <div className={styles.links}>
               <Link
-                className={styles.link}
+                className={`${styles.link} focus-ring`}
                 href="/dashboard"
                 aria-current={pathname === '/dashboard' ? 'page' : undefined}
               >
                 Products
               </Link>
               <Link
-                className={styles.link}
+                className={`${styles.link} focus-ring`}
                 href="/dashboard/settings"
                 aria-current={pathname === '/dashboard/settings' ? 'page' : undefined}
               >
                 Settings
               </Link>
               <Link
-                className={styles.link}
+                className={`${styles.link} focus-ring`}
                 href="/features"
                 aria-current={pathname === '/features' ? 'page' : undefined}
               >
@@ -285,7 +285,7 @@ export function GlobalNav({
 
           <div className={styles.utils}>
             {variant === 'app' && onSearchClick ? (
-              <button type="button" className={styles.searchBtn} onClick={onSearchClick}>
+              <button type="button" className={`${styles.searchBtn} focus-ring`} onClick={onSearchClick} aria-label="Search">
                 <Search className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Search</span>
                 <kbd className={`hidden sm:inline ${styles.searchKbd}`}>⌘K</kbd>
@@ -294,11 +294,11 @@ export function GlobalNav({
 
             {variant === 'marketing' ? (
               marketingAuthed ? (
-                <Link className={styles.link} href="/dashboard">
+                <Link className={`${styles.link} focus-ring`} href="/dashboard">
                   Products
                 </Link>
               ) : (
-                <Link className={styles.icon} href="/login" aria-label="Sign in">
+                <Link className={`${styles.icon} focus-ring`} href="/login" aria-label="Sign in">
                   <SignInIcon />
                 </Link>
               )
@@ -307,7 +307,7 @@ export function GlobalNav({
             {variant === 'app' ? (
               <button
                 type="button"
-                className={styles.icon}
+                className={`${styles.icon} focus-ring`}
                 onClick={toggleTheme}
                 aria-pressed={isDark}
                 aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
@@ -321,10 +321,11 @@ export function GlobalNav({
               <div ref={accountRef} className={`${styles.accountWrap} hidden md:block`}>
                 <button
                   type="button"
-                  className={styles.accountBtn}
+                  className={`${styles.accountBtn} focus-ring`}
                   onClick={() => setAccountOpen((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={accountOpen}
+                  aria-label="Account menu"
                 >
                   <span className={styles.accountAvatar}>{roleInitial}</span>
                   <ChevronDown className="w-3.5 h-3.5" />
@@ -356,7 +357,7 @@ export function GlobalNav({
             ) : null}
 
             {variant === 'portal' && onSignOut ? (
-              <button type="button" className={styles.link} onClick={onSignOut}>
+              <button type="button" className={`${styles.link} focus-ring`} onClick={onSignOut}>
                 Sign out
               </button>
             ) : null}
@@ -370,7 +371,7 @@ export function GlobalNav({
             {(showFlyout || variant === 'app') && (
               <button
                 type="button"
-                className={styles.burger}
+                className={`${styles.burger} focus-ring`}
                 aria-expanded={sheetOpen}
                 aria-controls="sheet"
                 aria-label="Menu"

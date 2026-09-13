@@ -28,6 +28,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const [url, setUrl] = useState('');
+
+  // resolveApiBase() branches on `typeof window`, so calling it directly here
+  // would render a different href on the server than on the client's first
+  // pass and trigger a hydration mismatch. Start with the SSR-deterministic
+  // value (matches what the server actually renders) and only resolve the
+  // local-dev-host override after mount, once hydration has already settled.
+  const [ssoHref, setSsoHref] = useState(
+    () => `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || '/api/v1'}/auth/sso/login`,
+  );
+  useEffect(() => {
+    setSsoHref(`${resolveApiBase()}/auth/sso/login`);
+  }, []);
   const [signup, setSignup] = useState({
     tenant_name: '',
     full_name: '',
@@ -174,7 +186,7 @@ export default function LoginPage() {
                 Continue
               </button>
               <div className={styles.altRow}>
-                <a className={styles.sso} href={`${resolveApiBase()}/auth/sso/login`}>
+                <a className={styles.sso} href={ssoHref}>
                   Continue with SSO
                 </a>
               </div>
@@ -249,7 +261,7 @@ export default function LoginPage() {
                 Continue
               </button>
               <div className={styles.altRow}>
-                <a className={styles.sso} href={`${resolveApiBase()}/auth/sso/login`}>
+                <a className={styles.sso} href={ssoHref}>
                   Continue with SSO
                 </a>
               </div>

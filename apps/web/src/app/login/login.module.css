@@ -6,7 +6,9 @@
   --login-ink: #1d1d1f;
   --login-mute: #6e6e73;
   --login-line: #d2d2d7;
-  --login-blue: #5a7ea8;
+  /* Same Apple-blue as --login-accent and PortalAuthShell's links — a muted
+     secondary blue here read as inconsistent next to the rest of the app. */
+  --login-blue: #0071e3;
   --login-accent: #0071e3;
   --login-accent-hover: #0077ed;
   --foreground: #1d1d1f;

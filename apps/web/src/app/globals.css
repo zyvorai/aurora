@@ -113,7 +113,9 @@
   --hs-accent-deep: #0077ed;
   --hs-text-heading: var(--foreground);
   --hs-text-muted: var(--muted-foreground);
-  --hs-text-subtle: #86868b;
+  /* #86868b was ~3.6:1 on white — fails WCAG AA for small text. Matches
+     --muted-foreground's already-passing (~5:1) value instead. */
+  --hs-text-subtle: var(--muted-foreground);
   --hs-border: var(--border);
   --hs-surface: var(--surface-elevated);
   --hs-surface-2: var(--surface);
@@ -211,7 +213,7 @@ html {
   --hs-accent-deep: #0077ed;
   --hs-text-heading: #1d1d1f;
   --hs-text-muted: #6e6e73;
-  --hs-text-subtle: #86868b;
+  --hs-text-subtle: #6e6e73;
   --hs-border: #d2d2d7;
   --hs-surface: #ffffff;
   --hs-surface-2: #f5f5f7;

@@ -230,7 +230,7 @@ export function ProductConsoleShell({
           type="button"
           onClick={() => rail.setCollapsed((v) => !v)}
           aria-label={rail.collapsed ? 'Expand rail' : 'Collapse rail'}
-          className="hidden lg:flex items-center justify-center h-6 w-6 shrink-0 rounded-[6px] text-muted hover:text-foreground hover:bg-white/80 transition-colors"
+          className="hidden lg:flex items-center justify-center h-6 w-6 shrink-0 rounded-[6px] text-muted hover:text-foreground hover:bg-white/80 dark:hover:bg-background transition-colors"
         >
           {rail.collapsed ? <ChevronsRight className="w-3.5 h-3.5" /> : <ChevronsLeft className="w-3.5 h-3.5" />}
         </button>
@@ -247,7 +247,7 @@ export function ProductConsoleShell({
                 href={chainStageHref(productId, stage.id)}
                 title={stage.label}
                 className={cn(
-                  'flex items-center gap-2 lg:gap-2.5 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 hover:text-foreground transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 lg:gap-2.5 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 dark:hover:bg-background hover:text-foreground transition-colors whitespace-nowrap',
                   rail.collapsed && 'lg:justify-center',
                 )}
               >
@@ -277,7 +277,7 @@ export function ProductConsoleShell({
                 href={`/products/${productId}?tab=${s.key}`}
                 title={s.label}
                 className={cn(
-                  'flex items-center gap-2 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 hover:text-foreground transition-colors whitespace-nowrap',
+                  'flex items-center gap-2 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 dark:hover:bg-background hover:text-foreground transition-colors whitespace-nowrap',
                   rail.collapsed && 'lg:justify-center',
                 )}
               >
@@ -300,12 +300,12 @@ export function ProductConsoleShell({
                   href={`/products/${productId}?tab=custom:${stage.id}`}
                   title={stage.label}
                   className={cn(
-                    'flex items-center gap-2 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 hover:text-foreground transition-colors whitespace-nowrap lg:truncate',
+                    'flex items-center gap-2 px-2 py-[7px] rounded-[8px] text-[13px] text-foreground/75 hover:bg-white/80 dark:hover:bg-background hover:text-foreground transition-colors whitespace-nowrap lg:truncate',
                     rail.collapsed && 'lg:justify-center',
                   )}
                 >
                   {rail.collapsed && (
-                    <span className="hidden lg:flex w-4 h-4 shrink-0 items-center justify-center rounded-full bg-white text-[9px]">
+                    <span className="hidden lg:flex w-4 h-4 shrink-0 items-center justify-center rounded-full bg-white dark:bg-background text-[9px]">
                       {stage.label.charAt(0).toUpperCase()}
                     </span>
                   )}
