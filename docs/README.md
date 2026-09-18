@@ -6,7 +6,7 @@
 |-----|---------|
 | [`dev-guide.md`](dev-guide.md) | Full local dev guide — prerequisites, `make start`/`stop`, Makefile reference, infra services, env config, troubleshooting. |
 | [`sso-oidc.md`](sso-oidc.md) | SSO/OIDC + bundled Keycloak setup, demo account credentials, BYO IdP. |
-| [`LICENSING.md`](LICENSING.md) | AGPL-3.0 vs. commercial ACL — what's free, what needs a license. |
+| [`LICENSING.md`](LICENSING.md) | Zyvor Production License v1.0 — free non-production use, paid production license. |
 | [`source-management.md`](source-management.md) | Supported knowledge-source types (website, docs, CSV, YouTube, GitHub, OpenAPI, …) and ingestion behavior. |
 | [`role-based-landing.md`](role-based-landing.md) | Persona-based post-login routing (exec/sales/marketing land on different views). |
 | [`ollama-llm-integration.md`](ollama-llm-integration.md) | Dual-provider LLM architecture (Ollama vs. OpenAI-compatible), per-agent model routing, testing. |

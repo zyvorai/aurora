@@ -2,7 +2,7 @@
 
 Shortest path from install → signed-in product → first useful result.
 
-Clone this AGPL source repo and run `make start`. Zyvor-owned labs typically use K3s + compose infra (see [`k8s/README.md`](../../k8s/README.md)).
+Clone this repo and run `make start`. Zyvor-owned labs typically use K3s + compose infra (see [`k8s/README.md`](../../k8s/README.md)).
 
 ## What you need
 

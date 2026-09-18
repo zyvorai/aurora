@@ -5,16 +5,15 @@
 A multi-tenant SaaS platform that onboards a software product from a website
 or docs URL, builds a knowledge graph + RAG store, and runs AI marketing,
 sales, and solution agents on top of it (Next.js/React frontend, FastAPI
-backend, LangChain/LangGraph agents). Dual-licensed: AGPL-3.0 open source in
-this repo, commercial ACL for closed-source/SaaS use — see
+backend, LangChain/LangGraph agents). Licensed under the Zyvor Production License v1.0: free for non-production
+use, commercial license required for production — see
 [`docs/LICENSING.md`](docs/LICENSING.md).
 
 ## Hard boundaries
 
 - Never commit real secrets, API keys, or `.env` files — only `.env*.example`
   templates belong in git.
-- Don't weaken or remove AGPL/ACL licensing notices, headers, or
-  `COMMERCIAL_LICENSE.md` terms without an explicit human request.
+- Don't weaken or remove Zyvor Production License notices without an explicit human request.
 - Don't change the seeded demo credentials (`marketing@zyvor.dev` /
   `Admin@321`, Keycloak `demo`/`demo`) without updating every doc that
   references them (`docs/sso-oidc.md`, `docs/customer/admin-basics.md`,

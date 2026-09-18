@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Changed
+
+- Replaced the AGPL-3.0 + Aurora Commercial License dual license with the Zyvor Production License v1.0. Non-production use is free. Production use requires a separate paid commercial license (https://zyvor.dev).
+
 ## 2026-09-14
 
 ### Changed

@@ -1,44 +1,24 @@
 # Licensing
 
-Aurora is **dual-licensed**:
+Aurora is licensed under the **[Zyvor Production License v1.0](../LICENSE)**.
 
-| Track | License | Cost |
-| --- | --- | --- |
-| **Open source / community** | [AGPL-3.0](../LICENSE) | Free |
-| **Commercial** | [Aurora Commercial License (ACL)](../COMMERCIAL_LICENSE.md) | See pricing below |
+Non-production use is free. Production use requires a separate paid commercial license from Zyvor AI Labs Private Limited.
 
-## Open source — AGPL-3.0 (free for home & self-host)
+SPDX identifier used in source headers: `LicenseRef-Zyvor-Production-1.0`
+(see [`LICENSES/`](../LICENSES/), [`NOTICE`](../NOTICE) where present).
 
-You can use, modify, and self-host Aurora under the GNU Affero General Public License v3.0.
+There is no runtime license key in this build. A missing key does not grant production rights.
 
-- **Home users** and personal self-host: free under AGPL
-- **Internal operations** (your org only): free under AGPL
-- **Network copyleft:** if you modify Aurora and make it available over a network to users, you must offer those users the corresponding source under AGPL-3.0 — or buy an ACL
+## Free — Non-Production Use
 
-Full text: [`LICENSE`](../LICENSE).
+You may use the Software without payment for development, testing, evaluation, proofs of concept, research, education, and non-production laboratory environments.
 
-### What AGPL allows (summary)
+Non-production use must not support live business operations, customers, revenue-generating services, or production workloads. Full text: [`LICENSE`](../LICENSE).
 
-| Use case | Allowed? |
-| --- | --- |
-| Self-host for home or your own operations | Yes, free |
-| Modify for internal use | Yes, free |
-| Build and publish your own AGPL extensions | Yes, free |
-| Deploy modified Aurora as public SaaS without releasing changes | No — needs ACL |
-| Embed Aurora in a closed-source product | No — needs ACL |
-| White-label proprietary customizations without AGPL | No — needs ACL |
+## Paid license required — Production Use
 
-## Aurora Commercial License (ACL)
+A commercial license is required for production environments, customer workloads, internal business-critical workloads, commercial services, SaaS, managed services, OEM use, redistribution, and revenue-generating use.
 
-For organizations that need freedom from AGPL obligations, proprietary integrations, warranties/indemnities, or ongoing support:
+Commercial terms are issued separately and are not published in this repository.
 
-| License Type | Price | Support & Updates | Best For |
-| --- | --- | --- | --- |
-| Annual License | $25,000/year | All upgrades & Business Support included | Continuous updates and support |
-| Monthly License | $2,500/month | All upgrades & Business Support included | Pilots and short-term deployments |
-| Major Version License | $25,000 (one-time) | No ongoing support | Stable single major version |
-| Minor Version License | $15,000 (one-time) | No ongoing support | Locked version deployments |
-
-Details: [`COMMERCIAL_LICENSE.md`](../COMMERCIAL_LICENSE.md).
-
-**Contact:** [sales@zyvor.dev](mailto:sales@zyvor.dev)
+**Contact:** [https://zyvor.dev](https://zyvor.dev)

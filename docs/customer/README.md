@@ -29,4 +29,4 @@ Output lands in [`pdf/`](pdf/).
   Agents               →  Marketing / Sales / Solution
 ```
 
-Default login (source / lab seed): see [Getting Started](getting-started.md). Licensing: [LICENSING.md](../LICENSING.md) (AGPL + ACL).
+Default login (source / lab seed): see [Getting Started](getting-started.md). Licensing: [LICENSING.md](../LICENSING.md) (Zyvor Production License v1.0).

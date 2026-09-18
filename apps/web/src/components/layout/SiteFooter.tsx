@@ -92,9 +92,9 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <Container tier="marketing" className="py-3.5 flex flex-wrap items-center justify-between gap-2">
           <span className="text-[11px] text-[var(--hs-text-subtle)]">
-            Copyright © {new Date().getFullYear()} Aurora · AGPL-3.0 ·{' '}
-            <a href="mailto:sales@zyvor.dev" className="hover:text-foreground transition-colors">
-              Commercial (ACL)
+            Copyright © {new Date().getFullYear()} ZyvorAI Labs · Zyvor Production License v1.0 ·{' '}
+            <a href="https://zyvor.dev" className="hover:text-foreground transition-colors">
+              Commercial license
             </a>
           </span>
         </Container>

@@ -1,6 +1,6 @@
 # Aurora
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![License: Zyvor Production v1.0](https://img.shields.io/badge/License-Zyvor%20Production%20v1.0-blue.svg)](LICENSE)
 [![CI](https://github.com/zyvorai/aurora/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/aurora/actions/workflows/ci.yml)
 
 ![Aurora — turn your technical product into an AI-powered salesperson](docs/social/aurora-share-card.png)
@@ -16,12 +16,11 @@ sales, and solution agents.
 
 | You want to… | Use |
 |--------------|-----|
-| **Self-host from source** (AGPL, free for home) | This repo — `make start` below |
-| **Commercial license (ACL)** | [sales@zyvor.dev](mailto:sales@zyvor.dev) · [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) |
+| **Non-production use** (free under the Zyvor Production License) | This repo — `make start` below |
+| **Production / commercial license** | [https://zyvor.dev](https://zyvor.dev) |
 | Product marketing / schedule a demo | [zyvor.dev/aurora](https://zyvor.dev/aurora) |
 
-This repository is the **open-source application** (AGPL-3.0).
-Organizations that need freedom from AGPL can buy an [Aurora Commercial License](COMMERCIAL_LICENSE.md).
+This repository is licensed under the **Zyvor Production License v1.0**. Non-production use is free. Production use needs a [commercial license](https://zyvor.dev).
 
 ## Contents
 
@@ -234,26 +233,26 @@ The product workspace (`/products/[id]/*`) keeps a left rail + top tab bar under
 
 ## Important boundaries
 
-What's free under AGPL vs. what needs a commercial license
+What's free under the Zyvor Production License vs. what needs a commercial license
 ([full guide](docs/LICENSING.md)):
 
-| Use case | Allowed under AGPL? |
+| Use case | Allowed without a paid license? |
 | --- | --- |
-| Self-host for home or your own operations | Yes, free |
-| Modify for internal use | Yes, free |
-| Build and publish your own AGPL extensions | Yes, free |
-| Deploy modified Aurora as public SaaS without releasing changes | No — needs ACL |
-| Embed Aurora in a closed-source product | No — needs ACL |
-| White-label proprietary customizations without AGPL | No — needs ACL |
+| Development, testing, evaluation, research, education | Yes |
+| Non-production laboratory and proof-of-concept use | Yes |
+| Production environments and customer workloads | No — needs a commercial license |
+| SaaS, managed services, OEM, appliances | No — needs a commercial license |
 
 `apps/sales-crm` and the platform's built-in opportunities pipeline are
 deliberately independent services — don't assume one implies the other.
 
 ## License
 
-Dual-licensed:
+Licensed under the **[Zyvor Production License v1.0](LICENSE)**.
 
-- **[AGPL-3.0](LICENSE)** — open source; free for home users and self-host under AGPL terms
-- **[Aurora Commercial License (ACL)](COMMERCIAL_LICENSE.md)** — proprietary integrations, freedom from AGPL obligations, support
+- **Free** for development, testing, evaluation, research, education, and non-production labs
+- **Paid commercial license required** for production, customer workloads, SaaS, managed services, OEM, and redistribution
+
+Commercial terms: [https://zyvor.dev](https://zyvor.dev).
 
 See [docs/LICENSING.md](docs/LICENSING.md).

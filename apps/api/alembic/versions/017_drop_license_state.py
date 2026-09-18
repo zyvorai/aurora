@@ -18,5 +18,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Historical keyless-trial table; not recreated — AGPL installs need no gate.
+    # Historical keyless-trial table; not recreated — this build has no license gate.
     pass
