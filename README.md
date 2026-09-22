@@ -1,16 +1,16 @@
 # Aurora
 
-[![License: Zyvor Production v1.0](https://img.shields.io/badge/License-Zyvor%20Production%20v1.0-blue.svg)](LICENSE)
 [![CI](https://github.com/zyvorai/aurora/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/aurora/actions/workflows/ci.yml)
+[![License: Zyvor Production v1.0](https://img.shields.io/badge/License-Zyvor%20Production%20v1.0-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/zyvorai/aurora?label=version&color=informational)](CHANGELOG.md)
 
 ![Aurora — turn your technical product into an AI-powered salesperson](docs/social/aurora-share-card.png)
 
 **Turn your technical product into an AI-powered salesperson.**
 
-Multi-tenant SaaS platform where software companies onboard by providing a
-website or documentation. The platform automatically discovers the product,
-builds a searchable knowledge graph + RAG store, then runs AI marketing,
-sales, and solution agents.
+Multi-tenant SaaS platform where software companies onboard by providing a website or documentation. The platform automatically discovers the product, builds a searchable knowledge graph + RAG store, then runs AI marketing, sales, and solution agents.
+
+📖 **[Customer docs](docs/customer/README.md)** · [Dev guide](docs/dev-guide.md) · [Product page](https://zyvor.dev/aurora) · [Changelog](CHANGELOG.md)
 
 ## Which repo am I in?
 
@@ -24,6 +24,7 @@ This repository is licensed under the **Zyvor Production License v1.0**. Non-pro
 
 ## Contents
 
+- [Which repo am I in?](#which-repo-am-i-in)
 - [Dashboard gallery](#dashboard-gallery)
 - [Features](#features)
 - [Architecture](#architecture)
