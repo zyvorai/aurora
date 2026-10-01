@@ -248,6 +248,8 @@ deliberately independent services — don't assume one implies the other.
 
 ## License
 
+Commercial subscriptions and support: see [docs/SUBSCRIPTION-MODEL.md](docs/SUBSCRIPTION-MODEL.md).
+
 Licensed under the **[Zyvor Production License v1.0](LICENSE)**.
 
 - **Free** for development, testing, evaluation, research, education, and non-production labs
