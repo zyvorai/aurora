@@ -3,7 +3,7 @@
 [![License: Zyvor Production v1.0](https://img.shields.io/badge/License-Zyvor%20Production%20v1.0-blue.svg)](LICENSE)
 [![CI](https://github.com/zyvorai/aurora/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/aurora/actions/workflows/ci.yml)
 
-![Aurora — turn your technical product into an AI-powered salesperson](docs/social/aurora-share-card.png)
+![Aurora — turn your technical product into an AI-powered salesperson](docs/social/aurora-hero-dark.jpg)
 
 **Turn your technical product into an AI-powered salesperson.**
 
