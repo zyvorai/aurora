@@ -1,5 +1,6 @@
 services:
   postgres:
+    restart: unless-stopped
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: gtm
@@ -16,6 +17,7 @@ services:
       retries: 5
 
   qdrant:
+    restart: unless-stopped
     image: qdrant/qdrant:v1.12.1
     ports:
       - "${QDRANT_HOST_PORT:-6333}:6333"
@@ -31,6 +33,7 @@ services:
       retries: 5
 
   neo4j:
+    restart: unless-stopped
     image: neo4j:5.26-community
     environment:
       NEO4J_AUTH: neo4j/gtm_dev_neo4j
@@ -48,6 +51,7 @@ services:
       retries: 5
 
   redis:
+    restart: unless-stopped
     image: redis:7-alpine
     ports:
       - "${REDIS_HOST_PORT:-6379}:6379"
@@ -60,6 +64,7 @@ services:
       retries: 5
 
   minio:
+    restart: unless-stopped
     image: cgr.dev/chainguard/minio:latest
     command: server /data --console-address ":9001"
     environment:
@@ -79,6 +84,7 @@ services:
   # Optional local LLM — lab/prod use OpenAI-compatible APIs (e.g. Groq, same
   # as zyvor-web chat). Start only when needed: docker compose --profile ollama up -d
   ollama:
+    restart: unless-stopped
     profiles: ["ollama"]
     image: ollama/ollama:latest
     ports:
@@ -93,6 +99,7 @@ services:
       retries: 5
 
   keycloak-db:
+    restart: unless-stopped
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: keycloak
@@ -107,6 +114,7 @@ services:
       retries: 5
 
   keycloak:
+    restart: unless-stopped
     image: quay.io/keycloak/keycloak:26.0
     command: start-dev --import-realm
     environment:
