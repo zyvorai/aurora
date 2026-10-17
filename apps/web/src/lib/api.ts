@@ -655,7 +655,7 @@ export interface PublishResponse {
 }
 
 export const PUBLISH_CHANNELS = [
-  'email', 'newsletter', 'linkedin', 'x', 'medium', 'devto', 'reddit', 'blog',
+  'email', 'newsletter', 'linkedin', 'x', 'medium', 'devto', 'reddit', 'blog', 'wordpress',
 ] as const;
 export type PublishChannel = typeof PUBLISH_CHANNELS[number];
 
@@ -1077,3 +1077,78 @@ export interface AccountHealthRecord {
   cs_brief: Record<string, unknown>;
   last_cs_brief_at?: string | null;
 }
+
+// ---- SEO ---------------------------------------------------------------------------------------
+
+export interface SeoFinding {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  message: string;
+  fix: string;
+}
+
+export interface SeoAuditResult {
+  url: string;
+  score: number;
+  title: string;
+  meta_description: string;
+  canonical: string;
+  h1: string[];
+  word_count: number;
+  images: number;
+  images_missing_alt: number;
+  internal_links: number;
+  external_links: number;
+  has_open_graph: boolean;
+  jsonld_types: string[];
+  findings: SeoFinding[];
+}
+
+export interface SeoKeyword {
+  keyword: string;
+  intent: 'informational' | 'commercial' | 'transactional' | 'navigational';
+  /** 'estimate' = mined from your knowledge base, not measured. */
+  source: 'estimate' | 'dataforseo' | 'search_console';
+  volume?: number | null;
+  difficulty?: number | null;
+  clicks?: number | null;
+  impressions?: number | null;
+  position?: number | null;
+}
+
+export interface SeoKeywordResult {
+  provider: string;
+  measured: boolean;
+  keywords: SeoKeyword[];
+}
+
+export interface SeoScoreResult {
+  target_keyword: string;
+  meta_title: string;
+  meta_description: string;
+  score: number;
+  components: Record<string, number>;
+  suggestions: string[];
+  schema_jsonld: Record<string, unknown>;
+}
+
+export interface SeoProviders {
+  default: string;
+  providers: Record<string, { configured: boolean; measured: boolean; note: string }>;
+  publish: { wordpress: boolean };
+}
+
+export const seo = {
+  providers(): Promise<SeoProviders> {
+    return request('/seo/providers');
+  },
+  audit(productId: string, url: string): Promise<SeoAuditResult> {
+    return request(`/products/${productId}/seo/audit`, { method: 'POST', body: JSON.stringify({ url }) });
+  },
+  keywords(productId: string, data: { seed: string; limit?: number; provider?: string }): Promise<SeoKeywordResult> {
+    return request(`/products/${productId}/seo/keywords`, { method: 'POST', body: JSON.stringify(data), timeoutMs: 120_000 });
+  },
+  score(artifactId: string, keyword: string): Promise<SeoScoreResult> {
+    return request(`/artifacts/${artifactId}/seo/score`, { method: 'POST', body: JSON.stringify({ keyword }) });
+  },
+};

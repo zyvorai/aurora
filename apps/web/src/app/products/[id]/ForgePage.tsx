@@ -24,6 +24,7 @@ import SourcesPanel from '@/components/sources/SourcesPanel';
 import { SourceLink } from '@/components/sources/SourceLink';
 import type { SourceKind } from '@/components/sources/AddSourceWizard';
 import ArtifactList from '@/components/artifacts/ArtifactList';
+import SeoPanel from '@/components/seo/SeoPanel';
 import AgentTaskProgress from '@/components/AgentTaskProgress';
 import { taskButtonLabel, type AgentTaskId } from '@/lib/agent-tasks';
 import { cn } from '@/lib/cn';
@@ -605,6 +606,12 @@ export default function ProductForgePageInner() {
                   ))}
                 </div>
               ) : null}
+            </WorkspacePanel>
+          )}
+
+          {tab === 'seo' && (
+            <WorkspacePanel title="SEO" description="Audit pages, research keywords and score drafts. Measured data is labelled; estimates say so.">
+              <SeoPanel productId={id} websiteUrl={product?.website_url} artifacts={artifacts} />
             </WorkspacePanel>
           )}
 
