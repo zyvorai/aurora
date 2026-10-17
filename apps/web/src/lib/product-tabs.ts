@@ -7,6 +7,7 @@ import {
   MessageCircleQuestion,
   MessagesSquare,
   Rocket,
+  Search,
   Send,
   Target,
   type LucideIcon,
@@ -14,7 +15,7 @@ import {
 import type { Tone } from '@/components/layout/PageHero';
 
 /** Single source for the product workspace tabs: ForgePage renders them and ProductConsoleShell's rail lists the `surface` ones. */
-export type FixedTab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'analytics';
+export type FixedTab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'seo' | 'analytics';
 // Custom (tenant-defined) stages use a `custom:<stageId>` tab key alongside the fixed ones.
 export type Tab = FixedTab | string;
 
@@ -51,7 +52,7 @@ export const TAB_GROUPS: { label: string; tone: Tone; tabs: TabDef[] }[] = [
       { key: 'proposal', label: 'Proposal', icon: FileSignature },
     ],
   },
-  { label: 'Distribution', tone: 'pink', tabs: [{ key: 'publish', label: 'Publish', icon: Rocket }] },
+  { label: 'Distribution', tone: 'pink', tabs: [{ key: 'seo', label: 'SEO', icon: Search, surface: true }, { key: 'publish', label: 'Publish', icon: Rocket }] },
   { label: 'Intelligence', tone: 'teal', tabs: [{ key: 'analytics', label: 'Analytics', icon: BarChart3, surface: true }] },
 ];
 
