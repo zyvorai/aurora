@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { audit, type AuditLogEntry } from '@/lib/api';
-import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
 import { WorkspaceFilterBar, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonTable } from '@/components/ui/Skeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { ClipboardList } from 'lucide-react';
 
 const POLL_MS = 10_000;
@@ -25,6 +25,8 @@ export default function AuditLogPage() {
   const [loading, setLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,10 +34,13 @@ export default function AuditLogPage() {
       audit
         .list()
         .then((list) => {
-          if (!cancelled) setEntries(list);
+          if (!cancelled) {
+            setEntries(list);
+            setError(null);
+          }
         })
         .catch((err) => {
-          if (!cancelled) showToast('error', err instanceof Error ? err.message : 'Failed to load audit log');
+          if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load audit log');
         })
         .finally(() => {
           if (!cancelled) setLoading(false);
@@ -47,7 +52,7 @@ export default function AuditLogPage() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [reloadKey]);
 
   const actionTypes = useMemo(() => {
     const unique = new Set(entries.map((e) => e.action));
@@ -98,6 +103,15 @@ export default function AuditLogPage() {
 
         {loading ? (
           <SkeletonTable />
+        ) : error && entries.length === 0 ? (
+          <ErrorState
+            title="Couldn't load the audit log"
+            message={error}
+            onRetry={() => {
+              setLoading(true);
+              setReloadKey((k) => k + 1);
+            }}
+          />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
@@ -108,16 +122,16 @@ export default function AuditLogPage() {
           <WorkspacePanel title="Activity" description={`${filtered.length} entries`} bodyClassName="divide-y divide-border">
             {filtered.map((entry) => (
               <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3.5">
-                <span className="text-[12px] text-muted whitespace-nowrap sm:w-44 shrink-0">
+                <span className="text-[length:var(--fs-micro)] text-muted whitespace-nowrap sm:w-44 shrink-0">
                   {new Date(entry.created_at).toLocaleString()}
                 </span>
                 <Badge variant={actionVariant(entry.action)} className="w-fit">
                   {entry.action}
                 </Badge>
-                <span className="text-[13px] text-muted min-w-0 truncate">
+                <span className="text-[length:var(--fs-small)] text-muted min-w-0 truncate">
                   {entry.resource_type}
                   {entry.resource_id && (
-                    <span className="ml-1.5 text-[12px] opacity-70">{entry.resource_id}</span>
+                    <span className="ml-1.5 text-[length:var(--fs-micro)] opacity-70">{entry.resource_id}</span>
                   )}
                 </span>
               </div>

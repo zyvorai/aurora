@@ -71,20 +71,22 @@ export default function ChatWidget({ productId }: ChatWidgetProps) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-hover)] text-white rounded-full shadow-lg flex items-center justify-center z-50 transition-transform hover:scale-105 focus-ring"
+        className="fixed bottom-6 right-6 w-12 h-12 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-hover)] text-[var(--on-primary)] rounded-full shadow-lg flex items-center justify-center z-50 transition-transform hover:scale-105 focus-ring"
         aria-label={open ? 'Close chat' : 'Open chat'}
       >
         {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
       </button>
 
       {open && (
-        <div className="glass-strong fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] h-[500px] rounded-[var(--radius-liquid-lg)] flex flex-col z-50 overflow-hidden">
+        <div role="dialog"
+          aria-label="Product assistant"
+          className="glass-strong fixed inset-x-3 bottom-24 z-50 flex h-[min(500px,calc(100dvh-8rem))] flex-col overflow-hidden rounded-[var(--radius-liquid-lg)] sm:inset-x-auto sm:right-6 sm:w-96">
           <div className="px-4 py-3 border-b border-[var(--glass-border)]">
             <p className="font-semibold text-sm">Product Assistant</p>
             <p className="text-xs text-muted">Powered by Aurora</p>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3" aria-live="polite">
             {messages.length === 0 && (
               <p className="text-muted text-sm text-center py-8">Ask me anything about this product</p>
             )}
@@ -93,7 +95,7 @@ export default function ChatWidget({ productId }: ChatWidgetProps) {
                 <div className={cn(
                   'max-w-[85%] px-3 py-2 rounded-lg text-sm',
                   m.role === 'user'
-                    ? 'bg-[var(--accent-blue)] text-white'
+                    ? 'bg-[var(--accent-blue)] text-[var(--on-primary)]'
                     : 'bg-background border border-border',
                 )}>
                   {m.role === 'user' ? m.content : <Markdown className="text-sm">{m.content}</Markdown>}
