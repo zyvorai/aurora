@@ -5,9 +5,15 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+
+## 0.2.0 — 2026-10-17
+
+First release with an easy-test path: one-line installers (macOS, Linux, Windows), a Kubernetes PoC chart, prebuilt multi-arch images on GHCR, a Pages site with docs and a feedback form, SEO scoring, and a notarized native Mac app.
+
 ### Fixed
 
 - API test suite is green again (312 passed): the SSO callback tests asserted old 501/409/200 responses although the callback now redirects the browser to `/login/callback?error=…|code=…` (the 404 test only passed by following that redirect to a missing path); the executive-brief test mocked 5 of its 9 count queries; the two `create_opportunity` tests did not mock the idempotency lookup that the service now performs first.
+
 
 ### Changed
 

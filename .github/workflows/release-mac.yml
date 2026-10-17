@@ -72,7 +72,9 @@ jobs:
       - uses: actions/attest-build-provenance@v2
         with:
           subject-path: dist/Aurora-*.dmg
+      # Only publish a DMG that is signed and notarized; an unsigned CI build must never replace a notarized one.
       - name: Upload to the release
+        if: env.HAVE_CERTS == 'true' && env.HAVE_NOTARY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
