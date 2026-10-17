@@ -8,10 +8,6 @@ All notable changes to Aurora are documented here. Format loosely follows
 ### Added
 
 
-- **Docker image version**: API image takes `APP_VERSION`/`GIT_SHA` build args (OCI labels, `AURORA_VERSION`/`AURORA_BUILD` env); `/health` and the OpenAPI doc report them; `scripts/deploy-remote.sh` derives them from `git describe` and prints docker, compose and Aurora versions after a deploy.
-=======
-- **SEO tab** (`apps/web`): page audit, keyword research (estimates are labelled), content score with SERP preview and JSON-LD, WordPress publish channel; `/features` mentions SEO.
-
 
 ### Changed
 

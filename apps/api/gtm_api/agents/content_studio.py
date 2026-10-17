@@ -11,6 +11,7 @@ from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
 from gtm_api.services.llm import get_chat_model
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Product
+from gtm_api.services.seo.artifact import seo_metadata
 from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
     build_context_from_results,
@@ -24,6 +25,12 @@ from gtm_api.tenant import record_usage
 settings = get_settings()
 
 CONTENT_TEMPLATES = {
+    "seo_article": (
+        "Write an SEO-optimised article targeting the keyword/topic: {topic}. Tone: {tone}. Audience: {persona}. "
+        "Use exactly one H1 that contains the target keyword, at least three H2 sections, a direct answer to the "
+        "search intent in the first 100 words, and a short FAQ. Use the keyword naturally (no stuffing) and only "
+        "state facts found in the sources."
+    ),
     "linkedin": "Write a LinkedIn post (150-300 words) about: {topic}. Tone: {tone}. Target: {persona}.",
     "blog": "Write a technical blog article (800-1200 words) about: {topic}. Tone: {tone}.",
     "email": "Write a marketing email about: {topic}. Tone: {tone}. Target: {persona}.",
@@ -147,7 +154,16 @@ async def run_content_generation(
         status=ApprovalStatus.DRAFT,
         channel=content_type,
         citations=result["citations"],
-        metadata_={"grounded": result["grounded"], "tone": tone, "topic": topic},
+        metadata_={
+            "grounded": result["grounded"],
+            "tone": tone,
+            "topic": topic,
+            **(
+                {"seo": seo_metadata(result["title"], result["content"], topic)}
+                if content_type in ("blog", "seo_article", "technical_deep_dive")
+                else {}
+            ),
+        },
         created_by=user_id,
     )
     db.add(artifact)
