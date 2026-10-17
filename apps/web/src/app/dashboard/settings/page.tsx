@@ -190,6 +190,7 @@ export default function SettingsPage() {
             {crmStatus.enabled && productList.length > 0 ? (
               <div className="px-5 py-4 flex flex-col sm:flex-row gap-2 sm:items-center border-t border-border">
                 <select
+                  aria-label="Product to sync"
                   value={syncProductId}
                   onChange={(e) => setSyncProductId(e.target.value)}
                   className="apple-select flex-1"

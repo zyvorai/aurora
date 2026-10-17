@@ -14,6 +14,7 @@ import { useResizableRail } from '@/hooks/useResizableRail';
 import { getNavGroups } from '@/lib/nav-data';
 import { products, workers, workflowStages, type ExecutiveBrief, type Product, type WorkerStatus, type WorkflowStage } from '@/lib/api';
 import { deriveChain, chainStageHref, type ChainStage, type ChainStageId } from '@/lib/chain';
+import { SURFACES } from '@/lib/product-tabs';
 import { RunLogDock } from '@/components/workflow/RunLogDock';
 import CommandPalette, { type CommandPaletteItem } from '@/components/CommandPalette';
 import { GlobalNav } from '@/components/layout/GlobalNav/GlobalNav';
@@ -41,13 +42,6 @@ const CHAIN_ICONS: Record<ChainStageId, LucideIcon> = {
   publish: Rocket,
 };
 
-const SURFACES: { key: string; label: string; icon: LucideIcon }[] = [
-  { key: 'query', label: 'Q&A', icon: MessageCircleQuestion },
-  { key: 'content', label: 'Content', icon: FileText },
-  { key: 'chat', label: 'Sales chat', icon: MessagesSquare },
-  { key: 'architect', label: 'Architect', icon: Blocks },
-  { key: 'analytics', label: 'Analytics', icon: BarChart3 },
-];
 
 export function ProductConsoleShell({
   productId,

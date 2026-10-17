@@ -1,25 +1,30 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { agents, type AgentRegistryEntry } from '@/lib/api';
-import { showToast } from '@/lib/toast';
 import { PageHero } from '@/components/layout/PageHero';
 import { KpiStrip, WorkspacePage, WorkspacePanel } from '@/components/layout/WorkspacePanel';
 import { Badge } from '@/components/ui/Badge';
 import { TextSmall } from '@/components/ui/Typography';
 import { SkeletonTable } from '@/components/ui/Skeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 export default function AgentRegistryPage() {
   const [entries, setEntries] = useState<AgentRegistryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
     agents
       .registry()
       .then(setEntries)
-      .catch((err) => showToast('error', err instanceof Error ? err.message : 'Failed to load agent registry'))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load agent registry'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(load, [load]);
 
   const stats = useMemo(() => {
     const implemented = entries.filter((e) => e.implemented).length;
@@ -55,18 +60,20 @@ export default function AgentRegistryPage() {
 
         {loading ? (
           <SkeletonTable />
+        ) : error ? (
+          <ErrorState title="Couldn't load agents" message={error} onRetry={load} />
         ) : (
           grouped.map(([tier, tierEntries]) => (
             <WorkspacePanel key={tier} title={tier} description={`${tierEntries.length} agents`} bodyClassName="divide-y divide-border">
               {tierEntries.map((a) => (
                 <div key={a.agent_id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3.5">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-medium text-foreground tracking-[-0.01em]">{a.display_name}</p>
-                    <TextSmall className="mt-0.5 block text-[13px]">{a.description}</TextSmall>
+                    <p className="text-[length:var(--fs-body)] font-medium text-foreground tracking-[-0.01em]">{a.display_name}</p>
+                    <TextSmall className="mt-0.5 block text-[length:var(--fs-small)]">{a.description}</TextSmall>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    <span className="text-[11px] text-muted">{a.async_required ? 'Async' : 'Sync'}</span>
-                    <span className="text-[11px] text-muted truncate max-w-[8rem]">{a.model_key}</span>
+                    <span className="text-[length:var(--fs-micro)] text-muted">{a.async_required ? 'Async' : 'Sync'}</span>
+                    <span className="text-[length:var(--fs-micro)] text-muted truncate max-w-[8rem]">{a.model_key}</span>
                     <Badge variant={a.implemented ? 'success' : 'warning'}>
                       {a.implemented ? 'Live' : 'Planned'}
                     </Badge>
