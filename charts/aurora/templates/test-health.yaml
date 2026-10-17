@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "aurora.fullname" . }}-test-health
+  labels:
+    {{- include "aurora.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: curlimages/curl:8.10.1
+      command: ["sh", "-c"]
+      args:
+        - |
+          curl -fsS http://{{ include "aurora.fullname" . }}-api:{{ .Values.api.service.port }}/health &&
+          curl -fsS -o /dev/null http://{{ include "aurora.fullname" . }}-web:{{ .Values.web.service.port }}/login

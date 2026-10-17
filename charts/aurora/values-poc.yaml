@@ -1,0 +1,11 @@
+# Aurora PoC on Kubernetes: helm install aurora ./charts/aurora -f charts/aurora/values-poc.yaml
+# Then:  kubectl port-forward svc/aurora-web 3000:3000   ->  http://localhost:3000   (marketing@zyvor.dev / Admin@321)
+# Add an LLM: --set llm.provider=openai --set llm.openaiApiKey=...   (or --set llm.provider=ollama --set llm.ollamaBaseUrl=...)
+poc:
+  enabled: true
+workers:
+  enabled: false
+web:
+  replicas: 1
+ingress:
+  enabled: false

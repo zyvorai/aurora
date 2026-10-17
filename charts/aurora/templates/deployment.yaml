@@ -19,19 +19,25 @@ spec:
     spec:
       containers:
         - name: api
-          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          image: {{ include "aurora.image" (dict "root" . "img" .Values.api.image) | quote }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - containerPort: 8000
               name: http
           envFrom:
             - secretRef:
-                name: {{ .Values.existingSecret | default (printf "%s-env" (include "aurora.fullname" .)) }}
+                name: {{ include "aurora.envSecretName" . }}
+          # First start runs DB migrations and waits for Postgres: give it up to ~3 minutes before liveness applies.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
           livenessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 20
             periodSeconds: 20
           readinessProbe:
             httpGet:
@@ -63,14 +69,24 @@ spec:
     spec:
       containers:
         - name: web
-          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          image: {{ include "aurora.image" (dict "root" . "img" .Values.web.image) | quote }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - containerPort: 3000
               name: http
+          env:
+            - name: API_INTERNAL_URL
+              value: "http://{{ include "aurora.fullname" . }}-api:{{ .Values.api.service.port }}"
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
 ---
+{{- if .Values.workers.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -92,10 +108,11 @@ spec:
     spec:
       containers:
         - name: workers
-          image: "{{ .Values.workers.image.repository }}:{{ .Values.workers.image.tag }}"
+          image: {{ include "aurora.image" (dict "root" . "img" .Values.workers.image) | quote }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           envFrom:
             - secretRef:
-                name: {{ .Values.existingSecret | default (printf "%s-env" (include "aurora.fullname" .)) }}
+                name: {{ include "aurora.envSecretName" . }}
           resources:
             {{- toYaml .Values.workers.resources | nindent 12 }}
+{{- end }}

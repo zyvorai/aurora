@@ -1,14 +1,21 @@
-# Aurora Helm chart — AGPL-3.0 open source. Commercial ACL: sales@zyvor.dev
+# Aurora Helm chart. Zyvor Production License v1.0: free for non-production use; production needs a commercial
+# license (sales@zyvor.dev, see docs/LICENSING.md).
+#
+# Quick test on any cluster (bundles Postgres + Qdrant, generates secrets):
+#   helm install aurora ./charts/aurora -f charts/aurora/values-poc.yaml
 
 nameOverride: ""
 fullnameOverride: ""
 
 imagePullPolicy: IfNotPresent
 
+# Image registry prefix; image tags default to the chart appVersion.
+registry: ghcr.io/zyvorai
+
 api:
   image:
     repository: aurora-api
-    tag: "0.1.0"
+    tag: ""   # empty = chart appVersion
   replicas: 1
   service:
     type: ClusterIP
@@ -24,14 +31,13 @@ api:
 web:
   image:
     repository: aurora-web
-    tag: "0.1.0"
+    tag: ""   # empty = chart appVersion
   replicas: 1
   service:
     type: ClusterIP
     port: 3000
-  # Browser-facing API base baked into the Next.js bundle at image build time.
-  # Override only if you rebuild the web image yourself.
-  publicApiUrl: ""
+  # The published web image calls a relative /api/v1 and proxies it to the API service at runtime
+  # (API_INTERNAL_URL is set by this chart), so no rebuild is needed for any host name.
   resources:
     requests:
       cpu: 100m
@@ -41,9 +47,10 @@ web:
       memory: 1Gi
 
 workers:
+  enabled: true   # PoC mode turns this off (workflows run in the API process)
   image:
     repository: aurora-workers
-    tag: "0.1.0"
+    tag: ""   # empty = chart appVersion
   replicas: 1
   resources:
     requests:
@@ -69,6 +76,21 @@ env:
   SECRET_KEY: ""
   FRONTEND_URL: ""
   LLM_PROVIDER: ollama
+
+# LLM settings (used in addition to env above). For OpenAI-compatible APIs set llm.provider=openai and llm.openaiApiKey.
+llm:
+  provider: ""        # empty = env.LLM_PROVIDER
+  openaiApiKey: ""
+  openaiBaseUrl: ""
+  model: ""
+  ollamaBaseUrl: ""   # e.g. http://host.docker.internal:11434/v1 for Ollama on the host
+
+# One-command test mode: bundles Postgres + Qdrant, DEPLOYMENT_PROFILE=minimal, no Neo4j/Redis/MinIO/workers,
+# generates SECRET_KEY and the DB password (kept across upgrades). Not for production.
+poc:
+  enabled: false
+  storage: 5Gi
+  storageClassName: ""
 
 # Optional: reference an existing Secret instead of inline env above.
 existingSecret: ""

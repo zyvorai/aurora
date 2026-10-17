@@ -1,9 +1,9 @@
 apiVersion: v2
 name: aurora
-description: Aurora — AI-powered GTM orchestration (AGPL-3.0)
+description: Aurora — AI-powered GTM orchestration (Zyvor Production License v1.0; free for non-production use)
 type: application
-version: 0.1.1
-appVersion: "0.1.1"
+version: 0.2.0
+appVersion: "0.2.0"
 keywords:
   - aurora
   - gtm

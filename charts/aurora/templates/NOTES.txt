@@ -1,8 +1,20 @@
 Aurora {{ .Chart.AppVersion }} installed.
+{{- if .Values.poc.enabled }}
+
+Quick test:
+  kubectl --namespace {{ .Release.Namespace }} rollout status deploy/{{ include "aurora.fullname" . }}-web
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "aurora.fullname" . }}-web {{ .Values.web.service.port }}:{{ .Values.web.service.port }}
+  open http://localhost:{{ .Values.web.service.port }}     # sign in: marketing@zyvor.dev / Admin@321 (demo account)
+
+Check:      helm test {{ .Release.Name }} --namespace {{ .Release.Namespace }}
+Add an LLM: helm upgrade {{ .Release.Name }} <chart> --reuse-values --set llm.provider=openai --set llm.openaiApiKey=...
+Feedback:   https://github.com/zyvorai/aurora/issues/new?template=poc-feedback.yml
+{{- else }}
 
 1. Ensure backing services (Postgres, Redis, Qdrant, Neo4j, MinIO, Ollama) are reachable
    via the env Secret values you passed.
 2. Health check:
      curl -s http://{{ include "aurora.fullname" . }}-api:{{ .Values.api.service.port }}/health
-3. Licensing: AGPL-3.0 open source; commercial ACL via sales@zyvor.dev
-   See COMMERCIAL_LICENSE.md / docs/LICENSING.md in the source repo.
+{{- end }}
+
+Licensing: Zyvor Production License v1.0 (free for non-production use; commercial license for production, sales@zyvor.dev).
