@@ -11,6 +11,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Added
 
+- **Kubernetes PoC**: `charts/aurora` gains `poc.enabled` (bundled Postgres + Qdrant StatefulSets, generated and persisted credentials, minimal profile, no workers), `values-poc.yaml`, GHCR images defaulting to the chart appVersion, `helm test` health hook, an API startup probe, `llm.*` values, and `scripts/poc/install-k8s.sh` (creates a kind/k3d cluster if none, installs, port-forwards). Web gets `API_INTERNAL_URL` from the chart. Chart version 0.2.0; header/description no longer say AGPL. Verified on a fresh k3s cluster: install, all pods ready, `helm test` passed, login through the web service.
+
+### Added
+
 - **Easy-test PoC**: `docker-compose.poc.yml` (Postgres, Qdrant, API, web; prebuilt multi-arch images), `scripts/poc/install.sh` and `install.ps1` one-line installers with an `aurora-poc` helper (`status|logs|down|up|update|llm|reset|feedback|uninstall`), `docs/poc.md`, and GitHub issue templates for PoC feedback and bugs. Verified on Linux (amd64 guest); the Windows script is untested on real Windows.
 
 ### Added

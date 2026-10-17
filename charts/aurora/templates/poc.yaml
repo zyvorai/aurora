@@ -1,0 +1,110 @@
+{{- if .Values.poc.enabled }}
+{{- $fn := include "aurora.fullname" . }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $fn }}-postgres
+  labels:
+    {{- include "aurora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  serviceName: {{ $fn }}-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "aurora.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgres
+  template:
+    metadata:
+      labels:
+        {{- include "aurora.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - { name: POSTGRES_USER, value: aurora }
+            - { name: POSTGRES_DB, value: aurora }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ $fn }}-poc, key: POSTGRES_PASSWORD } }
+          ports: [{ containerPort: 5432, name: pg }]
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "aurora", "-d", "aurora"] }
+            periodSeconds: 5
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+          resources: { requests: { cpu: 100m, memory: 256Mi } }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with .Values.poc.storageClassName }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources: { requests: { storage: {{ .Values.poc.storage }} } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fn }}-postgres
+  labels:
+    {{- include "aurora.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports: [{ port: 5432, name: pg }]
+  selector:
+    {{- include "aurora.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $fn }}-qdrant
+  labels:
+    {{- include "aurora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: qdrant
+spec:
+  serviceName: {{ $fn }}-qdrant
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "aurora.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: qdrant
+  template:
+    metadata:
+      labels:
+        {{- include "aurora.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: qdrant
+    spec:
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.12.1
+          ports: [{ containerPort: 6333, name: http }]
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 5
+          volumeMounts: [{ name: data, mountPath: /qdrant/storage }]
+          resources: { requests: { cpu: 100m, memory: 256Mi } }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with .Values.poc.storageClassName }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources: { requests: { storage: {{ .Values.poc.storage }} } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fn }}-qdrant
+  labels:
+    {{- include "aurora.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports: [{ port: 6333, name: http }]
+  selector:
+    {{- include "aurora.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: qdrant
+{{- end }}
