@@ -103,7 +103,7 @@
   padding: 0 1rem;
   font-size: 14px;
   font-weight: 500;
-  color: #fff;
+  color: var(--on-primary);
   background: var(--accent-blue);
   border-radius: 980px;
   text-decoration: none;

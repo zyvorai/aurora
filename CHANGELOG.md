@@ -7,6 +7,7 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Changed
 
+- **UX contract, phase 2** (`apps/web`): all hard-coded colours in component CSS replaced by tokens (`color-mix` for tints), global `:focus-visible` outline for links/buttons, nav type on the scale, `scripts/check-tokens.sh` guard, `docs/design/APPLE-UX-CONTRACT.md`.
 - **UX contract, phase 1** (`apps/web`): Netra-style type scale tokens (`--fs-*`), `--hit-min`, `--hairline`, `--scrim`;
   `Button` md is now 44px and `danger` is solid; `Modal` has a unique title id, focus trap and focus return; toasts use
   `role="status"` except errors; clickable table rows are keyboard-operable; `StageChain` has `aria-current` and a focus ring.
