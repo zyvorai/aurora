@@ -7,10 +7,15 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Added
 
+
 - **SEO suite (API)**: deterministic page audit and content scoring, keyword providers (grounded estimates, DataForSEO, Search Console), `seo_article` content type with an SEO block (meta + Article JSON-LD) on artifacts, and a WordPress publishing adapter. See `docs/seo.md`.
+
+- **SEO tab** (`apps/web`): page audit, keyword research (estimates are labelled), content score with SERP preview and JSON-LD, WordPress publish channel; `/features` mentions SEO.
+
 
 ### Changed
 
+- **UX contract, phase 3** (`apps/web`): agents/audit pages and the product layout show an inline `ErrorState` with retry instead of a toast-only failure or silent redirect; run log opens as a drawer below `xl`; chat widget fits phones and is a labelled dialog; one shared `lib/product-tabs.ts` feeds the workspace tabs and the rail; no duplicate error toast on workflow failures.
 - **UX contract, phase 2** (`apps/web`): all hard-coded colours in component CSS replaced by tokens (`color-mix` for tints), global `:focus-visible` outline for links/buttons, nav type on the scale, `scripts/check-tokens.sh` guard, `docs/design/APPLE-UX-CONTRACT.md`.
 - **UX contract, phase 1** (`apps/web`): Netra-style type scale tokens (`--fs-*`), `--hit-min`, `--hairline`, `--scrim`;
   `Button` md is now 44px and `danger` is solid; `Modal` has a unique title id, focus trap and focus return; toasts use

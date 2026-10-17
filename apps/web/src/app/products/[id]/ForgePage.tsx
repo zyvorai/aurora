@@ -24,6 +24,7 @@ import SourcesPanel from '@/components/sources/SourcesPanel';
 import { SourceLink } from '@/components/sources/SourceLink';
 import type { SourceKind } from '@/components/sources/AddSourceWizard';
 import ArtifactList from '@/components/artifacts/ArtifactList';
+import SeoPanel from '@/components/seo/SeoPanel';
 import AgentTaskProgress from '@/components/AgentTaskProgress';
 import { taskButtonLabel, type AgentTaskId } from '@/lib/agent-tasks';
 import { cn } from '@/lib/cn';
@@ -65,41 +66,7 @@ function artifactAbbrev(type: string): string {
   return type.slice(0, 2).toUpperCase();
 }
 
-type FixedTab = 'overview' | 'query' | 'strategy' | 'content' | 'chat' | 'outreach' | 'architect' | 'proposal' | 'publish' | 'analytics';
-// Custom (tenant-defined) stages use a `custom:<stageId>` tab key alongside the 10
-// fixed ones -- kept as a plain string rather than a template-literal union so
-// TAB_GROUPS/switch-case logic below stays exactly as it was for the fixed tabs.
-type Tab = FixedTab | string;
-
-// macOS/iOS-Settings-style: each tab gets a small colored icon tile, each group a tone
-// from the same iPhone-colorway palette used everywhere else (WORKSPACE_COLORS etc).
-const TAB_GROUPS: { label: string; tone: Tone; tabs: { key: FixedTab; label: string; icon: LucideIcon }[] }[] = [
-  {
-    label: 'Foundation', tone: 'sky',
-    tabs: [
-      { key: 'overview', label: 'Overview', icon: LayoutGrid },
-      { key: 'query', label: 'Q&A', icon: MessageCircleQuestion },
-    ],
-  },
-  {
-    label: 'GTM', tone: 'violet',
-    tabs: [
-      { key: 'strategy', label: 'Strategy', icon: Target },
-      { key: 'content', label: 'Content', icon: FileText },
-    ],
-  },
-  {
-    label: 'Revenue', tone: 'emerald',
-    tabs: [
-      { key: 'chat', label: 'Sales Chat', icon: MessagesSquare },
-      { key: 'outreach', label: 'Outreach', icon: Send },
-      { key: 'architect', label: 'Architect', icon: Blocks },
-      { key: 'proposal', label: 'Proposal', icon: FileSignature },
-    ],
-  },
-  { label: 'Distribution', tone: 'pink', tabs: [{ key: 'publish', label: 'Publish', icon: Rocket }] },
-  { label: 'Intelligence', tone: 'teal', tabs: [{ key: 'analytics', label: 'Analytics', icon: BarChart3 }] },
-];
+import { TAB_GROUPS, type FixedTab, type Tab } from '@/lib/product-tabs';
 
 const VALID_TABS = new Set<string>(TAB_GROUPS.flatMap((g) => g.tabs.map((t) => t.key)));
 
@@ -166,7 +133,6 @@ export default function ProductForgePageInner() {
     },
     onError: (message) => {
       setResult({ error: message });
-      showToast('error', message);
     },
   });
 
@@ -189,7 +155,6 @@ export default function ProductForgePageInner() {
       setLoading(false);
       setLoadingAction(null);
       setTaskDetail(undefined);
-      showToast('error', message);
     },
   });
 
@@ -641,6 +606,12 @@ export default function ProductForgePageInner() {
                   ))}
                 </div>
               ) : null}
+            </WorkspacePanel>
+          )}
+
+          {tab === 'seo' && (
+            <WorkspacePanel title="SEO" description="Audit pages, research keywords and score drafts. Measured data is labelled; estimates say so.">
+              <SeoPanel productId={id} websiteUrl={product?.website_url} artifacts={artifacts} />
             </WorkspacePanel>
           )}
 
