@@ -113,6 +113,8 @@ class TestSupervisorExecution:
         )
         mock_db = AsyncMock()
         mock_db.flush = AsyncMock()
+        # create_opportunity looks for an existing row first (idempotent seeding): none found.
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None)))
 
         output = await dispatch_agent(
             mock_db,

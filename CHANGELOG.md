@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Fixed
+
+- API test suite is green again (312 passed): the SSO callback tests asserted old 501/409/200 responses although the callback now redirects the browser to `/login/callback?error=…|code=…` (the 404 test only passed by following that redirect to a missing path); the executive-brief test mocked 5 of its 9 count queries; the two `create_opportunity` tests did not mock the idempotency lookup that the service now performs first.
+
 ### Changed
 
 - README: a prominent "Try it in 5 minutes" section near the top (per-OS install commands, a five-minute test checklist, feedback); installers fall back to raw.githubusercontent.com when the Pages site is not live yet.
