@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added
+
+- **Docker image version**: API image takes `APP_VERSION`/`GIT_SHA` build args (OCI labels, `AURORA_VERSION`/`AURORA_BUILD` env); `/health` and the OpenAPI doc report them; `scripts/deploy-remote.sh` derives them from `git describe` and prints docker, compose and Aurora versions after a deploy.
+
 ### Changed
 
 - **UX contract, phase 3** (`apps/web`): agents/audit pages and the product layout show an inline `ErrorState` with retry instead of a toast-only failure or silent redirect; run log opens as a drawer below `xl`; chat widget fits phones and is a labelled dialog; one shared `lib/product-tabs.ts` feeds the workspace tabs and the rail; no duplicate error toast on workflow failures.

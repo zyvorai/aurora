@@ -12,6 +12,9 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-unknown}
     env_file:
       - .env
     # Credentials below mirror infra/docker-compose.yml's hardcoded postgres/
