@@ -511,3 +511,140 @@
   color: var(--hs-text-subtle);
   margin-bottom: var(--hs-s3);
 }
+
+/* ---- Hero visual, trust pills, capability grid ---- */
+
+.hero {
+  min-height: 0;
+  align-items: flex-start;
+  padding-bottom: var(--hs-s9);
+}
+
+.heroInner {
+  width: 100%;
+}
+
+.trustRow {
+  list-style: none;
+  margin: var(--hs-s6) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.trustPill {
+  padding: 6px 14px;
+  border-radius: var(--hs-radius-pill);
+  border: 1px solid var(--hairline);
+  background: var(--surface-elevated);
+  color: var(--hs-text-muted);
+  font-size: var(--fs-small);
+}
+
+.heroVisual {
+  position: relative;
+  margin: var(--hs-s8) auto 0;
+  max-width: 1040px;
+  text-align: left;
+}
+
+.heroGlow {
+  position: absolute;
+  inset: -8% -4% auto;
+  height: 70%;
+  background: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--accent-blue) 22%, transparent), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.heroVisual > * {
+  position: relative;
+}
+
+.heroVisual > .heroGlow {
+  position: absolute;
+}
+
+.capabilities {
+  padding: var(--hs-s9) 0;
+  background: var(--background);
+  text-align: center;
+}
+
+.capGrid {
+  margin-top: var(--hs-s7);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--hs-s4);
+  text-align: left;
+}
+
+.capCard {
+  padding: var(--hs-s5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline);
+  background: var(--surface-elevated);
+  transition: transform var(--hs-fast) ease, box-shadow var(--hs-fast) ease, border-color var(--hs-fast) ease;
+}
+
+.capCard:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-blue) 35%, var(--hairline));
+  box-shadow: var(--shadow-popover);
+}
+
+.capIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
+}
+
+.capTitle {
+  margin: var(--hs-s4) 0 var(--hs-s2);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--hs-text-heading);
+}
+
+.capBody {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.47;
+  color: var(--hs-text-muted);
+}
+
+@media (max-width: 900px) {
+  .capGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .capGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .capabilities {
+    padding: var(--hs-s8) 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capCard {
+    transition: none;
+  }
+  .capCard:hover {
+    transform: none;
+  }
+}
+
+.heroVisual .productFrameBody {
+  min-height: clamp(240px, 52vw, 560px);
+}
