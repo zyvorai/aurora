@@ -8,10 +8,6 @@ All notable changes to Aurora are documented here. Format loosely follows
 ### Added
 
 
-- **SEO suite (API)**: deterministic page audit and content scoring, keyword providers (grounded estimates, DataForSEO, Search Console), `seo_article` content type with an SEO block (meta + Article JSON-LD) on artifacts, and a WordPress publishing adapter. See `docs/seo.md`.
-
-- **SEO tab** (`apps/web`): page audit, keyword research (estimates are labelled), content score with SERP preview and JSON-LD, WordPress publish channel; `/features` mentions SEO.
-
 
 ### Changed
 

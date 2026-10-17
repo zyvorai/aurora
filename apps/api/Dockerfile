@@ -35,6 +35,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN useradd -u 1000 -m appuser
 
+# Build identity: shown by GET /health (version, build) and `docker inspect`.
+ARG APP_VERSION=dev
+ARG GIT_SHA=unknown
+ENV AURORA_VERSION=${APP_VERSION} AURORA_BUILD=${GIT_SHA}
+LABEL org.opencontainers.image.title="aurora-api" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${GIT_SHA}"
+
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1

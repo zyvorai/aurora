@@ -86,6 +86,11 @@ _rsync() {
 
 info "Target: ${DEPLOY_USER}@${HOST}:~/${REMOTE_DIR}"
 
+# Image identity: `git describe` of the checkout being deployed (override with APP_VERSION / GIT_SHA).
+APP_VERSION="${APP_VERSION:-$(git -C "$REPO_DIR" describe --tags --always --dirty 2>/dev/null || echo dev)}"
+GIT_SHA="${GIT_SHA:-$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)}"
+info "Aurora version: ${APP_VERSION} (${GIT_SHA})"
+
 # All docker/compose calls go through sudo -- don't assume the SSH user is in
 # the docker group (true on at least one lab host this has been run against).
 # --project-directory is required: with infra/docker-compose.yml listed first,
@@ -189,7 +194,7 @@ fi
 BUILD_FLAG="--build"
 $SKIP_BUILD && BUILD_FLAG=""
 info "Starting stack (docker compose up -d ${BUILD_FLAG})..."
-_ssh "cd \"\$HOME/${REMOTE_DIR}\" && ${DC} up -d ${BUILD_FLAG}"
+_ssh "cd \"\$HOME/${REMOTE_DIR}\" && APP_VERSION='${APP_VERSION}' GIT_SHA='${GIT_SHA}' ${DC} up -d ${BUILD_FLAG}"
 info "Stack started."
 
 # ── Step 6: wait for health ──
@@ -214,6 +219,8 @@ fi
 # ── Status ──
 info "Container status:"
 _ssh "cd \"\$HOME/${REMOTE_DIR}\" && ${DC} ps"
+info "Versions on ${HOST}:"
+_ssh "echo \"  docker:  \$(docker --version)\"; echo \"  compose: \$(sudo docker compose version --short 2>/dev/null || echo unknown)\"; echo \"  aurora:  \$(curl -fsS http://localhost:8000/health 2>/dev/null | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get(\"version\",\"?\"),d.get(\"build\",\"?\"))' 2>/dev/null || echo unreachable)\"" || true
 
 echo ""
 echo "  Web:  http://${HOST}:3000"

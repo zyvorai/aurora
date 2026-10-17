@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -72,7 +73,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
+    version=os.getenv("AURORA_VERSION", "dev"),
     lifespan=lifespan,
 )
 
@@ -156,6 +157,8 @@ async def health():
     return {
         "status": status,
         "service": settings.app_name,
+        "version": os.getenv("AURORA_VERSION", "dev"),
+        "build": os.getenv("AURORA_BUILD", "unknown"),
         **db_health,
         **llm_health,
     }
