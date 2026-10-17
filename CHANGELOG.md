@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Changed
+
+- Zyvor brand: favicon is now Netra's orange Z tile (`app/icon.svg`, replacing the generated blue "A"), and the product console rail starts with the Z tile linking to the dashboard. `public/zyvor-mark.svg` and `zyvor-logomark.svg` come from Netra.
+
 ### Fixed
 
 - Web image now copies `public/` (Next standalone output omits it), so `/screenshots/*` and the social card are served instead of 404.

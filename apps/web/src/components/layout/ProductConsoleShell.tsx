@@ -200,6 +200,16 @@ export function ProductConsoleShell({
       >
         <Link
           href="/dashboard"
+          title="Zyvor — all products"
+          aria-label="Zyvor — all products"
+          className="flex items-center shrink-0 p-2 rounded-[8px] hover:bg-white/80 dark:hover:bg-background transition-colors"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- static SVG brand tile shared with Netra */}
+          <img src="/zyvor-mark.svg" alt="" width={28} height={28} className="h-7 w-7 rounded-[7px]" />
+        </Link>
+
+        <Link
+          href="/dashboard"
           title={product?.name ?? undefined}
           className="flex items-center gap-2.5 p-2 rounded-[8px] hover:bg-white/80 dark:hover:bg-background transition-colors shrink-0"
         >
