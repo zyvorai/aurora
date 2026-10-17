@@ -20,6 +20,8 @@ class TestCRMService:
         product_id = uuid.uuid4()
         mock_db = AsyncMock()
         mock_db.flush = AsyncMock()
+        # create_opportunity first looks for an existing row with the same name + company (idempotent seeding).
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None)))
 
         opp = await create_opportunity(
             mock_db,

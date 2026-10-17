@@ -74,13 +74,15 @@ class TestExecutiveBrief:
             }
         )
 
-        scalar_results = [0, 0, 0, 0, 0]  # sources, completed, strategy, outreach, leads
+        # The brief issues nine COUNT queries (sources, completed, strategy, outreach, leads, discovered,
+        # qualified, proposals, published) and then looks up dashboard snapshots.
+        scalar_results = [0] * 9
         call_idx = {"n": 0}
 
         async def execute_side_effect(*args, **kwargs):
             idx = call_idx["n"]
             call_idx["n"] += 1
-            if idx >= 5:
+            if idx >= len(scalar_results):
                 result = MagicMock()
                 result.scalar_one_or_none.return_value = None
                 return result
