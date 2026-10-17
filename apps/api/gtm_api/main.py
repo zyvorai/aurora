@@ -24,6 +24,7 @@ from gtm_api.routers import (
     mcp,
     admin,
     portal,
+    seo,
 )
 from gtm_api.services.embeddings import LLMServiceError
 from gtm_api.services.llm import check_llm_health
@@ -132,6 +133,7 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(social_auth.router, prefix=settings.api_prefix)
 app.include_router(products.router, prefix=settings.api_prefix)
 app.include_router(marketing.router, prefix=settings.api_prefix)
+app.include_router(seo.router, prefix=settings.api_prefix)
 app.include_router(agents.router, prefix=settings.api_prefix)
 app.include_router(workflows.router, prefix=settings.api_prefix)
 app.include_router(pipeline.router, prefix=settings.api_prefix)

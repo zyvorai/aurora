@@ -27,6 +27,7 @@ CHANNEL_HANDLERS = {
     "devto": "Dev.to API",
     "reddit": "Reddit API",
     "blog": "CMS Webhook",
+    "wordpress": "WordPress REST API",
     "newsletter": "Email Service",
     "email": "SMTP",
 }
