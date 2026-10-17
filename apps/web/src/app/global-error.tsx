@@ -21,23 +21,23 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
-          background: '#ffffff',
-          color: '#1d1d1f',
+          background: 'var(--background, #ffffff)',
+          color: 'var(--foreground, #1d1d1f)',
         }}
       >
         <div style={{ maxWidth: 420, width: '100%', textAlign: 'center', padding: '0 24px' }}>
-          <p style={{ color: '#0071e3', fontWeight: 600, fontSize: 22, marginBottom: 4 }}>Aurora</p>
+          <p style={{ color: 'var(--accent-blue, #0071e3)', fontWeight: 600, fontSize: 22, marginBottom: 4 }}>Aurora</p>
           <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.03em', margin: '0 0 8px' }}>
             Something went wrong
           </h1>
-          <p style={{ color: '#6e6e73', marginBottom: 32, lineHeight: 1.47 }}>
+          <p style={{ color: 'var(--muted-foreground, #6e6e73)', marginBottom: 32, lineHeight: 1.47 }}>
             An unexpected error occurred loading the app. Try reloading the page.
           </p>
           <button
             onClick={reset}
             style={{
-              background: '#0071e3',
-              color: '#ffffff',
+              background: 'var(--accent-blue, #0071e3)',
+              color: 'var(--on-primary, #ffffff)',
               border: 'none',
               borderRadius: 980,
               padding: '10px 24px',

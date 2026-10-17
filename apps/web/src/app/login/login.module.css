@@ -3,18 +3,18 @@
 .page {
   /* Force light Apple ID canvas independent of html.dark-theme */
   color-scheme: light;
-  --login-ink: #1d1d1f;
-  --login-mute: #6e6e73;
-  --login-line: #d2d2d7;
+  --login-ink: #1d1d1f; /* token-exempt: pins a light scope */
+  --login-mute: #6e6e73; /* token-exempt: pins a light scope */
+  --login-line: #d2d2d7; /* token-exempt: pins a light scope */
   /* Same Apple-blue as --login-accent and PortalAuthShell's links — a muted
      secondary blue here read as inconsistent next to the rest of the app. */
-  --login-blue: #0071e3;
-  --login-accent: #0071e3;
-  --login-accent-hover: #0077ed;
-  --foreground: #1d1d1f;
-  --muted-foreground: #6e6e73;
-  --primary: #0071e3;
-  --accent-blue: #0071e3;
+  --login-blue: #0071e3; /* token-exempt: pins a light scope */
+  --login-accent: #0071e3; /* token-exempt: pins a light scope */
+  --login-accent-hover: #0077ed; /* token-exempt: pins a light scope */
+  --foreground: #1d1d1f; /* token-exempt: pins a light scope */
+  --muted-foreground: #6e6e73; /* token-exempt: pins a light scope */
+  --primary: #0071e3; /* token-exempt: pins a light scope */
+  --accent-blue: #0071e3; /* token-exempt: pins a light scope */
 
   position: relative;
   min-height: 100dvh;
@@ -23,7 +23,7 @@
   color: var(--login-ink);
   font-family: var(--font-display);
   overflow: hidden;
-  background: #ffffff;
+  background: var(--surface-elevated);
 }
 
 .atmosphere {
@@ -32,8 +32,8 @@
   inset: 0;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.06), transparent 55%),
-    linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--accent-blue) 6%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface) 100%);
 }
 
 .top {
@@ -158,7 +158,7 @@
   margin: 0 0 1rem;
   padding: 0.4rem 0.75rem 0.4rem 0.4rem;
   border-radius: 980px;
-  background: #ffffff;
+  background: var(--surface-elevated);
   border: 1px solid var(--login-line);
   font-size: 0.8125rem;
   color: var(--login-ink);
@@ -177,7 +177,7 @@
   height: 1.5rem;
   border-radius: 50%;
   background: var(--login-ink);
-  color: #f5f5f7;
+  color: var(--surface);
   display: grid;
   place-items: center;
   font-size: 0.6875rem;
@@ -213,7 +213,7 @@
   padding: 0 0.9rem;
   border-radius: 12px;
   border: 1px solid var(--login-line);
-  background: #ffffff;
+  background: var(--surface-elevated);
   color: var(--login-ink);
   font: inherit;
   font-size: 1rem;
@@ -224,7 +224,7 @@
 
 .field:focus {
   border-color: var(--login-accent);
-  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.16);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-blue) 16%, transparent);
 }
 
 /* Hide placeholder until focus so it doesn't fight the floating label */
@@ -275,7 +275,7 @@
   border: 0;
   border-radius: 980px;
   background: var(--login-accent);
-  color: #fff;
+  color: var(--on-primary);
   font: inherit;
   font-size: 1.0625rem;
   font-weight: 400;
@@ -301,8 +301,8 @@
   margin: 0.85rem 0 0;
   padding: 0.75rem 0.9rem;
   border-radius: 12px;
-  background: rgba(215, 0, 21, 0.08);
-  color: #d70015;
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  color: var(--danger);
   font-size: 0.875rem;
   text-align: left;
   animation: fadeSwap 0.25s ease both;
@@ -378,8 +378,8 @@
 .spin {
   width: 1.1rem;
   height: 1.1rem;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
+  border: 2px solid color-mix(in srgb, var(--on-primary) 35%, transparent);
+  border-top-color: var(--surface-elevated);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

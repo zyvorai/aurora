@@ -3,24 +3,24 @@
 .shell {
   /* Force light Apple auth canvas even when app chrome is dark-theme */
   color-scheme: light;
-  --background: #ffffff;
-  --surface: #f5f5f7;
-  --surface-elevated: #ffffff;
-  --foreground: #1d1d1f;
-  --muted-foreground: #6e6e73;
-  --primary: #0071e3;
-  --primary-hover: #0077ed;
-  --border: #d2d2d7;
-  --accent-blue: #0071e3;
-  --accent-blue-hover: #0077ed;
-  --login-accent: #0071e3;
-  --login-accent-hover: #0077ed;
-  --hs-accent: #0071e3;
-  --hs-accent-deep: #0077ed;
-  --login-ink: #1d1d1f;
-  --login-mute: #6e6e73;
-  --login-line: #d2d2d7;
-  --login-blue: #0071e3;
+  --background: #ffffff; /* token-exempt: pins a light scope */
+  --surface: #f5f5f7; /* token-exempt: pins a light scope */
+  --surface-elevated: #ffffff; /* token-exempt: pins a light scope */
+  --foreground: #1d1d1f; /* token-exempt: pins a light scope */
+  --muted-foreground: #6e6e73; /* token-exempt: pins a light scope */
+  --primary: #0071e3; /* token-exempt: pins a light scope */
+  --primary-hover: #0077ed; /* token-exempt: pins a light scope */
+  --border: #d2d2d7; /* token-exempt: pins a light scope */
+  --accent-blue: #0071e3; /* token-exempt: pins a light scope */
+  --accent-blue-hover: #0077ed; /* token-exempt: pins a light scope */
+  --login-accent: #0071e3; /* token-exempt: pins a light scope */
+  --login-accent-hover: #0077ed; /* token-exempt: pins a light scope */
+  --hs-accent: #0071e3; /* token-exempt: pins a light scope */
+  --hs-accent-deep: #0077ed; /* token-exempt: pins a light scope */
+  --login-ink: #1d1d1f; /* token-exempt: pins a light scope */
+  --login-mute: #6e6e73; /* token-exempt: pins a light scope */
+  --login-line: #d2d2d7; /* token-exempt: pins a light scope */
+  --login-blue: #0071e3; /* token-exempt: pins a light scope */
 
   position: relative;
   min-height: calc(100vh - var(--nav-h, 44px));
@@ -29,7 +29,7 @@
   justify-content: center;
   padding: clamp(2.5rem, 6vw, 4rem) 1.25rem;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--surface-elevated);
   color: var(--login-ink);
   font-family: var(--font-display);
 }
@@ -40,8 +40,8 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.08), transparent 55%),
-    linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--accent-blue) 8%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface) 100%);
 }
 
 .inner {
@@ -112,7 +112,7 @@
 }
 
 .panel :global(input) {
-  background: #ffffff;
+  background: var(--surface-elevated);
   border-color: var(--login-line);
 }
 

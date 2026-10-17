@@ -14,8 +14,8 @@
   padding: var(--hs-s9) 0 var(--hs-s8);
   text-align: center;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.06), transparent 55%),
-    linear-gradient(180deg, #ffffff 0%, var(--hs-bg-alt) 100%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--accent-blue) 6%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--surface-elevated) 0%, var(--hs-bg-alt) 100%);
 }
 
 .heroInner {
@@ -81,17 +81,17 @@
   border-radius: var(--hs-radius-pill);
   font-size: 14px;
   font-weight: 400;
-  color: #fff;
-  background: #0071e3;
-  border: 1px solid #0071e3;
+  color: var(--on-primary);
+  background: var(--accent-blue);
+  border: 1px solid var(--accent-blue);
   text-decoration: none;
   transition: background var(--hs-fast) ease;
 }
 
 .btnPrimary:hover {
-  background: #0077ed;
-  border-color: #0077ed;
-  color: #fff;
+  background: var(--accent-blue-hover);
+  border-color: var(--accent-blue-hover);
+  color: var(--on-primary);
   text-decoration: none;
 }
 
@@ -114,7 +114,7 @@
 
 .btnSecondary:hover {
   border-color: var(--hs-text-subtle);
-  background: rgba(0, 0, 0, 0.03);
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
   text-decoration: none;
 }
 
@@ -219,10 +219,10 @@
 }
 
 .productFrame {
-  background: #ffffff;
+  background: var(--surface-elevated);
   border-radius: 12px;
   border: 1px solid var(--hs-border);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--foreground) 6%, transparent);
   overflow: hidden;
   flex: 1;
   display: flex;
@@ -236,21 +236,21 @@
   gap: 6px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--hs-border);
-  background: #fbfbfd;
+  background: var(--surface);
 }
 
 .productFrameDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #d2d2d7;
+  background: var(--border);
 }
 
 .productFrameBody {
   position: relative;
   flex: 1;
   min-height: 220px;
-  background: #f5f5f7;
+  background: var(--surface);
 }
 
 .productFrameImage {
@@ -354,13 +354,13 @@
   letter-spacing: -0.03em;
   font-weight: 600;
   font-family: var(--font-display);
-  color: #f5f5f7;
+  color: var(--surface);
   margin: 0 0 var(--hs-s3);
 }
 
 .inkLede {
   font-size: 19px;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--nav-bg);
   max-width: 40ch;
   margin: 0 auto var(--hs-s6);
   line-height: 1.47;
@@ -372,8 +372,8 @@
   padding: var(--hs-s9) 0 var(--hs-s8);
   text-align: center;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 113, 227, 0.05), transparent 55%),
-    linear-gradient(180deg, #ffffff 0%, var(--hs-bg-alt) 100%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--accent-blue) 5%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--surface-elevated) 0%, var(--hs-bg-alt) 100%);
 }
 
 .featuresHero .heroHeadline {
@@ -469,9 +469,9 @@
   position: relative;
   min-height: 320px;
   border-radius: var(--radius-lg);
-  background: #ffffff;
+  background: var(--surface-elevated);
   border: 1px solid var(--hs-border);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--foreground) 6%, transparent);
   overflow: hidden;
 }
 
