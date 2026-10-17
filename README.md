@@ -9,7 +9,7 @@
 
 [![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=aurora&utm_campaign=readme_hero)
 [![30-day PoC](https://img.shields.io/badge/30--day_PoC-000000?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=aurora&utm_campaign=readme_hero)
-[![Quickstart](https://img.shields.io/badge/Quickstart_make_start-5e5ce6?style=for-the-badge)](#quickstart)
+[![Try it](https://img.shields.io/badge/Try_it_in_5_minutes-5e5ce6?style=for-the-badge)](#try-it-in-5-minutes)
 
 ![Aurora — turn your technical product into an AI-powered salesperson](docs/social/aurora-hero-dark.jpg)
 
@@ -20,6 +20,40 @@
 **11 specialized agents** · **9-stage GTM pipeline** · **6 publish channels** · **Ollama or OpenAI-compatible** · **Neo4j + Qdrant grounding**
 
 </div>
+
+---
+
+## Try it in 5 minutes
+
+You need [Docker](https://www.docker.com/products/docker-desktop) running (about 4 GB of free RAM). No clone, no build. Pick your platform:
+
+| Platform | Command |
+|---|---|
+| **macOS / Linux** | `curl -fsSL https://raw.githubusercontent.com/zyvorai/aurora/main/scripts/poc/install.sh \| bash` |
+| **Windows** (PowerShell) | `irm https://raw.githubusercontent.com/zyvorai/aurora/main/scripts/poc/install.ps1 \| iex` |
+| **Kubernetes** (kind, k3d or any cluster) | `git clone https://github.com/zyvorai/aurora && cd aurora && AURORA_CHART=./charts/aurora ./scripts/poc/install-k8s.sh` |
+| **Docker Compose only** | `curl -fsSLO https://raw.githubusercontent.com/zyvorai/aurora/main/docker-compose.poc.yml && docker compose -f docker-compose.poc.yml up -d --wait` |
+
+The installer asks which LLM to use (an OpenAI-compatible key, or Ollama already running on your machine), starts four containers
+(Postgres, Qdrant, the API and the web app) and opens **http://localhost:3000**.
+
+**Sign in:** `marketing@zyvor.dev` / `Admin@321` (a seeded demo account: change it for anything beyond a throwaway test).
+
+**Test it (about five minutes):**
+
+1. **Create a product** from your website or docs URL, then run *Ingest*. Aurora builds a product profile.
+2. Open the **SEO** tab: *Page audit* a public URL, try *Keywords* (estimates are labelled as such), then *Content score* on a draft.
+3. In **Content**, generate an article, review it, **approve** it. Publishing only works on approved, unchanged content.
+4. Look at the **Executive Brief** for the GTM readiness signals.
+
+**Manage it:** `~/.aurora-poc/aurora-poc status | logs | down | up | update | reset | feedback | uninstall`.
+Windows, LLM options and troubleshooting: **[docs/poc.md](docs/poc.md)**.
+
+**Tell us how it went:** run `~/.aurora-poc/aurora-poc feedback`, or [open the two-minute feedback form](https://github.com/zyvorai/aurora/issues/new?template=poc-feedback.yml).
+The Windows installer has not yet been run on a real Windows machine, so please report anything odd.
+
+> The installers pull prebuilt images from `ghcr.io/zyvorai`, which are published when a release tag is cut. If a pull fails with "not found",
+> the images for that version are not out yet: build from source instead (see [Developing from source](#quickstart)).
 
 ---
 
@@ -135,6 +169,7 @@ synced from `docs/customer/` via `scripts/customer-docs/sync-to-website.mjs`
 ---
 
 ## Quickstart
+<!-- developing from source; to just try Aurora see 'Try it in 5 minutes' above -->
 
 **Just want to try it?** No clone, no build (needs Docker):
 
