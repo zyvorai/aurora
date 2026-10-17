@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Changed
+
+- README: a prominent "Try it in 5 minutes" section near the top (per-OS install commands, a five-minute test checklist, feedback); installers fall back to raw.githubusercontent.com when the Pages site is not live yet.
+
 ### Added
 
 - **Easy-test PoC**: `docker-compose.poc.yml` (Postgres, Qdrant, API, web; prebuilt multi-arch images), `scripts/poc/install.sh` and `install.ps1` one-line installers with an `aurora-poc` helper (`status|logs|down|up|update|llm|reset|feedback|uninstall`), `docs/poc.md`, and GitHub issue templates for PoC feedback and bugs. Verified on Linux (amd64 guest); the Windows script is untested on real Windows.

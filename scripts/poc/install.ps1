@@ -59,7 +59,10 @@ function Get-Compose {
   New-Item -ItemType Directory -Force -Path $Dir | Out-Null
   $dest = Join-Path $Dir 'docker-compose.poc.yml'
   if ($env:AURORA_COMPOSE_FILE) { Copy-Item $env:AURORA_COMPOSE_FILE $dest -Force }
-  else { Invoke-WebRequest -UseBasicParsing "$BaseUrl/docker-compose.poc.yml" -OutFile $dest }
+  else {
+    try { Invoke-WebRequest -UseBasicParsing "$BaseUrl/docker-compose.poc.yml" -OutFile $dest }
+    catch { Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/zyvorai/aurora/main/docker-compose.poc.yml' -OutFile $dest }
+  }
 }
 
 function Select-Llm {

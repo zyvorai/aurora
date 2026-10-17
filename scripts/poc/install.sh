@@ -46,7 +46,10 @@ have_env() { grep -q "^$1=" "$DIR/.env" 2>/dev/null; }
 fetch_compose() {
   mkdir -p "$DIR"
   if [ -n "${AURORA_COMPOSE_FILE:-}" ]; then cp "$AURORA_COMPOSE_FILE" "$DIR/docker-compose.poc.yml"
-  else curl -fsSL "$BASE_URL/docker-compose.poc.yml" -o "$DIR/docker-compose.poc.yml" || die "could not download $BASE_URL/docker-compose.poc.yml"
+  else
+    curl -fsSL "$BASE_URL/docker-compose.poc.yml" -o "$DIR/docker-compose.poc.yml" 2>/dev/null \
+      || curl -fsSL "https://raw.githubusercontent.com/zyvorai/aurora/main/docker-compose.poc.yml" -o "$DIR/docker-compose.poc.yml" \
+      || die "could not download docker-compose.poc.yml from $BASE_URL or GitHub"
   fi
 }
 
@@ -81,7 +84,8 @@ install_self() {
   if [ -n "$self" ] && [ -f "$self" ] && [ "$(cd "$(dirname "$self")" && pwd)/$(basename "$self")" != "$DIR/aurora-poc" ]; then
     cp "$self" "$DIR/aurora-poc"
   else
-    curl -fsSL "$BASE_URL/install.sh" -o "$DIR/aurora-poc" 2>/dev/null || true
+    curl -fsSL "$BASE_URL/install.sh" -o "$DIR/aurora-poc" 2>/dev/null \
+      || curl -fsSL "https://raw.githubusercontent.com/zyvorai/aurora/main/scripts/poc/install.sh" -o "$DIR/aurora-poc" 2>/dev/null || true
   fi
   chmod +x "$DIR/aurora-poc" 2>/dev/null || true
 }
