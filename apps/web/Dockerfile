@@ -10,10 +10,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# NEXT_PUBLIC_* vars are inlined into the client bundle at build time (Next.js
-# public-env behavior) -- this image is therefore specific to the API URL it
-# was built with; rebuild with a different --build-arg to target another env.
-ARG NEXT_PUBLIC_API_URL
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time (Next.js public-env behavior).
+# The default is the relative /api/v1, which the runtime middleware (src/middleware.ts) proxies to
+# API_INTERNAL_URL -- so the published image is portable. Pass a full URL only for split-origin deployments.
+ARG NEXT_PUBLIC_API_URL=/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
@@ -22,7 +22,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    API_INTERNAL_URL=http://api:8000
 
 RUN addgroup -g 1001 appgroup && adduser -u 1001 -G appgroup -D appuser
 

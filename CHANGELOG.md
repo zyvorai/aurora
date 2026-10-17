@@ -5,6 +5,12 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added
+
+- **Portable web image**: the browser calls a relative `/api/v1`, and `src/middleware.ts` proxies it to `API_INTERNAL_URL` read at runtime (default `http://api:8000` in the image), so a prebuilt image works on any host name or in Kubernetes. Rewrite proxy timeout raised to 30 min for long agent calls. `NEXT_PUBLIC_API_URL` still overrides for split-origin deployments.
+- `.github/workflows/release-images.yml`: on a `v*` tag, multi-arch (amd64 + arm64) `aurora-api`, `aurora-workers`, `aurora-web` images to GHCR, keyless cosign-signed, with a PoC-stack smoke test once `docker-compose.poc.yml` exists.
+- `.gitattributes`: LF endings for shell/Python so Windows checkouts do not break `docker-entrypoint.sh`.
+
 ### Fixed
 
 - `infra/docker-compose.yml`: every backing service has `restart: unless-stopped`, so the stack comes back after a host/VM restart (only api/web/workers did before).
