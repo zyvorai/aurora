@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+## 0.2.0 — 2026-10-17
+
+First release with an easy-test path: one-line installers (macOS, Linux, Windows), a Kubernetes PoC chart, prebuilt multi-arch images on GHCR, a Pages site with docs and a feedback form, SEO scoring, and a notarized native Mac app.
+
 ### Changed
 
 - README: a prominent "Try it in 5 minutes" section near the top (per-OS install commands, a five-minute test checklist, feedback); installers fall back to raw.githubusercontent.com when the Pages site is not live yet.
