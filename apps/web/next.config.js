@@ -31,6 +31,8 @@ loadRootPublicEnv();
 
 const nextConfig = {
   output: 'standalone',
+  // Agent/LLM calls can run for many minutes (local models); the default 30s rewrite proxy timeout would cut them off.
+  experimental: { proxyTimeout: 30 * 60 * 1000 },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
