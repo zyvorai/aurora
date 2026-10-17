@@ -136,6 +136,15 @@ synced from `docs/customer/` via `scripts/customer-docs/sync-to-website.mjs`
 
 ## Quickstart
 
+**Just want to try it?** No clone, no build (needs Docker):
+
+```bash
+curl -fsSL https://zyvorai.github.io/aurora/install.sh | bash      # macOS / Linux
+irm https://zyvorai.github.io/aurora/install.ps1 | iex              # Windows (PowerShell)
+```
+
+Details, LLM options and troubleshooting: **[docs/poc.md](docs/poc.md)**. To develop from source:
+
 **Requires Docker Desktop running.**
 
 ```bash

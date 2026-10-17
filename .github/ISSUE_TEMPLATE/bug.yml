@@ -1,0 +1,20 @@
+name: Bug report
+description: Something is broken.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: What did you expect instead? }
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to reproduce }
+  - type: input
+    id: env
+    attributes: { label: "OS and how you installed (Docker one-liner, Helm, native app)" }
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional, remove secrets)
+      description: "`aurora-poc logs api` for the Docker PoC"
+      render: shell

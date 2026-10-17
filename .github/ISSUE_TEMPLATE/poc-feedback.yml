@@ -1,0 +1,44 @@
+name: PoC feedback
+description: Tell us how the Aurora test went (good or bad).
+title: "PoC feedback: "
+labels: ["poc-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Aurora. Two minutes here shapes what we build next. Please do not paste API keys or passwords.
+  - type: dropdown
+    id: os
+    attributes:
+      label: Where did you run it?
+      options: [macOS (Docker), Linux (Docker), Windows (Docker Desktop), Kubernetes, Native Mac app, Other]
+    validations: { required: true }
+  - type: dropdown
+    id: ease
+    attributes:
+      label: How easy was it to get running?
+      options: ["5 - trivial", "4 - easy", "3 - OK", "2 - hard", "1 - could not get it working"]
+    validations: { required: true }
+  - type: textarea
+    id: tried
+    attributes:
+      label: What did you try?
+      placeholder: Added a product, ran an SEO audit, generated content, approved and published...
+  - type: textarea
+    id: worked
+    attributes:
+      label: What worked well?
+  - type: textarea
+    id: hurt
+    attributes:
+      label: What was confusing, slow or broken?
+  - type: textarea
+    id: want
+    attributes:
+      label: What would make you use this for real?
+  - type: textarea
+    id: health
+    attributes:
+      label: Version / health output (optional)
+      description: "`aurora-poc feedback` prints this. Safe to paste: it contains no secrets."
+      render: json

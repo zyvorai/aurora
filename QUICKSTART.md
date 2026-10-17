@@ -1,6 +1,8 @@
 # Quickstart
 
-Three ways to run Aurora, from fastest to production-shaped. Full detail:
+**Just want to try it? One command, no build:** see [`docs/poc.md`](docs/poc.md) (`curl -fsSL https://zyvorai.github.io/aurora/install.sh | bash`, or `irm …/install.ps1 | iex` on Windows).
+
+Three ways to run Aurora from source, from fastest to production-shaped. Full detail:
 [`docs/dev-guide.md`](docs/dev-guide.md) (local dev) and
 [`k8s/README.md`](k8s/README.md) (K3s / production).
 
