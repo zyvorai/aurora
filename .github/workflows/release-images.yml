@@ -73,6 +73,19 @@ jobs:
       - name: Sign image (keyless)
         run: cosign sign --yes "${{ env.REGISTRY }}/${{ env.OWNER }}/${{ matrix.name }}@${{ steps.build.outputs.digest }}"
 
+  chart:
+    runs-on: ubuntu-latest
+    needs: images
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Package and push the Helm chart (OCI)
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+          helm package charts/aurora --version "$ver" --app-version "$ver" -d dist
+          helm push "dist/aurora-${ver}.tgz" oci://ghcr.io/zyvorai/charts
+
   smoke:
     needs: images
     runs-on: ubuntu-latest
