@@ -1,0 +1,63 @@
+name: Aurora
+options:
+  bundleIdPrefix: dev.zyvor
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+packages:
+  AuroraKit:
+    path: AuroraKit
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.2.0
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+targets:
+  AuroraTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: Aurora
+      - package: AuroraKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.zyvor.aurora.tests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Aurora.app/Contents/MacOS/Aurora
+        BUNDLE_LOADER: $(TEST_HOST)
+        GENERATE_INFOPLIST_FILE: YES
+  Aurora:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    dependencies:
+      - package: AuroraKit
+    entitlements:
+      path: Config/Aurora.entitlements
+    info:
+      path: Config/Info.plist
+      properties:
+        CFBundleDisplayName: Aurora
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.business
+        LSMinimumSystemVersion: "14.0"
+        NSHumanReadableCopyright: "Copyright © 2026 ZyvorAI Labs Private Limited."
+        # HTTPS is required except for localhost and local-network hosts (the PoC runs on http://localhost:3000).
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.zyvor.aurora
+        PRODUCT_NAME: Aurora
+        GENERATE_INFOPLIST_FILE: NO
+    scheme:
+      testTargets: [AuroraTests]

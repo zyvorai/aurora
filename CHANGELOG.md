@@ -7,6 +7,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Added
 
+- **Aurora for Mac** (`native/`): a sandboxed SwiftUI client (macOS 14+) for any Aurora server: Keychain sign-in, products, workspace runs, SEO (audit, keywords with estimates labelled, content score), content approve/reject/publish, agents, audit log, feedback command. `AuroraKit` Swift package (API client, models, Keychain) with 7 tests; app renders tested off-screen. `scripts/package-mac.sh` builds, Developer-ID-signs, notarizes (`notarytool`), staples and checksums the DMG; `.github/workflows/release-mac.yml` does the same on a `v*` tag from secrets and attaches it to the release. A locally built 0.2.0 DMG was accepted by Apple's notary service and passes `spctl`.
+
+### Added
+
 - **Easy-test PoC**: `docker-compose.poc.yml` (Postgres, Qdrant, API, web; prebuilt multi-arch images), `scripts/poc/install.sh` and `install.ps1` one-line installers with an `aurora-poc` helper (`status|logs|down|up|update|llm|reset|feedback|uninstall`), `docs/poc.md`, and GitHub issue templates for PoC feedback and bugs. Verified on Linux (amd64 guest); the Windows script is untested on real Windows.
 
 ### Added
