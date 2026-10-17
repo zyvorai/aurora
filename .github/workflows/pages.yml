@@ -15,8 +15,7 @@ on:
       - "CHANGELOG.md"
       - "apps/web/public/screenshots/**"
       - ".github/workflows/pages.yml"
-  release:
-    types: [published]
+  # Not triggered by `release`: the github-pages environment only deploys from the default branch, so a tag-ref run is refused.
   workflow_dispatch:
 
 permissions:

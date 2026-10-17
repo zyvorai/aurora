@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Pages workflow no longer runs on `release: published`: the `github-pages` environment only deploys from the default branch, so the tag-ref run failed after every release. Re-run it manually (`workflow_dispatch`) or push to `main` to refresh the footer version.
+
 
 ## 0.2.0 — 2026-10-17
 
