@@ -39,7 +39,7 @@ services:
         condition: service_started
     ports:
       # Bound to localhost only — public HTTPS is Cilium Gateway / break-glass NodePort.
-      - "127.0.0.1:8000:8000"
+      - "${API_BIND:-127.0.0.1}:8000:8000"
     restart: unless-stopped
 
   workers:
@@ -78,5 +78,5 @@ services:
         condition: service_started
     ports:
       # Same reasoning as the api service above -- localhost-only.
-      - "127.0.0.1:3000:3000"
+      - "${WEB_BIND:-127.0.0.1}:3000:3000"
     restart: unless-stopped

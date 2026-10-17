@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { BookOpenCheck, Compass, Megaphone, Radar, SearchCheck, ShieldCheck } from 'lucide-react';
 import { Reveal, RevealGroup } from '@/components/ui/Reveal';
 import { MarketingHeroActions } from '@/components/marketing/MarketingHeroActions';
 import { PipelineSteps } from '@/components/marketing/PipelineSteps';
@@ -14,6 +15,17 @@ const PROOF = [
   { label: 'Documented test cases', value: '223' },
   { label: 'Multi-tenant', value: 'Built in' },
 ];
+
+const CAPABILITIES = [
+  { icon: Compass, title: 'Auto-discovery', body: 'Point at a website or docs. Agents crawl, read and build the product profile for you.' },
+  { icon: BookOpenCheck, title: 'Grounded answers', body: 'Every claim is checked against your own knowledge base and cited, so pitches stay true.' },
+  { icon: Radar, title: 'Background agents', body: 'Research, outreach and proposals keep running after you close the tab.' },
+  { icon: SearchCheck, title: 'SEO scoring', body: 'Audit pages and score drafts with checks computed from the content. Keyword data says whether it is measured or an estimate.' },
+  { icon: ShieldCheck, title: 'Human-approved publishing', body: 'Nothing goes out unreviewed. Approval is tied to the exact content that gets published.' },
+  { icon: Megaphone, title: 'Every channel', body: 'LinkedIn, X, Medium, Dev.to, Reddit, WordPress and email, with suppression built in.' },
+];
+
+const TRUST = ['Grounded', 'Human-approved', 'Multi-tenant', 'Runs on your hardware'];
 
 const SHOWCASE = [
   {
@@ -72,6 +84,19 @@ export function HomeHero() {
           solution agents — quietly, in the background.
         </p>
         <MarketingHeroActions variant="home" />
+        <ul className={styles.trustRow} aria-label="Highlights">
+          {TRUST.map((t) => (
+            <li key={t} className={styles.trustPill}>{t}</li>
+          ))}
+        </ul>
+        <div className={styles.heroVisual}>
+          <div className={styles.heroGlow} aria-hidden />
+          <ShowcaseFrame
+            image="/screenshots/workspace.png"
+            alt="The Aurora workspace: a nine-stage GTM pipeline with a live run log"
+            objectPosition="50% 20%"
+          />
+        </div>
       </div>
     </section>
   );
@@ -88,6 +113,27 @@ export function HomeProofBand() {
                 <div className={styles.proofValue}>{s.value}</div>
                 <div className={styles.proofLabel}>{s.label}</div>
               </div>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+    </Reveal>
+  );
+}
+
+export function HomeCapabilities() {
+  return (
+    <Reveal>
+      <section className={styles.capabilities} aria-labelledby="cap-title">
+        <div className={styles.wrap}>
+          <h2 id="cap-title" className={styles.hSec}>Everything between a URL and a published page.</h2>
+          <RevealGroup className={styles.capGrid}>
+            {CAPABILITIES.map(({ icon: Icon, title, body }) => (
+              <article key={title} className={styles.capCard}>
+                <span className={styles.capIcon}><Icon aria-hidden size={20} /></span>
+                <h3 className={styles.capTitle}>{title}</h3>
+                <p className={styles.capBody}>{body}</p>
+              </article>
             ))}
           </RevealGroup>
         </div>
@@ -134,6 +180,7 @@ export function HomeSections() {
     <>
       <HomeHero />
       <HomeProofBand />
+      <HomeCapabilities />
       <HomeShowcaseBands />
       <HomePipelineSection />
       <HomeInkCta />

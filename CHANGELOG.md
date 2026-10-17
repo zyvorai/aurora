@@ -5,6 +5,15 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Web image now copies `public/` (Next standalone output omits it), so `/screenshots/*` and the social card are served instead of 404.
+- `infra/docker-compose.yml`: MinIO image from Chainguard (community MinIO images are gone from Docker Hub/Quay); host ports configurable (`*_HOST_PORT`); `API_BIND`/`WEB_BIND` for the prod compose.
+
+### Changed
+
+- Home page: framed product screenshot in the hero, trust pills, and a six-card capability grid (incl. SEO and human-approved publishing).
+
 ### Added
 
 

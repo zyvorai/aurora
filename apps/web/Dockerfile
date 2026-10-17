@@ -28,6 +28,8 @@ RUN addgroup -g 1001 appgroup && adduser -u 1001 -G appgroup -D appuser
 
 COPY --from=builder --chown=appuser:appgroup /app/.next/standalone ./
 COPY --from=builder --chown=appuser:appgroup /app/.next/static ./.next/static
+# Next standalone output does not include public/ (screenshots, social card, favicons).
+COPY --from=builder --chown=appuser:appgroup /app/public ./public
 
 USER appuser
 EXPOSE 3000
