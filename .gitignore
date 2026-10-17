@@ -49,3 +49,4 @@ infra/nginx/certs/*
 # Local secrets (never commit)
 secrets/
 .docs-tools/
+_site/

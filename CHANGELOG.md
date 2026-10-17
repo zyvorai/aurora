@@ -7,6 +7,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Added
 
+- **GitHub Pages site** (`site/`, `scripts/build-site.py`, `scripts/site-check.mjs`, `.github/workflows/pages.yml`): landing page, per-OS "Try it" tabs (macOS, Linux, Windows, Kubernetes, Docker-only, Mac app), searchable docs rendered from `docs/`, feedback page, and the published installers + PoC compose file at `https://zyvorai.github.io/aurora/`. Needs Settings > Pages > Source: GitHub Actions once.
+
+### Added
+
 - **Easy-test PoC**: `docker-compose.poc.yml` (Postgres, Qdrant, API, web; prebuilt multi-arch images), `scripts/poc/install.sh` and `install.ps1` one-line installers with an `aurora-poc` helper (`status|logs|down|up|update|llm|reset|feedback|uninstall`), `docs/poc.md`, and GitHub issue templates for PoC feedback and bugs. Verified on Linux (amd64 guest); the Windows script is untested on real Windows.
 
 ### Added
