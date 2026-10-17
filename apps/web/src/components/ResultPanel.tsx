@@ -6,6 +6,7 @@ import { SourceLink } from '@/components/sources/SourceLink';
 import { Eyebrow, Stat, SubsectionTitle, TextMuted, TextSmall } from '@/components/ui/Typography';
 import { Markdown } from '@/components/ui/Markdown';
 import { Badge } from '@/components/ui/Badge';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/Table';
 import { sanitizeWorkflowError } from '@/lib/workflow-errors';
 
@@ -23,10 +24,7 @@ function Card({ title, children, className = '' }: { title?: string; children: R
 function ErrorBanner({ message }: { message: string }) {
   return (
     <Card title="Something went wrong">
-      <div className="flex gap-3 items-start rounded-md bg-danger/10 border border-danger/30 p-4">
-        <span className="text-danger text-lg leading-none">!</span>
-        <p className="text-sm text-danger leading-relaxed">{message}</p>
-      </div>
+      <ErrorState message={message} />
     </Card>
   );
 }

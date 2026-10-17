@@ -110,7 +110,7 @@ export default function OnboardingChecklist({
       <div className="space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <Text className="font-semibold text-[21px] tracking-[-0.02em]">
+            <Text className="font-semibold text-[length:var(--fs-h2)] tracking-[-0.02em]">
               {hasProduct ? 'Getting started' : 'Start here'}
             </Text>
             <TextMuted className="mt-1 text-body-sm">

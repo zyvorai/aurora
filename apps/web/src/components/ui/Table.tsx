@@ -34,10 +34,23 @@ export function TableRow({
     <tr
       className={cn(
         'border-t border-border first:border-t-0',
-        onClick && 'cursor-pointer hover:bg-surface/80',
+        onClick && 'cursor-pointer hover:bg-surface/80 focus-ring',
         className,
       )}
       onClick={onClick}
+      // Clickable rows are keyboard-operable: focusable, Enter/Space activate.
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.target !== e.currentTarget) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
     >
       {children}
     </tr>
@@ -46,12 +59,12 @@ export function TableRow({
 
 export function TableHeaderCell({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <th className={cn('px-4 py-2.5 text-[11px] font-normal tracking-[0.02em] uppercase text-muted', className)}>
+    <th scope="col" className={cn('px-4 py-2.5 text-[length:var(--fs-micro)] font-normal tracking-[0.02em] uppercase text-muted', className)}>
       {children}
     </th>
   );
 }
 
 export function TableCell({ children, className }: { children: ReactNode; className?: string }) {
-  return <td className={cn('px-4 py-3 text-[13px]', className)}>{children}</td>;
+  return <td className={cn('px-4 py-3 text-[length:var(--fs-small)]', className)}>{children}</td>;
 }

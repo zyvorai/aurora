@@ -25,7 +25,7 @@ function ToastItem({ toast, closing }: { toast: ToastMessage; closing: boolean }
   const Icon = ICONS[toast.variant];
   return (
     <div
-      role="alert"
+      role={toast.variant === 'error' ? 'alert' : 'status'}
       className={cn(
         'flex items-start gap-2 rounded-[var(--radius-liquid)] border px-4 py-3 shadow-lg',
         'bg-[var(--glass-bg-elevated)] backdrop-blur-[var(--blur-liquid-sm)] text-body-sm',
@@ -39,7 +39,7 @@ function ToastItem({ toast, closing }: { toast: ToastMessage; closing: boolean }
         type="button"
         onClick={() => dismissToast(toast.id)}
         aria-label="Dismiss notification"
-        className="shrink-0 text-muted hover:text-foreground"
+        className="focus-ring -m-2.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </button>

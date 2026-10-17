@@ -164,6 +164,7 @@ export default function CommandPalette({ open, onClose, items, title = 'Jump toâ
                   <button
                     key={item.id}
                     type="button"
+                    aria-selected={isActive}
                     onMouseEnter={() => setActiveIndex(flatIndex)}
                     onClick={() => {
                       onClose();

@@ -124,10 +124,10 @@ export function StatGrid({ items, variant = 'strip', className }: StatGridProps)
     <div className={cn('grid grid-cols-2 sm:grid-cols-3 gap-4', className)}>
       {items.map((item) => (
         <div key={item.label}>
-          <p className="text-[20px] font-semibold tabular-nums" style={item.color ? { color: item.color } : undefined}>
+          <p className="text-[length:var(--fs-figure)] font-semibold tabular-nums" style={item.color ? { color: item.color } : undefined}>
             {item.value}
           </p>
-          <p className="text-[12px] text-muted capitalize">{item.label}</p>
+          <p className="text-[length:var(--fs-micro)] text-muted capitalize">{item.label}</p>
         </div>
       ))}
     </div>
