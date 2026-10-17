@@ -32,7 +32,11 @@ const CORE_FEATURES = [
   },
   {
     title: 'Omnichannel Publishing',
-    description: 'Push content to LinkedIn, X, Medium, Dev.to, Reddit, and email — suppression-aware.',
+    description: 'Push content to LinkedIn, X, Medium, Dev.to, Reddit, WordPress, and email — suppression-aware.',
+  },
+  {
+    title: 'SEO Scoring',
+    description: 'Audit pages and score drafts with checks computed from the content itself. Keyword data is labelled measured or estimated.',
   },
   {
     title: 'Multi-Tenant Workspaces',
