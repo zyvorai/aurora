@@ -7,6 +7,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Added
 
+- **Easy-test PoC**: `docker-compose.poc.yml` (Postgres, Qdrant, API, web; prebuilt multi-arch images), `scripts/poc/install.sh` and `install.ps1` one-line installers with an `aurora-poc` helper (`status|logs|down|up|update|llm|reset|feedback|uninstall`), `docs/poc.md`, and GitHub issue templates for PoC feedback and bugs. Verified on Linux (amd64 guest); the Windows script is untested on real Windows.
+
+### Added
+
 - **Portable web image**: the browser calls a relative `/api/v1`, and `src/middleware.ts` proxies it to `API_INTERNAL_URL` read at runtime (default `http://api:8000` in the image), so a prebuilt image works on any host name or in Kubernetes. Rewrite proxy timeout raised to 30 min for long agent calls. `NEXT_PUBLIC_API_URL` still overrides for split-origin deployments.
 - `.github/workflows/release-images.yml`: on a `v*` tag, multi-arch (amd64 + arm64) `aurora-api`, `aurora-workers`, `aurora-web` images to GHCR, keyless cosign-signed, with a PoC-stack smoke test once `docker-compose.poc.yml` exists.
 - `.gitattributes`: LF endings for shell/Python so Windows checkouts do not break `docker-entrypoint.sh`.
