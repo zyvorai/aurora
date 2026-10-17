@@ -2,6 +2,7 @@
 including the deliberate multi-tenant-email-ambiguity behavior (404/409)."""
 
 import uuid
+from urllib.parse import unquote_plus
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -93,15 +94,18 @@ class TestSsoRoutes:
         assert response.status_code in (302, 307)
         assert response.headers["location"].startswith("https://idp.example.com/authorize?")
 
-    def test_callback_returns_501_when_disabled(self, monkeypatch):
+    def test_callback_redirects_with_error_when_disabled(self, monkeypatch):
         from gtm_api.routers import auth as auth_router
 
         monkeypatch.setattr(auth_router.settings, "sso_enabled", False)
         with TestClient(app) as client:
-            response = client.get("/api/v1/auth/sso/callback", params={"code": "x"})
-        assert response.status_code == 501
+            response = client.get("/api/v1/auth/sso/callback", params={"code": "x"}, follow_redirects=False)
+        # A full-page redirect flow: errors send the browser back into the app, not a bare JSON error page.
+        assert response.status_code in (302, 307)
+        assert "/login/callback?error=" in response.headers["location"]
+        assert "SSO_ENABLED" in unquote_plus(response.headers["location"])
 
-    def test_callback_404_when_no_account_matches_email(self, monkeypatch):
+    def test_callback_redirects_with_error_when_no_account_matches_email(self, monkeypatch):
         from gtm_api.routers import auth as auth_router
 
         monkeypatch.setattr(auth_router.settings, "sso_enabled", True)
@@ -121,11 +125,13 @@ class TestSsoRoutes:
             patch("gtm_api.routers.auth.fetch_userinfo", AsyncMock(return_value={"email": "nouser@example.com"})),
         ):
             with TestClient(app) as client:
-                response = client.get("/api/v1/auth/sso/callback", params={"code": "x"})
+                response = client.get("/api/v1/auth/sso/callback", params={"code": "x"}, follow_redirects=False)
 
-        assert response.status_code == 404
+        assert response.status_code in (302, 307)
+        loc = unquote_plus(response.headers["location"])
+        assert "/login/callback?error=" in loc and "No account provisioned for nouser@example.com" in loc
 
-    def test_callback_409_when_email_ambiguous_across_tenants(self, monkeypatch):
+    def test_callback_redirects_with_error_when_email_ambiguous_across_tenants(self, monkeypatch):
         from gtm_api.routers import auth as auth_router
 
         monkeypatch.setattr(auth_router.settings, "sso_enabled", True)
@@ -149,11 +155,13 @@ class TestSsoRoutes:
             patch("gtm_api.routers.auth.fetch_userinfo", AsyncMock(return_value={"email": "dupe@example.com"})),
         ):
             with TestClient(app) as client:
-                response = client.get("/api/v1/auth/sso/callback", params={"code": "x"})
+                response = client.get("/api/v1/auth/sso/callback", params={"code": "x"}, follow_redirects=False)
 
-        assert response.status_code == 409
+        assert response.status_code in (302, 307)
+        loc = unquote_plus(response.headers["location"])
+        assert "/login/callback?error=" in loc and "multiple tenants" in loc
 
-    def test_callback_success_issues_token_for_single_match(self, monkeypatch):
+    def test_callback_redirects_with_exchange_code_for_single_match(self, monkeypatch):
         from gtm_api.routers import auth as auth_router
 
         monkeypatch.setattr(auth_router.settings, "sso_enabled", True)
@@ -178,9 +186,9 @@ class TestSsoRoutes:
             patch("gtm_api.routers.auth.fetch_userinfo", AsyncMock(return_value={"email": "ok@example.com"})),
         ):
             with TestClient(app) as client:
-                response = client.get("/api/v1/auth/sso/callback", params={"code": "x"})
+                response = client.get("/api/v1/auth/sso/callback", params={"code": "x"}, follow_redirects=False)
 
-        assert response.status_code == 200
-        body = response.json()
-        assert body["role"] == "editor"
-        assert body["tenant_id"] == str(tenant_id)
+        # Success redirects into the app with a short-lived exchange code (not the raw token as JSON).
+        assert response.status_code in (302, 307)
+        loc = response.headers["location"]
+        assert "/login/callback?code=" in loc and "error=" not in loc
