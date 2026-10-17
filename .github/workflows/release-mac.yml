@@ -1,0 +1,83 @@
+name: release-mac
+
+# Tag vX.Y.Z -> Aurora for Mac: test, build, sign (Developer ID), notarize, staple, attach the DMG to the GitHub Release.
+# Signing and notarization run only when the secrets exist; otherwise an unsigned DMG is still produced.
+# Secrets (repo or org): MACOS_CERTS_P12 (base64 .p12 with the Developer ID Application identity), MACOS_CERTS_PASSWORD,
+# DEVELOPER_ID_APP ("Developer ID Application: NAME (TEAMID)"), NOTARY_KEY_P8 (base64 App Store Connect API key),
+# NOTARY_KEY_ID, NOTARY_ISSUER.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build (e.g. v0.2.0)"
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  mac:
+    runs-on: macos-15
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      HAVE_CERTS: ${{ secrets.MACOS_CERTS_P12 != '' }}
+      HAVE_NOTARY: ${{ secrets.NOTARY_KEY_P8 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - run: brew install xcodegen
+      - name: AuroraKit tests
+        run: swift test --package-path native/AuroraKit
+      - name: App tests
+        run: |
+          cd native && xcodegen generate
+          xcodebuild -project Aurora.xcodeproj -scheme Aurora -derivedDataPath build CODE_SIGNING_ALLOWED=NO test | tail -5
+      - name: Import signing identity
+        if: env.HAVE_CERTS == 'true'
+        env:
+          P12: ${{ secrets.MACOS_CERTS_P12 }}
+          P12_PASSWORD: ${{ secrets.MACOS_CERTS_PASSWORD }}
+        run: |
+          kc="$RUNNER_TEMP/signing.keychain-db"; kc_pass="$(openssl rand -hex 16)"
+          security create-keychain -p "$kc_pass" "$kc"
+          security set-keychain-settings -lut 3600 "$kc"
+          security unlock-keychain -p "$kc_pass" "$kc"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/certs.p12"
+          security import "$RUNNER_TEMP/certs.p12" -k "$kc" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$kc_pass" "$kc" >/dev/null
+          existing=(); while IFS= read -r k; do existing+=("$k"); done < <(security list-keychains -d user | tr -d '" ')
+          security list-keychains -d user -s "$kc" "${existing[@]}"
+          rm "$RUNNER_TEMP/certs.p12"
+      - name: Store notarytool credentials
+        if: env.HAVE_CERTS == 'true' && env.HAVE_NOTARY == 'true'
+        env:
+          KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          ISSUER: ${{ secrets.NOTARY_ISSUER }}
+        run: |
+          echo "$KEY_P8" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+          xcrun notarytool store-credentials aurora-notary --key "$RUNNER_TEMP/notary.p8" --key-id "$KEY_ID" --issuer "$ISSUER" \
+            --keychain "$RUNNER_TEMP/signing.keychain-db"
+          rm "$RUNNER_TEMP/notary.p8"
+          echo "NOTARY_PROFILE=aurora-notary" >> "$GITHUB_ENV"
+      - name: Package
+        env:
+          DEVELOPER_ID_APP: ${{ env.HAVE_CERTS == 'true' && secrets.DEVELOPER_ID_APP || '' }}
+        run: AURORA_VERSION="${TAG#v}" scripts/package-mac.sh
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/Aurora-*.dmg
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Aurora ${TAG#v}" --notes "See CHANGELOG.md" --verify-tag
+          gh release upload "$TAG" dist/Aurora-*.dmg dist/Aurora-*.dmg.sha256 --clobber
+      - name: Remove keychain
+        if: always() && env.HAVE_CERTS == 'true'
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true

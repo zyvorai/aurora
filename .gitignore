@@ -49,3 +49,7 @@ infra/nginx/certs/*
 # Local secrets (never commit)
 secrets/
 .docs-tools/
+native/build/
+native/Aurora.xcodeproj/
+dist/
+native/AuroraKit/.build/
