@@ -122,6 +122,17 @@ class Settings(BaseSettings):
     medium_access_token: str = ""
     medium_author_id: str = ""
     devto_api_key: str = ""
+    # SEO: keyword/SERP provider ("grounded" = knowledge-base terms, labelled estimates; no external call).
+    seo_provider: str = "grounded"  # grounded | dataforseo | search_console
+    dataforseo_login: str = ""
+    dataforseo_password: str = ""
+    # Google Search Console (read-only). The OAuth app and token come from the operator.
+    gsc_access_token: str = ""
+    gsc_site_url: str = ""  # e.g. "https://example.com/" or "sc-domain:example.com"
+    # WordPress REST publishing (application password).
+    wordpress_url: str = ""
+    wordpress_user: str = ""
+    wordpress_app_password: str = ""
     reddit_access_token: str = ""
     reddit_subreddit: str = ""
     reddit_user_agent: str = "AuroraBot/1.0"
@@ -336,6 +347,18 @@ class Settings(BaseSettings):
     @property
     def devto_configured(self) -> bool:
         return bool(self.devto_api_key)
+
+    @property
+    def dataforseo_configured(self) -> bool:
+        return bool(self.dataforseo_login and self.dataforseo_password)
+
+    @property
+    def gsc_configured(self) -> bool:
+        return bool(self.gsc_access_token and self.gsc_site_url)
+
+    @property
+    def wordpress_configured(self) -> bool:
+        return bool(self.wordpress_url and self.wordpress_user and self.wordpress_app_password)
 
     @property
     def reddit_configured(self) -> bool:

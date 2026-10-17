@@ -163,7 +163,7 @@ now enqueues `refresh_product_knowledge` the same way via `enqueue_product_refre
 
 ### Gaps ⚠️
 
-- No multi-language or SEO scoring
+- No multi-language generation (SEO scoring now exists, see `docs/seo.md`)
 - Tone/persona params exist but UI uses defaults
 
 ### Acceptance criteria
@@ -173,7 +173,7 @@ now enqueues `refresh_product_knowledge` the same way via `enqueue_product_refre
 - [x] Approval required before publish
 - [x] Content review/approve/publish UI
 - [ ] Multi-language generation
-- [ ] SEO scoring
+- [x] SEO scoring (deterministic audit + content score, `docs/seo.md`)
 
 ### Tests
 

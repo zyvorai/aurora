@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Added
+
+- **SEO suite (API)**: deterministic page audit and content scoring, keyword providers (grounded estimates, DataForSEO, Search Console), `seo_article` content type with an SEO block (meta + Article JSON-LD) on artifacts, and a WordPress publishing adapter. See `docs/seo.md`.
+
 ### Changed
 
 - **UX contract, phase 2** (`apps/web`): all hard-coded colours in component CSS replaced by tokens (`color-mix` for tints), global `:focus-visible` outline for links/buttons, nav type on the scale, `scripts/check-tokens.sh` guard, `docs/design/APPLE-UX-CONTRACT.md`.
