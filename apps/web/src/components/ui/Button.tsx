@@ -18,15 +18,15 @@ const variants: Record<Variant, string> = {
     'rounded-full text-foreground border border-[var(--border)] bg-transparent ' +
     'hover:bg-[var(--nav-hover-bg)] transition-colors font-normal',
   ghost: 'rounded-[var(--radius-sm)] text-muted hover:text-foreground hover:bg-[var(--nav-hover-bg)] transition-colors font-normal',
-  danger: 'rounded-full bg-danger/10 text-danger hover:bg-danger/15 transition-colors font-normal',
+  danger: 'rounded-full text-[var(--on-primary)] bg-danger border border-danger hover:opacity-90 transition-opacity font-normal',
   link: 'text-[var(--accent-blue)] hover:underline underline-offset-2 p-0 h-auto font-normal',
 };
 
-/** Comfortable tap targets — default md (40px). */
+/** Touch-safe targets: md is 44px (--hit-min); sm is for dense toolbars only. */
 const sizes = {
   sm: 'h-9 min-h-9 px-4 text-[14px] leading-none',
-  md: 'h-10 min-h-10 px-5 text-[15px] leading-none',
-  lg: 'h-11 min-h-11 px-6 text-[16px] leading-none',
+  md: 'h-11 min-h-11 px-5 text-[15px] leading-none',
+  lg: 'h-12 min-h-12 px-6 text-[16px] leading-none',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

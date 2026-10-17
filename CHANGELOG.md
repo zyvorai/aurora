@@ -7,6 +7,11 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Changed
 
+- **UX contract, phase 1** (`apps/web`): Netra-style type scale tokens (`--fs-*`), `--hit-min`, `--hairline`, `--scrim`;
+  `Button` md is now 44px and `danger` is solid; `Modal` has a unique title id, focus trap and focus return; toasts use
+  `role="status"` except errors; clickable table rows are keyboard-operable; `StageChain` has `aria-current` and a focus ring.
+- New primitives in `components/ui`: `Tabs`, `Select`, `Switch`, `Toolbar`/`SearchField`, `StatBand`, `ErrorState`,
+  `IconButton`, `Spinner`, `Callout`, `Drawer`.
 - Replaced the AGPL-3.0 + Aurora Commercial License dual license with the Zyvor Production License v1.0. Non-production use is free. Production use requires a separate paid commercial license (https://zyvor.dev).
 
 ## 2026-09-14

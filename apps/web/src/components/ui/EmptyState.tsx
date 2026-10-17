@@ -36,11 +36,11 @@ export function EmptyState({ icon: Icon, title, description, actions, tone, clas
             <Icon className="h-5 w-5" />
           </div>
         )}
-        <h2 className="text-[28px] sm:text-[32px] font-semibold tracking-[-0.03em] text-foreground leading-tight mb-3">
+        <h2 className="text-[length:var(--fs-h1)] font-semibold tracking-[-0.03em] text-foreground leading-tight mb-3">
           {title}
         </h2>
         {description && (
-          <p className="mx-auto mb-8 max-w-md text-[17px] leading-[1.47] text-muted">{description}</p>
+          <p className="mx-auto mb-8 max-w-md text-[length:var(--fs-lede)] leading-[1.47] text-muted">{description}</p>
         )}
         {actions && actions.length > 0 && (
           <div className="flex flex-wrap justify-center gap-3">

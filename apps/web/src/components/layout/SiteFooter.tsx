@@ -66,7 +66,7 @@ export function SiteFooter() {
     <footer className="bg-[var(--hs-bg-alt)] border-t border-border mt-auto">
       <Container tier="marketing" className="pt-14 pb-10 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10">
         <div className="col-span-2 md:col-span-1">
-          <p className="text-[19px] font-semibold tracking-[-0.03em] text-foreground mb-1.5">Aurora</p>
+          <p className="text-[length:var(--fs-h3)] font-semibold tracking-[-0.03em] text-foreground mb-1.5">Aurora</p>
           <p className="text-[12px] text-[var(--hs-text-subtle)] leading-relaxed max-w-[18ch]">
             Turn your product into an AI salesperson.
           </p>

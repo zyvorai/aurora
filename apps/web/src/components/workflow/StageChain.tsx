@@ -48,8 +48,9 @@ export function StageChain({
             <button
               type="button"
               onClick={() => onSelect?.(stage.id)}
+              aria-current={active ? 'step' : undefined}
               className={cn(
-                'w-full text-left rounded-[var(--radius-lg)] bg-surface px-4 py-4 transition-colors',
+                'focus-ring w-full text-left rounded-[var(--radius-lg)] bg-surface px-4 py-4 transition-colors',
                 'hover:bg-[var(--hs-bg-alt)]',
                 active && 'ring-1 ring-inset ring-border bg-[var(--hs-bg-alt)]',
                 stage.status === 'idle' && 'opacity-55',
