@@ -123,7 +123,12 @@ case "$cmd" in
     [ "$cmd" = install ] && { fetch_compose; mkdir -p "$DIR"; have_env SECRET_KEY || set_env SECRET_KEY "$(rand_hex 32)"; have_env POSTGRES_PASSWORD || set_env POSTGRES_PASSWORD "$(rand_hex 16)"
       [ -n "${AURORA_VERSION:-}" ] && set_env AURORA_VERSION "$AURORA_VERSION"; set_env AURORA_PORT "$PORT"; choose_llm; install_self; }
     say "Starting Aurora"
-    compose up -d --wait --wait-timeout 600 || warn "compose reported a problem; continuing to health check"
+    # Image pulls are the usual first-run failure (slow or flaky network): retry before giving up.
+    for attempt in 1 2 3; do
+      compose up -d --wait --wait-timeout 600 && break
+      [ "$attempt" = 3 ] && warn "compose reported a problem; continuing to health check" && break
+      warn "compose up failed (attempt $attempt of 3) - retrying in 10s"; sleep 10
+    done
     wait_healthy && { banner; [ -z "${AURORA_NO_OPEN:-}" ] && open_url "http://localhost:${PORT}"; } ;;
   down)      need_docker; compose down ;;
   status)    need_docker; compose ps; curl -fsS "http://127.0.0.1:${AURORA_API_PORT:-8000}/health" || true; echo ;;
