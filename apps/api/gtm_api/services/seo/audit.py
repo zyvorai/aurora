@@ -76,16 +76,16 @@ def audit_html(html: str, url: str) -> SeoAudit:
     host = urlparse(url).netloc
 
     title = soup.title.string.strip() if soup.title and soup.title.string else ""
-    desc_tag = soup.find("meta", attrs={"name": re.compile("^description$", re.I)})
+    desc_tag = soup.find("meta", attrs={"name": re.compile("^description$", re.IGNORECASE)})
     description = (desc_tag.get("content") or "").strip() if desc_tag else ""
     canon_tag = soup.find("link", rel=lambda v: v and "canonical" in v)
     canonical = urljoin(url, canon_tag["href"]) if canon_tag and canon_tag.get("href") else ""
-    robots_tag = soup.find("meta", attrs={"name": re.compile("^robots$", re.I)})
+    robots_tag = soup.find("meta", attrs={"name": re.compile("^robots$", re.IGNORECASE)})
     robots = (robots_tag.get("content") or "").lower() if robots_tag else ""
-    viewport = soup.find("meta", attrs={"name": re.compile("^viewport$", re.I)})
+    viewport = soup.find("meta", attrs={"name": re.compile("^viewport$", re.IGNORECASE)})
     html_tag = soup.find("html")
     lang = (html_tag.get("lang") or "").strip() if html_tag else ""
-    og = soup.find("meta", property=re.compile("^og:", re.I)) is not None
+    og = soup.find("meta", property=re.compile("^og:", re.IGNORECASE)) is not None
 
     headings = [(int(h.name[1]), h.get_text(" ", strip=True)) for h in soup.find_all(re.compile("^h[1-6]$"))]
     h1 = [text for level, text in headings if level == 1]

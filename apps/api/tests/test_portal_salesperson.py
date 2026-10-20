@@ -4,7 +4,7 @@ scoped-pipeline visibility (a sales person must only see leads/opportunities ass
 their own account, via Lead.assigned_sales_person_id / Opportunity.assigned_sales_person_id)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -33,7 +33,7 @@ def _salesperson_account(**overrides):
         id=uuid.uuid4(), tenant_id=uuid.uuid4(),
         email="rep@example.com", hashed_password=hash_password("password123"),
         status=PortalAccountStatus.PENDING, is_active=True,
-        commission_rate=0.0, created_at=datetime.now(timezone.utc),
+        commission_rate=0.0, created_at=datetime.now(UTC),
     )
     defaults.update(overrides)
     return SalesPersonAccount(**defaults)
@@ -69,7 +69,7 @@ class TestSalesPersonSignup:
 
         def _populate(entry):
             entry.id = uuid.uuid4()
-            entry.created_at = datetime.now(timezone.utc)
+            entry.created_at = datetime.now(UTC)
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(
@@ -190,7 +190,7 @@ class TestCrossPortalTypeDiscrimination:
             id=uuid.uuid4(), tenant_id=uuid.uuid4(), product_id=uuid.uuid4(),
             email="cust@example.com", hashed_password=hash_password("x"),
             status=PortalAccountStatus.APPROVED, is_active=True,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         token = create_portal_token(customer.id, customer.tenant_id, portal_type="customer")
 
@@ -268,13 +268,13 @@ class TestSalesPersonPipeline:
         lead = Lead(
             id=uuid.uuid4(), product_id=uuid.uuid4(), tenant_id=rep.tenant_id,
             company="Prospect Co", name="Pat Prospect", stage="new", score=0.0,
-            assigned_sales_person_id=rep.id, created_at=datetime.now(timezone.utc),
+            assigned_sales_person_id=rep.id, created_at=datetime.now(UTC),
         )
         opportunity = Opportunity(
             id=uuid.uuid4(), product_id=uuid.uuid4(), tenant_id=rep.tenant_id,
             name="Prospect Co deal", stage="discovery", probability=0.1,
             assigned_sales_person_id=rep.id, metadata_={},
-            created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC), updated_at=datetime.now(UTC),
         )
 
         mock_db = AsyncMock()
@@ -326,13 +326,13 @@ class TestSalesPersonActivity:
         lead = Lead(
             id=uuid.uuid4(), product_id=uuid.uuid4(), tenant_id=tenant.id,
             company="Prospect Co", name="Pat Prospect", stage="qualification", score=0.5,
-            assigned_sales_person_id=rep.id, created_at=datetime.now(timezone.utc),
+            assigned_sales_person_id=rep.id, created_at=datetime.now(UTC),
         )
         opportunity = Opportunity(
             id=uuid.uuid4(), product_id=uuid.uuid4(), tenant_id=tenant.id,
             name="Prospect Co deal", stage="proposal", probability=0.4,
             assigned_sales_person_id=rep.id, metadata_={},
-            created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC), updated_at=datetime.now(UTC),
         )
 
         mock_db = AsyncMock()

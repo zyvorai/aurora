@@ -3,7 +3,7 @@ login, portal-token discrimination (a portal token must never satisfy get_curren
 and vice versa), and admin approve/reject."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -27,7 +27,7 @@ def _customer_account(**overrides):
         id=uuid.uuid4(), tenant_id=uuid.uuid4(), product_id=uuid.uuid4(),
         email="cust@example.com", hashed_password=hash_password("password123"),
         status=PortalAccountStatus.PENDING, is_active=True,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     defaults.update(overrides)
     return CustomerAccount(**defaults)
@@ -71,7 +71,7 @@ class TestCustomerSignup:
 
         def _populate(entry):
             entry.id = uuid.uuid4()
-            entry.created_at = datetime.now(timezone.utc)
+            entry.created_at = datetime.now(UTC)
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(

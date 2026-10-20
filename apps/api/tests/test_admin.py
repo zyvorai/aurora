@@ -88,7 +88,7 @@ async def test_purge_succeeds_with_matching_slug():
     mock_db.execute = AsyncMock(
         side_effect=[
             MagicMock(scalar_one_or_none=lambda: tenant),  # get_tenant_context
-            MagicMock(scalars=lambda: MagicMock(all=lambda: [])),  # purge_tenant_data's product lookup
+            MagicMock(scalars=lambda: MagicMock(all=list)),  # purge_tenant_data's product lookup
         ]
     )
     mock_db.get = AsyncMock(return_value=tenant)

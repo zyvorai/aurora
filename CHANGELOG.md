@@ -7,6 +7,7 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ### Fixed
 
+- `ruff check` is now clean and blocks CI (it was `continue-on-error` with ~870 findings). Autofixes applied across `apps/api`; stylistic rules with a large footprint are ignored in `[tool.ruff.lint]`. This also fixed a real bug: `solution_architect.py` used `json` without importing it, so parsing the agent's LLM reply raised `NameError`.
 - PoC installer retries `docker compose up` up to three times (image pulls are the usual first-run failure on slow or flaky networks) instead of warning once and waiting for a health check that cannot pass.
 - Pages workflow no longer runs on `release: published`: the `github-pages` environment only deploys from the default branch, so the tag-ref run failed after every release. Re-run it manually (`workflow_dispatch`) or push to `main` to refresh the footer version.
 

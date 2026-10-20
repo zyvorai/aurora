@@ -2,9 +2,9 @@
 
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field, HttpUrl
+from pydantic import BaseModel, EmailStr, Field
 
 
 # Auth
@@ -56,8 +56,8 @@ class ApiKeyResponse(BaseModel):
     name: str
     role: str
     key_prefix: str
-    last_used_at: Optional[datetime] = None
-    revoked_at: Optional[datetime] = None
+    last_used_at: datetime | None = None
+    revoked_at: datetime | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -98,10 +98,10 @@ class CustomerAccountResponse(BaseModel):
     tenant_id: uuid.UUID
     product_id: uuid.UUID
     email: str
-    company_name: Optional[str] = None
-    contact_name: Optional[str] = None
+    company_name: str | None = None
+    contact_name: str | None = None
     status: str
-    rejected_reason: Optional[str] = None
+    rejected_reason: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -111,8 +111,8 @@ class CustomerProfileUpdateRequest(BaseModel):
     """Self-service profile edit -- deliberately excludes email/status/product_id/
     tenant_id, which only an admin (via the approve/reject endpoints) may change."""
 
-    company_name: Optional[str] = Field(None, max_length=255)
-    contact_name: Optional[str] = Field(None, max_length=255)
+    company_name: str | None = Field(None, max_length=255)
+    contact_name: str | None = Field(None, max_length=255)
 
 
 class PortalRejectRequest(BaseModel):
@@ -145,8 +145,8 @@ class TicketResponse(BaseModel):
     description: str
     status: str
     priority: str
-    resolved_by: Optional[uuid.UUID] = None
-    resolved_at: Optional[datetime] = None
+    resolved_by: uuid.UUID | None = None
+    resolved_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -158,7 +158,7 @@ class TicketWithCustomerResponse(TicketResponse):
     to triage without a second lookup."""
 
     customer_email: str
-    customer_company_name: Optional[str] = None
+    customer_company_name: str | None = None
 
 
 class ResellerSignupRequest(BaseModel):
@@ -174,14 +174,14 @@ class ResellerAccountResponse(BaseModel):
     id: uuid.UUID
     tenant_id: uuid.UUID
     email: str
-    company_name: Optional[str] = None
-    contact_name: Optional[str] = None
-    business_id: Optional[str] = None
+    company_name: str | None = None
+    contact_name: str | None = None
+    business_id: str | None = None
     margin_tier: str = "standard"
-    authorized_product_ids: Optional[list[uuid.UUID]] = None
-    proof_document_key: Optional[str] = None
+    authorized_product_ids: list[uuid.UUID] | None = None
+    proof_document_key: str | None = None
     status: str
-    rejected_reason: Optional[str] = None
+    rejected_reason: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -191,17 +191,17 @@ class ResellerProfileUpdateRequest(BaseModel):
     """Self-service profile edit -- excludes email/status/margin_tier/
     authorized_product_ids, which only an admin may change."""
 
-    company_name: Optional[str] = Field(None, max_length=255)
-    contact_name: Optional[str] = Field(None, max_length=255)
+    company_name: str | None = Field(None, max_length=255)
+    contact_name: str | None = Field(None, max_length=255)
 
 
 class DealRegistrationRequest(BaseModel):
     product_id: uuid.UUID
     company_name: str = Field(..., min_length=1, max_length=255)
-    domain: Optional[str] = None
-    industry: Optional[str] = None
-    company_size: Optional[str] = None
-    geo: Optional[str] = None
+    domain: str | None = None
+    industry: str | None = None
+    company_size: str | None = None
+    geo: str | None = None
 
 
 class DealRegistrationResponse(BaseModel):
@@ -225,12 +225,12 @@ class SalesPersonAccountResponse(BaseModel):
     id: uuid.UUID
     tenant_id: uuid.UUID
     email: str
-    contact_name: Optional[str] = None
+    contact_name: str | None = None
     commission_rate: float = 0.0
-    territory: Optional[str] = None
-    proof_document_key: Optional[str] = None
+    territory: str | None = None
+    proof_document_key: str | None = None
     status: str
-    rejected_reason: Optional[str] = None
+    rejected_reason: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -240,16 +240,16 @@ class SalesPersonProfileUpdateRequest(BaseModel):
     """Self-service profile edit -- excludes email/status/commission_rate, which only
     an admin may change."""
 
-    contact_name: Optional[str] = Field(None, max_length=255)
-    territory: Optional[str] = Field(None, max_length=255)
+    contact_name: str | None = Field(None, max_length=255)
+    territory: str | None = Field(None, max_length=255)
 
 
 class SalesPersonLeadResponse(BaseModel):
     id: uuid.UUID
-    company: Optional[str] = None
-    name: Optional[str] = None
-    email: Optional[str] = None
-    title: Optional[str] = None
+    company: str | None = None
+    name: str | None = None
+    email: str | None = None
+    title: str | None = None
     score: float = 0.0
     stage: str
     created_at: datetime
@@ -260,16 +260,16 @@ class SalesPersonLeadResponse(BaseModel):
 # Products
 class ProductCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)
-    website_url: Optional[str] = None
-    description: Optional[str] = None
+    website_url: str | None = None
+    description: str | None = None
 
 
 class ProductResponse(BaseModel):
     id: uuid.UUID
     name: str
-    website_url: Optional[str]
-    description: Optional[str]
-    profile: Optional[dict]
+    website_url: str | None
+    description: str | None
+    profile: dict | None
     profile_status: str
     created_at: datetime
 
@@ -278,28 +278,28 @@ class ProductResponse(BaseModel):
 
 class SourceCreate(BaseModel):
     source_type: str
-    url: Optional[str] = None
-    display_name: Optional[str] = None
-    metadata: Optional[dict] = None
-    github_token: Optional[str] = None
+    url: str | None = None
+    display_name: str | None = None
+    metadata: dict | None = None
+    github_token: str | None = None
 
 
 class DatabaseSourceCreate(BaseModel):
     engine: str = Field(..., pattern="^(postgresql|mysql|mariadb)$")
     host: str
-    port: Optional[int] = None
+    port: int | None = None
     database: str
     username: str
     password: str
     tables: list[str] = Field(..., min_length=1)
-    display_name: Optional[str] = None
+    display_name: str | None = None
     read_only: bool = True
 
 
 class DatabaseTestRequest(BaseModel):
     engine: str = Field(..., pattern="^(postgresql|mysql|mariadb)$")
     host: str
-    port: Optional[int] = None
+    port: int | None = None
     database: str
     username: str
     password: str
@@ -312,17 +312,17 @@ class DatabaseTestResponse(BaseModel):
 class SourceResponse(BaseModel):
     id: uuid.UUID
     source_type: str
-    url: Optional[str]
-    display_name: Optional[str]
-    storage_key: Optional[str] = None
-    mime_type: Optional[str] = None
-    file_size_bytes: Optional[int] = None
+    url: str | None
+    display_name: str | None
+    storage_key: str | None = None
+    mime_type: str | None = None
+    file_size_bytes: int | None = None
     status: str
     pages_discovered: int
     pages_processed: int
-    error_message: Optional[str]
-    metadata: Optional[dict] = None
-    last_crawled_at: Optional[datetime] = None
+    error_message: str | None
+    metadata: dict | None = None
+    last_crawled_at: datetime | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -348,7 +348,7 @@ class SourceResponse(BaseModel):
 
 
 class IngestRequest(BaseModel):
-    source_ids: Optional[list[uuid.UUID]] = None
+    source_ids: list[uuid.UUID] | None = None
     force: bool = False
     async_mode: bool = True
 
@@ -358,19 +358,19 @@ class IngestResponse(BaseModel):
     status: str
     message: str
     sources_queued: int = 0
-    results: Optional[list[dict]] = None
+    results: list[dict] | None = None
 
 
 class ProductProfile(BaseModel):
-    summary: Optional[str] = None
+    summary: str | None = None
     features: list[str] = []
     technical_stack: list[str] = []
-    industry: Optional[str] = None
+    industry: str | None = None
     target_personas: list[str] = []
     competitors: list[str] = []
-    pricing: Optional[str] = None
+    pricing: str | None = None
     faqs: list[dict] = []
-    architecture: Optional[str] = None
+    architecture: str | None = None
     use_cases: list[str] = []
     pain_points: list[str] = []
     roi_statements: list[str] = []
@@ -380,14 +380,14 @@ class ProductProfile(BaseModel):
 
 class QueryRequest(BaseModel):
     question: str = Field(..., min_length=3, max_length=2000)
-    session_id: Optional[str] = None
+    session_id: str | None = None
 
 
 class Citation(BaseModel):
     chunk_id: str
     document_title: str
     excerpt: str
-    url: Optional[str] = None
+    url: str | None = None
 
 
 class QueryResponse(BaseModel):
@@ -424,7 +424,7 @@ class ContentRequest(BaseModel):
     content_type: str = Field(..., description="linkedin, blog, email, x_thread, etc.")
     topic: str
     tone: str = "professional"
-    target_persona: Optional[str] = None
+    target_persona: str | None = None
 
 
 class ContentResponse(BaseModel):
@@ -438,14 +438,14 @@ class ContentResponse(BaseModel):
 
 class ApprovalRequest(BaseModel):
     status: str = Field(..., pattern="^(approved|rejected)$")
-    comment: Optional[str] = None
+    comment: str | None = None
 
 
 class ApprovalResponse(BaseModel):
     id: uuid.UUID
     artifact_id: uuid.UUID
     status: str
-    reviewer_id: Optional[uuid.UUID]
+    reviewer_id: uuid.UUID | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -461,7 +461,7 @@ class ChatResponse(BaseModel):
     reply: str
     citations: list[Citation]
     grounded: bool
-    lead_score: Optional[float] = None
+    lead_score: float | None = None
     suggested_actions: list[str] = []
     sources_used: list[str] = []
 
@@ -470,8 +470,8 @@ class ChatResponse(BaseModel):
 class OutreachRequest(BaseModel):
     company_url: str
     target_persona: str = "CTO"
-    campaign_name: Optional[str] = None
-    recipient_email: Optional[str] = None
+    campaign_name: str | None = None
+    recipient_email: str | None = None
 
 
 class OutreachResponse(BaseModel):
@@ -489,8 +489,8 @@ class OutreachResponse(BaseModel):
 class PublishRequest(BaseModel):
     artifact_id: uuid.UUID
     channel: str
-    scheduled_at: Optional[datetime] = None
-    recipient: Optional[str] = None
+    scheduled_at: datetime | None = None
+    recipient: str | None = None
 
 
 class PublishResponse(BaseModel):
@@ -502,13 +502,13 @@ class PublishResponse(BaseModel):
 # Solution Architect
 class ArchitectRequest(BaseModel):
     question: str
-    context: Optional[str] = None
+    context: str | None = None
 
 
 class ArchitectResponse(BaseModel):
     answer: str
-    architecture_diagram: Optional[str]
-    deployment_plan: Optional[str]
+    architecture_diagram: str | None
+    deployment_plan: str | None
     citations: list[Citation]
     grounded: bool
     sources_used: list[str] = []
@@ -516,7 +516,7 @@ class ArchitectResponse(BaseModel):
 
 # Proposals
 class ProposalRequest(BaseModel):
-    lead_id: Optional[uuid.UUID] = None
+    lead_id: uuid.UUID | None = None
     scope: str
     include_pricing: bool = True
 
@@ -527,7 +527,7 @@ class ProposalResponse(BaseModel):
     proposal_content: str
     sow: str
     roi_analysis: str
-    pricing: Optional[str]
+    pricing: str | None
     timeline: str
     citations: list[Citation]
     sources_used: list[str] = []
@@ -576,15 +576,15 @@ class BriefResponse(BaseModel):
     risks: list[str]
     updated_at: str
     compute_tier: str = "T0"
-    narrative_llm: Optional[str] = None
+    narrative_llm: str | None = None
 
 
 # Workflows
 class OutboundSprintRequest(BaseModel):
     focus_industries: list[str] = Field(default_factory=list)
     max_leads: int = 50
-    campaign_name: Optional[str] = None
-    company_url: Optional[str] = None
+    campaign_name: str | None = None
+    company_url: str | None = None
     target_persona: str = "CTO"
 
 
@@ -602,8 +602,8 @@ class MarketResearchResponse(BaseModel):
 class DiscoverLeadsRequest(BaseModel):
     focus_industries: list[str] = Field(default_factory=list)
     max_leads: int = 50
-    csv_import: Optional[str] = None
-    geo: Optional[str] = None
+    csv_import: str | None = None
+    geo: str | None = None
 
 
 class DiscoverLeadsResponse(BaseModel):
@@ -613,7 +613,7 @@ class DiscoverLeadsResponse(BaseModel):
 
 
 class QualifyLeadsRequest(BaseModel):
-    account_ids: Optional[list[uuid.UUID]] = None
+    account_ids: list[uuid.UUID] | None = None
     focus_industries: list[str] = Field(default_factory=list)
 
 
@@ -627,13 +627,13 @@ class QualifyLeadsResponse(BaseModel):
 class PipelineLeadResponse(BaseModel):
     account_id: str
     company_name: str
-    domain: Optional[str] = None
-    industry: Optional[str] = None
+    domain: str | None = None
+    industry: str | None = None
     score: float = 0
     tier: str = "C"
-    explanation: Optional[str] = None
+    explanation: str | None = None
     factors: dict[str, Any] = Field(default_factory=dict)
-    score_id: Optional[str] = None
+    score_id: str | None = None
 
 
 class CampaignCreateRequest(BaseModel):
@@ -655,10 +655,10 @@ class CampaignResponse(BaseModel):
 # CRM (Wave 3)
 class OpportunityCreateRequest(BaseModel):
     name: str
-    company: Optional[str] = None
+    company: str | None = None
     stage: str = "discovery"
-    lead_id: Optional[uuid.UUID] = None
-    amount: Optional[float] = None
+    lead_id: uuid.UUID | None = None
+    amount: float | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -669,16 +669,16 @@ class OpportunityStageUpdate(BaseModel):
 class OpportunityResponse(BaseModel):
     id: uuid.UUID
     name: str
-    company: Optional[str] = None
+    company: str | None = None
     stage: str
-    amount: Optional[float] = None
+    amount: float | None = None
     probability: float = 0.1
-    lead_id: Optional[uuid.UUID] = None
-    proposal_artifact_id: Optional[uuid.UUID] = None
-    architect_artifact_id: Optional[uuid.UUID] = None
+    lead_id: uuid.UUID | None = None
+    proposal_artifact_id: uuid.UUID | None = None
+    architect_artifact_id: uuid.UUID | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class SalesPersonPipelineResponse(BaseModel):
@@ -704,21 +704,21 @@ class PipelineSummaryResponse(BaseModel):
 
 class InboundLeadRequest(BaseModel):
     email: str
-    name: Optional[str] = None
-    company: Optional[str] = None
-    phone: Optional[str] = None
-    title: Optional[str] = None
-    domain: Optional[str] = None
-    utm_source: Optional[str] = None
-    utm_campaign: Optional[str] = None
-    utm_medium: Optional[str] = None
+    name: str | None = None
+    company: str | None = None
+    phone: str | None = None
+    title: str | None = None
+    domain: str | None = None
+    utm_source: str | None = None
+    utm_campaign: str | None = None
+    utm_medium: str | None = None
 
 
 class InboundLeadResponse(BaseModel):
     lead_id: str
     score: float
     stage: str
-    assigned_sales_person_id: Optional[str] = None
+    assigned_sales_person_id: str | None = None
     enrichment_provider: str
     crm_sync: dict[str, Any] = Field(default_factory=dict)
 
@@ -742,7 +742,7 @@ class SequenceStepInput(BaseModel):
 
 
 class UpdateSequenceRequest(BaseModel):
-    recipient: Optional[str] = None
+    recipient: str | None = None
     steps: list[SequenceStepInput] = Field(default_factory=list)
 
 
@@ -757,15 +757,15 @@ class SequenceStepResponse(BaseModel):
     subject: str
     body: str
     status: str
-    scheduled_at: Optional[str] = None
-    channel_post_id: Optional[str] = None
-    artifact_id: Optional[str] = None
+    scheduled_at: str | None = None
+    channel_post_id: str | None = None
+    artifact_id: str | None = None
 
 
 class SequenceItemResponse(BaseModel):
     parent_artifact_id: str
     title: str
-    recipient: Optional[str] = None
+    recipient: str | None = None
     status: str
     steps: list[SequenceStepResponse] = Field(default_factory=list)
 
@@ -788,24 +788,24 @@ class AttributionSummaryResponse(BaseModel):
 # Workflows (Wave 3)
 class TechnicalEvalRequest(BaseModel):
     opportunity_name: str
-    company: Optional[str] = None
+    company: str | None = None
     question: str
     scope: str
-    lead_id: Optional[uuid.UUID] = None
+    lead_id: uuid.UUID | None = None
     include_pricing: bool = True
 
 
 class GenerateProposalRequest(BaseModel):
     scope: str
     include_pricing: bool = True
-    opportunity_id: Optional[uuid.UUID] = None
+    opportunity_id: uuid.UUID | None = None
 
 
 class WorkflowStepStatus(BaseModel):
     name: str
     status: str
-    updated_at: Optional[str] = None
-    error: Optional[str] = None
+    updated_at: str | None = None
+    error: str | None = None
 
 
 class WorkflowRunAccepted(BaseModel):
@@ -820,9 +820,9 @@ class WorkflowRunResponse(BaseModel):
     status: str
     steps: list[WorkflowStepStatus]
     output_data: dict[str, Any] = Field(default_factory=dict)
-    error_message: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    error_message: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     created_at: datetime
 
 
@@ -855,9 +855,9 @@ class InsightsResponse(BaseModel):
     pipeline: PipelineMetrics = Field(default_factory=PipelineMetrics)
     campaigns: CampaignMetrics = Field(default_factory=CampaignMetrics)
     compute_tier: str = "T0"
-    narrative_llm: Optional[str] = None
+    narrative_llm: str | None = None
     narrative_fresh: bool = False
-    narrative_updated_at: Optional[str] = None
+    narrative_updated_at: str | None = None
 
 
 class AccountHealthResponse(BaseModel):
@@ -868,8 +868,8 @@ class AccountHealthResponse(BaseModel):
     metrics: dict[str, Any] = Field(default_factory=dict)
     playbook: dict[str, Any] = Field(default_factory=dict)
     cs_brief: dict[str, Any] = Field(default_factory=dict)
-    last_cs_brief_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    last_cs_brief_at: str | None = None
+    updated_at: str | None = None
 
 
 class SuccessPlanResponse(BaseModel):
@@ -882,7 +882,7 @@ class SuccessPlanResponse(BaseModel):
 
 class SyncStatusResponse(BaseModel):
     enabled: bool
-    provider: Optional[str] = None
+    provider: str | None = None
     deployment_profile: str = "full"
     enrichment_enabled: bool = True
     apollo_configured: bool = False
@@ -931,7 +931,7 @@ class WorkflowStageResponse(BaseModel):
     tone: str
     position: int
     content_blocks: list[dict[str, Any]]
-    created_by: Optional[uuid.UUID] = None
+    created_by: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -948,15 +948,15 @@ class WorkflowStageCreateRequest(BaseModel):
 
 
 class WorkflowStageUpdateRequest(BaseModel):
-    group_label: Optional[str] = Field(None, min_length=1, max_length=100)
-    label: Optional[str] = Field(None, min_length=1, max_length=100)
-    icon: Optional[str] = Field(None, max_length=50)
-    tone: Optional[str] = Field(None, max_length=20)
-    position: Optional[int] = None
-    content_blocks: Optional[list[dict[str, Any]]] = None
+    group_label: str | None = Field(None, min_length=1, max_length=100)
+    label: str | None = Field(None, min_length=1, max_length=100)
+    icon: str | None = Field(None, max_length=50)
+    tone: str | None = Field(None, max_length=20)
+    position: int | None = None
+    content_blocks: list[dict[str, Any]] | None = None
 
 
 # Generic
 class MessageResponse(BaseModel):
     message: str
-    detail: Optional[str] = None
+    detail: str | None = None

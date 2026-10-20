@@ -1,16 +1,20 @@
 """Tests for Aurora API."""
 
-import pytest
-from gtm_api.auth import hash_password, verify_password, slugify, content_hash
-from gtm_api.config import get_settings
 from gtm_api.agents.product_understanding import (
     _PROFILE_CHUNK_TOKEN_LIMIT,
     _PROFILE_CONTEXT_TOKEN_BUDGET,
 )
-from gtm_api.services.chunking import chunk_text, compact_profile, estimate_tokens, truncate_to_token_budget
+from gtm_api.auth import content_hash, hash_password, slugify, verify_password
+from gtm_api.config import get_settings
+from gtm_api.services.chunking import (
+    chunk_text,
+    compact_profile,
+    estimate_tokens,
+    truncate_to_token_budget,
+)
 from gtm_api.services.citation_gate import build_context_from_results
-from gtm_api.services.vector_store import SearchResult
 from gtm_api.services.llm import get_chat_model, get_provider
+from gtm_api.services.vector_store import SearchResult
 
 
 class TestAuth:

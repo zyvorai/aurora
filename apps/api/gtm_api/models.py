@@ -131,7 +131,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     # Nullable: social-login-only accounts (see oauth_provider below) have no password to
     # check -- auth.verify_password's callers already guard on this being falsy first.
-    hashed_password: Mapped[Optional[str]] = mapped_column(String(255))
+    hashed_password: Mapped[str | None] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(255), default="")
     role: Mapped[str] = mapped_column(String(50), default="editor")  # admin, editor, viewer, approver
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -141,8 +141,8 @@ class User(Base):
     # password-only accounts. Distinct from the tenant-wide enterprise SSO in
     # services/sso.py, which authenticates existing users by email only and never
     # sets these columns.
-    oauth_provider: Mapped[Optional[str]] = mapped_column(String(50))  # "google" | "github"
-    oauth_subject: Mapped[Optional[str]] = mapped_column(String(255))  # provider's stable user id
+    oauth_provider: Mapped[str | None] = mapped_column(String(50))  # "google" | "github"
+    oauth_subject: Mapped[str | None] = mapped_column(String(255))  # provider's stable user id
 
     tenant: Mapped["Tenant"] = relationship(back_populates="users")
 
@@ -161,9 +161,9 @@ class Product(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    website_url: Mapped[Optional[str]] = mapped_column(String(2048))
-    description: Mapped[Optional[str]] = mapped_column(Text)
-    profile: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    website_url: Mapped[str | None] = mapped_column(String(2048))
+    description: Mapped[str | None] = mapped_column(Text)
+    profile: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     profile_status: Mapped[str] = mapped_column(String(50), default="pending")  # pending, ready, locked
     brand_context_version: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -185,21 +185,21 @@ class Source(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     source_type: Mapped[SourceType] = mapped_column(Enum(SourceType), nullable=False)
-    url: Mapped[Optional[str]] = mapped_column(String(2048))
-    display_name: Mapped[Optional[str]] = mapped_column(String(512))
-    storage_key: Mapped[Optional[str]] = mapped_column(String(1024))
-    mime_type: Mapped[Optional[str]] = mapped_column(String(255))
-    file_size_bytes: Mapped[Optional[int]] = mapped_column(Integer)
-    credential_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    url: Mapped[str | None] = mapped_column(String(2048))
+    display_name: Mapped[str | None] = mapped_column(String(512))
+    storage_key: Mapped[str | None] = mapped_column(String(1024))
+    mime_type: Mapped[str | None] = mapped_column(String(255))
+    file_size_bytes: Mapped[int | None] = mapped_column(Integer)
+    credential_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("source_credentials.id"), index=True
     )
     status: Mapped[SourceStatus] = mapped_column(Enum(SourceStatus), default=SourceStatus.PENDING)
-    content_hash: Mapped[Optional[str]] = mapped_column(String(64))
+    content_hash: Mapped[str | None] = mapped_column(String(64))
     pages_discovered: Mapped[int] = mapped_column(Integer, default=0)
     pages_processed: Mapped[int] = mapped_column(Integer, default=0)
-    error_message: Mapped[Optional[str]] = mapped_column(Text)
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
-    last_crawled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    error_message: Mapped[str | None] = mapped_column(Text)
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
+    last_crawled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     product: Mapped["Product"] = relationship(back_populates="sources")
@@ -215,15 +215,15 @@ class Document(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    source_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("sources.id"), index=True)
+    source_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("sources.id"), index=True)
     title: Mapped[str] = mapped_column(String(512), default="")
-    url: Mapped[Optional[str]] = mapped_column(String(2048))
+    url: Mapped[str | None] = mapped_column(String(2048))
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     provenance: Mapped[SourceProvenance] = mapped_column(
         Enum(SourceProvenance), default=SourceProvenance.TENANT_AUTHORITATIVE
     )
-    raw_content: Mapped[Optional[str]] = mapped_column(Text)
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    raw_content: Mapped[str | None] = mapped_column(Text)
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -246,8 +246,8 @@ class Chunk(Base):
     chunk_index: Mapped[int] = mapped_column(Integer, default=0)
     token_count: Mapped[int] = mapped_column(Integer, default=0)
     embedding_model: Mapped[str] = mapped_column(String(100), default="text-embedding-3-small")
-    qdrant_point_id: Mapped[Optional[str]] = mapped_column(String(100))
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    qdrant_point_id: Mapped[str | None] = mapped_column(String(100))
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     document: Mapped["Document"] = relationship(back_populates="chunks")
@@ -266,13 +266,13 @@ class Entity(Base):
     entity_type: Mapped[str] = mapped_column(String(100), nullable=False)
     name: Mapped[str] = mapped_column(String(512), nullable=False)
     canonical_name: Mapped[str] = mapped_column(String(512), nullable=False)
-    properties: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    properties: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     status: Mapped[ProfileFieldStatus] = mapped_column(
         Enum(ProfileFieldStatus), default=ProfileFieldStatus.INFERRED
     )
-    source_chunk_ids: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
-    neo4j_node_id: Mapped[Optional[str]] = mapped_column(String(100))
+    source_chunk_ids: Mapped[list | None] = mapped_column(JSONB, default=list)
+    neo4j_node_id: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -285,7 +285,7 @@ class Relation(Base):
     source_entity_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("entities.id"), nullable=False)
     target_entity_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("entities.id"), nullable=False)
     relation_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    properties: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    properties: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -302,11 +302,11 @@ class Artifact(Base):
     content_hash: Mapped[str] = mapped_column(String(64), default="")
     version: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[ApprovalStatus] = mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.DRAFT)
-    channel: Mapped[Optional[str]] = mapped_column(String(50))
-    citations: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
-    prompt_version: Mapped[Optional[str]] = mapped_column(String(50))
-    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    channel: Mapped[str | None] = mapped_column(String(50))
+    citations: Mapped[list | None] = mapped_column(JSONB, default=list)
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
+    prompt_version: Mapped[str | None] = mapped_column(String(50))
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -325,8 +325,8 @@ class Approval(Base):
     artifact_version: Mapped[int] = mapped_column(Integer, nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[ApprovalStatus] = mapped_column(Enum(ApprovalStatus), nullable=False)
-    reviewer_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
-    comment: Mapped[Optional[str]] = mapped_column(Text)
+    reviewer_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    comment: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     artifact: Mapped["Artifact"] = relationship(back_populates="approvals")
@@ -341,7 +341,7 @@ class Campaign(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     campaign_type: Mapped[str] = mapped_column(String(50), default="outreach")
     status: Mapped[str] = mapped_column(String(50), default="draft")
-    config: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    config: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -353,13 +353,13 @@ class ChannelPost(Base):
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     channel: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="draft")
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     idempotency_key: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
-    provider_message_id: Mapped[Optional[str]] = mapped_column(String(255))
-    error_message: Mapped[Optional[str]] = mapped_column(Text)
+    provider_message_id: Mapped[str | None] = mapped_column(String(255))
+    error_message: Mapped[str | None] = mapped_column(Text)
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
-    next_retry_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    next_retry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -370,10 +370,10 @@ class Conversation(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     session_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    visitor_id: Mapped[Optional[str]] = mapped_column(String(100))
-    messages: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
-    lead_score: Mapped[Optional[float]] = mapped_column(Float)
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    visitor_id: Mapped[str | None] = mapped_column(String(100))
+    messages: Mapped[list | None] = mapped_column(JSONB, default=list)
+    lead_score: Mapped[float | None] = mapped_column(Float)
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -386,18 +386,18 @@ class Lead(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    email: Mapped[Optional[str]] = mapped_column(String(255))
-    company: Mapped[Optional[str]] = mapped_column(String(255))
-    name: Mapped[Optional[str]] = mapped_column(String(255))
-    title: Mapped[Optional[str]] = mapped_column(String(255))
+    email: Mapped[str | None] = mapped_column(String(255))
+    company: Mapped[str | None] = mapped_column(String(255))
+    name: Mapped[str | None] = mapped_column(String(255))
+    title: Mapped[str | None] = mapped_column(String(255))
     score: Mapped[float] = mapped_column(Float, default=0.0)
     stage: Mapped[str] = mapped_column(String(50), default="new")
     source: Mapped[str] = mapped_column(String(50), default="chat")
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
-    consent_basis: Mapped[Optional[str]] = mapped_column(String(100))
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
+    consent_basis: Mapped[str | None] = mapped_column(String(100))
     # Set when an external salesperson-portal account owns this lead; null for
     # internally-sourced leads.
-    assigned_sales_person_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    assigned_sales_person_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("sales_person_accounts.id"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -410,17 +410,17 @@ class DiscoveredAccount(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     company_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    domain: Mapped[Optional[str]] = mapped_column(String(255))
-    industry: Mapped[Optional[str]] = mapped_column(String(100))
-    company_size: Mapped[Optional[str]] = mapped_column(String(50))
-    geo: Mapped[Optional[str]] = mapped_column(String(100))
-    personas: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
+    domain: Mapped[str | None] = mapped_column(String(255))
+    industry: Mapped[str | None] = mapped_column(String(100))
+    company_size: Mapped[str | None] = mapped_column(String(50))
+    geo: Mapped[str | None] = mapped_column(String(100))
+    personas: Mapped[list | None] = mapped_column(JSONB, default=list)
     source: Mapped[str] = mapped_column(String(50), default="rules")
     status: Mapped[str] = mapped_column(String(50), default="new")
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
     # Set when a reseller registers this account as their deal (portal self-service);
     # null for accounts discovered by the tenant's own agents.
-    registered_by_reseller_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    registered_by_reseller_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("reseller_accounts.id"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -436,14 +436,14 @@ class LeadScoreRecord(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    discovered_account_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    discovered_account_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("discovered_accounts.id"), index=True
     )
-    lead_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("leads.id"), index=True)
+    lead_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("leads.id"), index=True)
     score: Mapped[float] = mapped_column(Float, default=0.0)
     tier: Mapped[str] = mapped_column(String(1), default="C")
-    factors: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
-    explanation: Mapped[Optional[str]] = mapped_column(Text)
+    factors: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    explanation: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -464,22 +464,22 @@ class Opportunity(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    lead_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("leads.id"), index=True)
+    lead_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("leads.id"), index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    company: Mapped[Optional[str]] = mapped_column(String(255))
+    company: Mapped[str | None] = mapped_column(String(255))
     stage: Mapped[str] = mapped_column(String(50), default="discovery")
-    amount: Mapped[Optional[float]] = mapped_column(Float)
+    amount: Mapped[float | None] = mapped_column(Float)
     probability: Mapped[float] = mapped_column(Float, default=0.1)
-    owner_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     # Distinct from owner_id (which is an unconstrained UUID implicitly meaning an
     # internal User) -- this is the FK for an external salesperson-portal account, kept
     # separate deliberately rather than overloading owner_id with two identity types.
-    assigned_sales_person_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    assigned_sales_person_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("sales_person_accounts.id"), nullable=True
     )
-    proposal_artifact_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("artifacts.id"))
-    architect_artifact_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("artifacts.id"))
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, default=dict)
+    proposal_artifact_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("artifacts.id"))
+    architect_artifact_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("artifacts.id"))
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -498,8 +498,8 @@ class OpportunityActivity(Base):
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     activity_type: Mapped[str] = mapped_column(String(50), default="note")
     subject: Mapped[str] = mapped_column(String(255), default="")
-    body: Mapped[Optional[str]] = mapped_column(Text)
-    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    body: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -514,10 +514,10 @@ class AccountHealth(Base):
     )
     health_score: Mapped[float] = mapped_column(Float, default=50.0)
     status: Mapped[str] = mapped_column(String(50), default="healthy")
-    metrics: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
-    playbook: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
-    cs_brief: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
-    last_cs_brief_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    metrics: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    playbook: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    cs_brief: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    last_cs_brief_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -530,9 +530,9 @@ class Meeting(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     lead_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("leads.id"), nullable=False, index=True)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(String(50), default="scheduled")
-    notes: Mapped[Optional[str]] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -541,9 +541,9 @@ class MetricEvent(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    product_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("products.id"), index=True)
+    product_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("products.id"), index=True)
     event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    event_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    event_data: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     __table_args__ = (
@@ -556,11 +556,11 @@ class AuditLog(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     action: Mapped[str] = mapped_column(String(100), nullable=False)
     resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    resource_id: Mapped[Optional[str]] = mapped_column(String(100))
-    details: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    resource_id: Mapped[str | None] = mapped_column(String(100))
+    details: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
 
 
@@ -569,13 +569,13 @@ class ApiKey(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     key_prefix: Mapped[str] = mapped_column(String(12), nullable=False)
     key_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(50), default="viewer")
-    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -590,19 +590,19 @@ class CustomerAccount(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
-    discovered_account_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    discovered_account_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("discovered_accounts.id"), nullable=True
     )
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    company_name: Mapped[Optional[str]] = mapped_column(String(255))
-    contact_name: Mapped[Optional[str]] = mapped_column(String(255))
+    company_name: Mapped[str | None] = mapped_column(String(255))
+    contact_name: Mapped[str | None] = mapped_column(String(255))
     status: Mapped[PortalAccountStatus] = mapped_column(
         Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
     )
-    rejected_reason: Mapped[Optional[str]] = mapped_column(Text)
-    reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    rejected_reason: Mapped[str | None] = mapped_column(Text)
+    reviewed_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -630,8 +630,8 @@ class CustomerTicket(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[TicketStatus] = mapped_column(Enum(TicketStatus), default=TicketStatus.OPEN, index=True)
     priority: Mapped[TicketPriority] = mapped_column(Enum(TicketPriority), default=TicketPriority.MEDIUM)
-    resolved_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    resolved_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -650,22 +650,22 @@ class ResellerAccount(Base):
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    company_name: Mapped[Optional[str]] = mapped_column(String(255))
-    contact_name: Mapped[Optional[str]] = mapped_column(String(255))
-    business_id: Mapped[Optional[str]] = mapped_column(String(255))
+    company_name: Mapped[str | None] = mapped_column(String(255))
+    contact_name: Mapped[str | None] = mapped_column(String(255))
+    business_id: Mapped[str | None] = mapped_column(String(255))
     margin_tier: Mapped[str] = mapped_column(String(50), default="standard")
-    authorized_product_ids: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
+    authorized_product_ids: Mapped[list | None] = mapped_column(JSONB, default=list)
     # MinIO object key for an uploaded proof-of-business document (tax ID, business
     # license, etc). Nullable -- upload is optional, done via a follow-up multipart
     # request after signup rather than bundled into it (keeps the signup body plain
     # JSON like the customer/salesperson signups).
-    proof_document_key: Mapped[Optional[str]] = mapped_column(String(1024))
+    proof_document_key: Mapped[str | None] = mapped_column(String(1024))
     status: Mapped[PortalAccountStatus] = mapped_column(
         Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
     )
-    rejected_reason: Mapped[Optional[str]] = mapped_column(Text)
-    reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    rejected_reason: Mapped[str | None] = mapped_column(Text)
+    reviewed_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -689,18 +689,18 @@ class SalesPersonAccount(Base):
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    contact_name: Mapped[Optional[str]] = mapped_column(String(255))
+    contact_name: Mapped[str | None] = mapped_column(String(255))
     commission_rate: Mapped[float] = mapped_column(Float, default=0.0)
-    territory: Mapped[Optional[str]] = mapped_column(String(255))
-    assigned_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    territory: Mapped[str | None] = mapped_column(String(255))
+    assigned_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     # See ResellerAccount.proof_document_key -- same optional, follow-up-upload pattern.
-    proof_document_key: Mapped[Optional[str]] = mapped_column(String(1024))
+    proof_document_key: Mapped[str | None] = mapped_column(String(1024))
     status: Mapped[PortalAccountStatus] = mapped_column(
         Enum(PortalAccountStatus), default=PortalAccountStatus.PENDING
     )
-    rejected_reason: Mapped[Optional[str]] = mapped_column(Text)
-    reviewed_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    rejected_reason: Mapped[str | None] = mapped_column(Text)
+    reviewed_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -717,8 +717,8 @@ class SourceCredential(Base):
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
     channel: Mapped[str] = mapped_column(String(50), nullable=False)
     encrypted_token: Mapped[str] = mapped_column(Text, nullable=False)
-    scopes: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    scopes: Mapped[list | None] = mapped_column(JSONB, default=list)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -728,19 +728,19 @@ class AgentRun(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
-    product_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("products.id"), index=True)
+    product_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("products.id"), index=True)
     agent_type: Mapped[str] = mapped_column(String(100), nullable=False)
     thread_id: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="running")
-    input_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
-    output_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    input_data: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    output_data: Mapped[dict | None] = mapped_column(JSONB, default=dict)
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
     cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
-    retrieved_chunk_ids: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
-    prompt_version: Mapped[Optional[str]] = mapped_column(String(50))
-    error_message: Mapped[Optional[str]] = mapped_column(Text)
+    retrieved_chunk_ids: Mapped[list | None] = mapped_column(JSONB, default=list)
+    prompt_version: Mapped[str | None] = mapped_column(String(50))
+    error_message: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class UsageMeter(Base):
@@ -794,13 +794,13 @@ class WorkflowRun(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
     workflow_name: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="queued")
-    input_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
-    output_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
-    steps: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
-    error_message: Mapped[Optional[str]] = mapped_column(Text)
-    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    input_data: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    output_data: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    steps: Mapped[list | None] = mapped_column(JSONB, default=list)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -824,7 +824,7 @@ class CustomWorkflowStage(Base):
     tone: Mapped[str] = mapped_column(String(20), nullable=False)
     position: Mapped[int] = mapped_column(Integer, default=0, index=True)
     content_blocks: Mapped[list] = mapped_column(JSONB, default=list)
-    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

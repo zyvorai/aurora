@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.config import get_settings
 from gtm_api.models import Lead
-from gtm_api.services.crm import list_opportunities, opportunity_to_dict
+from gtm_api.services.crm import list_opportunities
 from gtm_api.services.crm_providers import hubspot, sales_crm
 
 settings = get_settings()

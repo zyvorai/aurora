@@ -38,8 +38,5 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
-      # ruff currently reports ~840 pre-existing style findings across the
-      # codebase — not blocking CI on those until a dedicated cleanup lands.
       - run: ruff check .
-        continue-on-error: true
       - run: python -m pytest tests/ -v

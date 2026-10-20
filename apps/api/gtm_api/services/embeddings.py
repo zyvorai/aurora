@@ -1,6 +1,6 @@
 """Embedding service with dual-provider support (Ollama + OpenAI)."""
 
-from typing import Optional, Protocol
+from typing import Protocol
 
 import httpx
 from langchain_openai import OpenAIEmbeddings
@@ -173,8 +173,8 @@ def _hash_embed(text: str, dims: int) -> list[float]:
 
 class EmbeddingService:
     def __init__(self) -> None:
-        self._backend: Optional[_EmbeddingBackend] = None
-        self._provider: Optional[str] = None
+        self._backend: _EmbeddingBackend | None = None
+        self._provider: str | None = None
 
     def _get_backend(self) -> _EmbeddingBackend:
         settings = get_settings()

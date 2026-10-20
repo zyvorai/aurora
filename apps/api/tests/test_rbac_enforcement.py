@@ -8,7 +8,7 @@ whose permission dependency is missing or wrong would actually fail here.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -74,7 +74,7 @@ class TestRBACEnforcementViaRoutes:
 
         def _populate_generated_fields(entry):
             entry.id = uuid.uuid4()
-            entry.created_at = datetime.now(timezone.utc)
+            entry.created_at = datetime.now(UTC)
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: tenant))
@@ -104,7 +104,7 @@ class TestRBACEnforcementViaRoutes:
         mock_db.execute = AsyncMock(
             side_effect=[
                 MagicMock(scalar_one_or_none=lambda: tenant),  # get_tenant_context
-                MagicMock(scalars=lambda: MagicMock(all=lambda: [])),  # count_active_products
+                MagicMock(scalars=lambda: MagicMock(all=list)),  # count_active_products
             ]
         )
         mock_db.get = AsyncMock(return_value=tenant)
@@ -128,7 +128,7 @@ class TestRBACEnforcementViaRoutes:
         mock_db.execute = AsyncMock(
             side_effect=[
                 MagicMock(scalar_one_or_none=lambda: tenant),  # get_tenant_context
-                MagicMock(scalars=lambda: MagicMock(all=lambda: [])),  # purge_tenant_data lookup
+                MagicMock(scalars=lambda: MagicMock(all=list)),  # purge_tenant_data lookup
             ]
         )
         mock_db.get = AsyncMock(return_value=tenant)

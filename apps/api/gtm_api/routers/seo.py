@@ -2,7 +2,6 @@
 
 import json
 import uuid
-from typing import Optional
 from urllib.parse import urljoin
 
 import httpx
@@ -33,7 +32,7 @@ class AuditRequest(BaseModel):
 class KeywordRequest(BaseModel):
     seed: str = Field("", max_length=200)
     limit: int = Field(25, ge=1, le=100)
-    provider: Optional[str] = Field(None, description="grounded | dataforseo | search_console (default: SEO_PROVIDER)")
+    provider: str | None = Field(None, description="grounded | dataforseo | search_console (default: SEO_PROVIDER)")
 
 
 class ScoreRequest(BaseModel):
@@ -111,7 +110,7 @@ async def keyword_research(
         vec = await embedding_service.embed_query(seed)
         hits = await vector_store.search(ctx.tenant_id, product.id, vec, limit=12)
         corpus.extend(h.content for h in hits)
-    except Exception:  # noqa: BLE001 - the vector store is optional here; the profile alone still yields terms
+    except Exception:
         pass
     provider = get_provider(req.provider)
     try:

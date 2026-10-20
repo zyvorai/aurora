@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from gtm_api.services.publishing_adapters import email_adapter, oauth_adapters, stub_adapter, wordpress_adapter
+from gtm_api.services.publishing_adapters import (
+    email_adapter,
+    oauth_adapters,
+    stub_adapter,
+    wordpress_adapter,
+)
 from gtm_api.services.publishing_adapters.base import ProviderResult, PublishAdapter
 
 ADAPTER_REGISTRY = {

@@ -9,16 +9,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
-from gtm_api.services.llm import get_chat_model
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Product
-from gtm_api.services.seo.artifact import seo_metadata
 from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
     build_context_from_results,
-    extract_citations_from_response,
     verify_grounding,
 )
 from gtm_api.services.embeddings import embedding_service
+from gtm_api.services.llm import get_chat_model
+from gtm_api.services.seo.artifact import seo_metadata
 from gtm_api.services.vector_store import SearchResult, vector_store
 from gtm_api.tenant import record_usage
 

@@ -5,8 +5,7 @@ import hashlib
 import re
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 from fastapi import Depends, Header, HTTPException, status
@@ -17,7 +16,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
-from gtm_api.models import ApiKey, CustomerAccount, PortalAccountStatus, ResellerAccount, SalesPersonAccount, User
+from gtm_api.models import (
+    ApiKey,
+    CustomerAccount,
+    PortalAccountStatus,
+    ResellerAccount,
+    SalesPersonAccount,
+    User,
+)
 
 settings = get_settings()
 # auto_error=False so a request can authenticate via X-API-Key instead of Bearer JWT;
@@ -60,7 +66,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: uuid.UUID, tenant_id: uuid.UUID, role: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+    expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {
         "sub": str(user_id),
         "tenant_id": str(tenant_id),
@@ -76,7 +82,7 @@ def create_oauth_exchange_code(user_id: uuid.UUID, tenant_id: uuid.UUID, role: s
     even if it leaks (proxy/CDN access logs, browser history), and its short expiry
     bounds the exposure window if it does. Exchanged for a real session token by
     POST /auth/oauth/exchange immediately after the frontend receives the redirect."""
-    expire = datetime.now(timezone.utc) + timedelta(seconds=60)
+    expire = datetime.now(UTC) + timedelta(seconds=60)
     payload = {
         "sub": str(user_id),
         "tenant_id": str(tenant_id),
@@ -124,7 +130,7 @@ PORTAL_ACCOUNT_MODELS: dict[str, type] = {
 
 
 def create_portal_token(account_id: uuid.UUID, tenant_id: uuid.UUID, portal_type: str = "customer") -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.portal_token_expire_minutes)
+    expire = datetime.now(UTC) + timedelta(minutes=settings.portal_token_expire_minutes)
     payload = {
         "sub": str(account_id),
         "tenant_id": str(tenant_id),
@@ -136,7 +142,7 @@ def create_portal_token(account_id: uuid.UUID, tenant_id: uuid.UUID, portal_type
 
 
 async def get_current_portal_account(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(portal_security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(portal_security),
     db: AsyncSession = Depends(get_db),
 ) -> PortalIdentity:
     invalid = HTTPException(
@@ -182,7 +188,7 @@ async def _resolve_api_key(raw_key: str, db: AsyncSession) -> User:
             detail="Invalid API key",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    api_key.last_used_at = datetime.now(timezone.utc)
+    api_key.last_used_at = datetime.now(UTC)
     # Transient (unpersisted) User standing in for the key's identity — id/role/tenant
     # drive RBAC and audit logging exactly like a JWT-authenticated human user.
     return User(
@@ -197,8 +203,8 @@ async def _resolve_api_key(raw_key: str, db: AsyncSession) -> User:
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     if x_api_key:

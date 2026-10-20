@@ -1,18 +1,16 @@
 """Omnichannel publishing service (Phase 6)."""
 
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
 from gtm_api.models import Approval, ApprovalStatus, Artifact, ChannelPost
+from gtm_api.services.analytics import emit_event
 from gtm_api.services.enterprise import is_suppressed
 from gtm_api.services.publishing_adapters import ADAPTER_REGISTRY
-from gtm_api.services.analytics import emit_event
 from gtm_api.tenant import audit_log
 
 settings = get_settings()
@@ -38,8 +36,8 @@ async def dispatch_channel_post(
     post: ChannelPost,
     artifact: Artifact,
     tenant_id: uuid.UUID,
-    user_id: Optional[uuid.UUID] = None,
-    recipient: Optional[str] = None,
+    user_id: uuid.UUID | None = None,
+    recipient: str | None = None,
 ) -> None:
     """Resolve recipient (email channels), suppression-check, and call the channel
     adapter — mutates `post` in place. Shared by the immediate-publish path below and
@@ -74,7 +72,7 @@ async def dispatch_channel_post(
     post.provider_message_id = result.provider_message_id
     post.error_message = result.error
     if result.status == "published":
-        post.published_at = datetime.now(timezone.utc)
+        post.published_at = datetime.now(UTC)
         if post.channel in EMAIL_CHANNELS:
             await emit_event(
                 db,
@@ -96,8 +94,8 @@ async def publish_artifact(
     tenant_id: uuid.UUID,
     user_id: uuid.UUID,
     channel: str,
-    scheduled_at: Optional[datetime] = None,
-    recipient: Optional[str] = None,
+    scheduled_at: datetime | None = None,
+    recipient: str | None = None,
 ) -> ChannelPost:
     approval_result = await db.execute(
         select(Approval).where(
@@ -154,7 +152,7 @@ async def get_publish_status(
     db: AsyncSession,
     channel_post_id: uuid.UUID,
     tenant_id: uuid.UUID,
-) -> Optional[ChannelPost]:
+) -> ChannelPost | None:
     result = await db.execute(
         select(ChannelPost).where(
             ChannelPost.id == channel_post_id,

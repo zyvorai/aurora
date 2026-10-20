@@ -7,22 +7,22 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gtm_api.agents.content_studio import run_content_generation
+from gtm_api.agents.marketing_strategy import invoke_marketing_strategy
 from gtm_api.auth import content_hash, get_current_user, require_permission
 from gtm_api.database import async_session_factory, get_db
 from gtm_api.models import Approval, ApprovalStatus, Artifact, ArtifactType, User
 from gtm_api.schemas import (
     ApprovalRequest,
     ApprovalResponse,
+    Citation,
     ContentRequest,
     ContentResponse,
-    StrategyRequest,
-    StrategyResponse,
-    Citation,
     PublishRequest,
     PublishResponse,
+    StrategyRequest,
+    StrategyResponse,
 )
-from gtm_api.agents.marketing_strategy import invoke_marketing_strategy
-from gtm_api.agents.content_studio import run_content_generation
 from gtm_api.services.publishing import publish_artifact
 from gtm_api.tenant import audit_log, get_product_for_tenant, get_tenant_context, record_usage
 

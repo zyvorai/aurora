@@ -6,26 +6,27 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from openai import APIConnectionError, APIError as OpenAIAPIError
+from openai import APIConnectionError
+from openai import APIError as OpenAIAPIError
 from sqlalchemy.exc import OperationalError
 
 from gtm_api.config import get_settings
 from gtm_api.database import DB_SETUP_HINT, check_database
 from gtm_api.routers import (
-    auth,
-    social_auth,
-    products,
-    marketing,
-    agents,
-    workflows,
-    pipeline,
-    crm,
-    success,
-    inbound,
-    mcp,
     admin,
+    agents,
+    auth,
+    crm,
+    inbound,
+    marketing,
+    mcp,
+    pipeline,
     portal,
+    products,
     seo,
+    social_auth,
+    success,
+    workflows,
 )
 from gtm_api.services.embeddings import LLMServiceError
 from gtm_api.services.llm import check_llm_health
@@ -35,8 +36,8 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from gtm_api.services.vector_store import vector_store
     from gtm_api.services.knowledge_graph import knowledge_graph
+    from gtm_api.services.vector_store import vector_store
 
     app.state.llm_health = {}
     app.state.db_health = await check_database()

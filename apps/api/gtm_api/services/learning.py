@@ -1,16 +1,15 @@
 """Continuous Learning Engine (Phase 10)."""
 
-import hashlib
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gtm_api.models import Artifact, Document, Product, Source, SourceStatus
-from gtm_api.services.ingestion import ingest_source
+from gtm_api.models import Artifact, Product, Source, SourceStatus
 from gtm_api.services.crawler import fetch_single_page
+from gtm_api.services.ingestion import ingest_source
 
 logger = structlog.get_logger()
 
@@ -62,7 +61,7 @@ async def refresh_product(
         "sources_refreshed": len(refreshed),
         "refresh_details": refreshed,
         "stale_artifacts_flagged": stale_count,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

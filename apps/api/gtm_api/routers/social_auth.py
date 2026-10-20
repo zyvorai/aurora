@@ -24,7 +24,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gtm_api.auth import create_access_token, create_oauth_exchange_code, resolve_oauth_exchange_code, slugify
+from gtm_api.auth import (
+    create_access_token,
+    create_oauth_exchange_code,
+    resolve_oauth_exchange_code,
+    slugify,
+)
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
 from gtm_api.models import PlanTier, Tenant, User

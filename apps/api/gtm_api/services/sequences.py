@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -133,7 +133,7 @@ async def update_outreach_sequence(
         if ameta.get("parent_artifact_id") == str(parent.id) and isinstance(ameta.get("sequence_step"), int):
             existing[ameta["sequence_step"]] = (post, artifact)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     recipient_email = meta.get("recipient_email")
 
     for idx, step in enumerate(normalized):

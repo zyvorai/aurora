@@ -7,10 +7,10 @@ from typing import TypedDict
 from langgraph.graph import END, StateGraph
 
 from gtm_api.config import get_settings
-from gtm_api.services.llm import get_chat_model
-from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED, build_context_from_results
 from gtm_api.services.chunking import compact_profile, truncate_to_token_budget
+from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED, build_context_from_results
 from gtm_api.services.embeddings import LLMServiceError, embedding_service
+from gtm_api.services.llm import get_chat_model
 from gtm_api.services.vector_store import vector_store
 
 settings = get_settings()

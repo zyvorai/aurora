@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,7 @@ HEALTH_STATUSES = ("healthy", "at_risk", "churned")
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 async def collect_health_metrics(
@@ -31,7 +31,7 @@ async def collect_health_metrics(
     )
     days_in_stage = 0
     if opportunity.updated_at:
-        delta = _utcnow() - opportunity.updated_at.replace(tzinfo=timezone.utc)
+        delta = _utcnow() - opportunity.updated_at.replace(tzinfo=UTC)
         days_in_stage = max(0, delta.days)
 
     return {

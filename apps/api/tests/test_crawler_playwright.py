@@ -33,7 +33,7 @@ class TestPlaywrightNotInstalled:
         assert result is None
 
 
-def _fake_playwright_module(html: str, raise_on_goto: Exception = None):
+def _fake_playwright_module(html: str, raise_on_goto: Exception | None = None):
     """Build a fake playwright.async_api module exposing async_playwright() with the
     minimal chromium.launch().new_page().goto()/.content()/close() surface used by
     _render_with_playwright."""

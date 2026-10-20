@@ -6,7 +6,6 @@ import asyncio
 import smtplib
 from email.message import EmailMessage
 from email.utils import make_msgid
-from typing import Optional
 
 from gtm_api.config import get_settings
 from gtm_api.models import Artifact, ChannelPost
@@ -18,7 +17,7 @@ settings = get_settings()
 async def publish(
     artifact: Artifact,
     channel_post: ChannelPost,
-    recipient: Optional[str] = None,
+    recipient: str | None = None,
 ) -> ProviderResult:
     if not settings.smtp_configured:
         return ProviderResult(
@@ -61,7 +60,7 @@ def _send_transactional_sync(to: str, subject: str, body: str) -> ProviderResult
     return ProviderResult(status="published", provider_message_id=message["Message-Id"])
 
 
-def _send_sync(artifact: Artifact, recipient: Optional[str] = None) -> ProviderResult:
+def _send_sync(artifact: Artifact, recipient: str | None = None) -> ProviderResult:
     resolved_recipient = (
         recipient
         or (artifact.metadata_ or {}).get("recipient_email")

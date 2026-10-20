@@ -13,8 +13,6 @@ you, only consume the resulting token.
 
 from __future__ import annotations
 
-from typing import Optional
-
 import httpx
 
 from gtm_api.config import get_settings
@@ -27,7 +25,7 @@ _TIMEOUT = 20.0
 
 
 async def linkedin_publish(
-    artifact: Artifact, channel_post: ChannelPost, recipient: Optional[str] = None
+    artifact: Artifact, channel_post: ChannelPost, recipient: str | None = None
 ) -> ProviderResult:
     if not settings.linkedin_configured:
         return ProviderResult(
@@ -62,7 +60,7 @@ async def linkedin_publish(
 
 
 async def x_publish(
-    artifact: Artifact, channel_post: ChannelPost, recipient: Optional[str] = None
+    artifact: Artifact, channel_post: ChannelPost, recipient: str | None = None
 ) -> ProviderResult:
     if not settings.x_configured:
         return ProviderResult(
@@ -85,7 +83,7 @@ async def x_publish(
 
 
 async def medium_publish(
-    artifact: Artifact, channel_post: ChannelPost, recipient: Optional[str] = None
+    artifact: Artifact, channel_post: ChannelPost, recipient: str | None = None
 ) -> ProviderResult:
     if not settings.medium_configured:
         return ProviderResult(
@@ -116,7 +114,7 @@ async def medium_publish(
 
 
 async def devto_publish(
-    artifact: Artifact, channel_post: ChannelPost, recipient: Optional[str] = None
+    artifact: Artifact, channel_post: ChannelPost, recipient: str | None = None
 ) -> ProviderResult:
     if not settings.devto_configured:
         return ProviderResult(
@@ -137,7 +135,7 @@ async def devto_publish(
 
 
 async def reddit_publish(
-    artifact: Artifact, channel_post: ChannelPost, recipient: Optional[str] = None
+    artifact: Artifact, channel_post: ChannelPost, recipient: str | None = None
 ) -> ProviderResult:
     if not settings.reddit_configured:
         return ProviderResult(

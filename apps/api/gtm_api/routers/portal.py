@@ -8,24 +8,21 @@ non-employee login can never satisfy an internal `Depends(get_current_user)`.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import (
+    PortalIdentity,
     create_portal_token,
     get_current_portal_account,
     hash_password,
     require_permission,
     verify_password,
-    PortalIdentity,
 )
 from gtm_api.database import get_db
-from gtm_api.services.publishing_adapters.email_adapter import send_transactional_email
-from gtm_api.services.rate_limit import enforce_portal_signup_rate_limit
-from gtm_api.services.storage import storage_service
 from gtm_api.models import (
     CustomerAccount,
     CustomerTicket,
@@ -59,7 +56,6 @@ from gtm_api.schemas import (
     ResellerSignupRequest,
     SalesPersonAccountResponse,
     SalesPersonActivityResponse,
-    SalesPersonLeadResponse,
     SalesPersonPipelineResponse,
     SalesPersonProfileUpdateRequest,
     SalesPersonSignupRequest,
@@ -68,6 +64,9 @@ from gtm_api.schemas import (
     TicketStatusUpdateRequest,
     TicketWithCustomerResponse,
 )
+from gtm_api.services.publishing_adapters.email_adapter import send_transactional_email
+from gtm_api.services.rate_limit import enforce_portal_signup_rate_limit
+from gtm_api.services.storage import storage_service
 from gtm_api.tenant import audit_log, get_tenant_context
 
 router = APIRouter(prefix="/portal", tags=["portal"])
@@ -316,7 +315,7 @@ async def update_ticket_status(
     ticket.status = TicketStatus(req.status)
     if ticket.status in (TicketStatus.RESOLVED, TicketStatus.CLOSED):
         ticket.resolved_by = user.id
-        ticket.resolved_at = datetime.now(timezone.utc)
+        ticket.resolved_at = datetime.now(UTC)
     else:
         ticket.resolved_by = None
         ticket.resolved_at = None
@@ -362,7 +361,7 @@ async def approve_customer_account(
 
     account.status = PortalAccountStatus.APPROVED
     account.reviewed_by = user.id
-    account.reviewed_at = datetime.now(timezone.utc)
+    account.reviewed_at = datetime.now(UTC)
     await audit_log(
         db, ctx.tenant_id, user.id, "approve_customer_account", "customer_account",
         resource_id=str(account_id),
@@ -394,7 +393,7 @@ async def reject_customer_account(
     account.status = PortalAccountStatus.REJECTED
     account.rejected_reason = req.reason
     account.reviewed_by = user.id
-    account.reviewed_at = datetime.now(timezone.utc)
+    account.reviewed_at = datetime.now(UTC)
     await audit_log(
         db, ctx.tenant_id, user.id, "reject_customer_account", "customer_account",
         resource_id=str(account_id), details={"reason": req.reason},
@@ -649,7 +648,7 @@ async def approve_reseller_account(
 
     account.status = PortalAccountStatus.APPROVED
     account.reviewed_by = user.id
-    account.reviewed_at = datetime.now(timezone.utc)
+    account.reviewed_at = datetime.now(UTC)
     await audit_log(
         db, ctx.tenant_id, user.id, "approve_reseller_account", "reseller_account",
         resource_id=str(account_id),
@@ -681,7 +680,7 @@ async def reject_reseller_account(
     account.status = PortalAccountStatus.REJECTED
     account.rejected_reason = req.reason
     account.reviewed_by = user.id
-    account.reviewed_at = datetime.now(timezone.utc)
+    account.reviewed_at = datetime.now(UTC)
     await audit_log(
         db, ctx.tenant_id, user.id, "reject_reseller_account", "reseller_account",
         resource_id=str(account_id), details={"reason": req.reason},
@@ -941,7 +940,7 @@ async def approve_salesperson_account(
 
     account.status = PortalAccountStatus.APPROVED
     account.reviewed_by = user.id
-    account.reviewed_at = datetime.now(timezone.utc)
+    account.reviewed_at = datetime.now(UTC)
     await audit_log(
         db, ctx.tenant_id, user.id, "approve_salesperson_account", "sales_person_account",
         resource_id=str(account_id),
@@ -973,7 +972,7 @@ async def reject_salesperson_account(
     account.status = PortalAccountStatus.REJECTED
     account.rejected_reason = req.reason
     account.reviewed_by = user.id
-    account.reviewed_at = datetime.now(timezone.utc)
+    account.reviewed_at = datetime.now(UTC)
     await audit_log(
         db, ctx.tenant_id, user.id, "reject_salesperson_account", "sales_person_account",
         resource_id=str(account_id), details={"reason": req.reason},

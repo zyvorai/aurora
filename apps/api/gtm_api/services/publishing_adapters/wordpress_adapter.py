@@ -10,7 +10,6 @@ from __future__ import annotations
 import html
 import json
 import re
-from typing import Optional
 
 import httpx
 
@@ -59,7 +58,7 @@ def markdown_to_html(md: str) -> str:
 
 
 async def publish(
-    artifact: Artifact, channel_post: ChannelPost, recipient: Optional[str] = None
+    artifact: Artifact, channel_post: ChannelPost, recipient: str | None = None
 ) -> ProviderResult:
     s = get_settings()
     if not s.wordpress_configured:

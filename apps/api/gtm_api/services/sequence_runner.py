@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,7 +29,7 @@ async def schedule_outreach_sequence(
     if not isinstance(steps, list) or not steps:
         return []
 
-    now = base_time or datetime.now(timezone.utc)
+    now = base_time or datetime.now(UTC)
     scheduled: list[ChannelPost] = []
 
     for idx, step in enumerate(steps):

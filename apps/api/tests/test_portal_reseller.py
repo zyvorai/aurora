@@ -3,7 +3,7 @@ approval-gated login, deal registration, and cross-portal-type token discriminat
 (a reseller token must not satisfy the customer portal's /me and vice versa)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -36,7 +36,7 @@ def _reseller_account(**overrides):
         id=uuid.uuid4(), tenant_id=uuid.uuid4(),
         email="reseller@example.com", hashed_password=hash_password("password123"),
         status=PortalAccountStatus.PENDING, is_active=True,
-        margin_tier="standard", created_at=datetime.now(timezone.utc),
+        margin_tier="standard", created_at=datetime.now(UTC),
     )
     defaults.update(overrides)
     return ResellerAccount(**defaults)
@@ -72,7 +72,7 @@ class TestResellerSignup:
 
         def _populate(entry):
             entry.id = uuid.uuid4()
-            entry.created_at = datetime.now(timezone.utc)
+            entry.created_at = datetime.now(UTC)
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(
@@ -193,7 +193,7 @@ class TestCrossPortalTypeDiscrimination:
             id=uuid.uuid4(), tenant_id=uuid.uuid4(), product_id=uuid.uuid4(),
             email="cust@example.com", hashed_password=hash_password("x"),
             status=PortalAccountStatus.APPROVED, is_active=True,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         token = create_portal_token(customer.id, customer.tenant_id, portal_type="customer")
 
@@ -241,7 +241,7 @@ class TestSelfServiceProfileUpdate:
             id=uuid.uuid4(), tenant_id=uuid.uuid4(), product_id=uuid.uuid4(),
             email="cust@example.com", hashed_password=hash_password("x"),
             status=PortalAccountStatus.APPROVED, is_active=True,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         token = create_portal_token(customer.id, customer.tenant_id, portal_type="customer")
 
@@ -371,7 +371,7 @@ class TestDealRegistration:
 
         def _populate(entry):
             entry.id = uuid.uuid4()
-            entry.created_at = datetime.now(timezone.utc)
+            entry.created_at = datetime.now(UTC)
             entry.status = "new"
 
         mock_db = AsyncMock()

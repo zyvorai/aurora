@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +22,7 @@ NARRATIVE_MAX_AGE_DAYS = 7
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 async def get_extended_analytics(
@@ -97,7 +97,7 @@ async def _get_weekly_snapshot(
 def _snapshot_is_fresh(snapshot: DashboardSnapshot | None) -> bool:
     if not snapshot or not snapshot.updated_at:
         return False
-    updated = snapshot.updated_at.replace(tzinfo=timezone.utc)
+    updated = snapshot.updated_at.replace(tzinfo=UTC)
     return (_utcnow() - updated) < timedelta(days=NARRATIVE_MAX_AGE_DAYS)
 
 

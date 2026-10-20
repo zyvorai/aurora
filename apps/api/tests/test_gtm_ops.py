@@ -1,16 +1,15 @@
 """Tests for Tier-1 GTM ops: enrichment, inbound, attribution, sequences."""
 
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from gtm_api.models import Product
+from gtm_api.models import ApprovalStatus, Artifact, ArtifactType
+from gtm_api.services.attribution import record_touchpoint
 from gtm_api.services.enrichment.providers.static import enrich_static
 from gtm_api.services.enrichment.waterfall import enrich_candidate
-from gtm_api.services.attribution import get_attribution_summary, record_touchpoint
 from gtm_api.services.sequence_runner import schedule_outreach_sequence
-from gtm_api.models import Artifact, ArtifactType, ApprovalStatus
 
 
 class TestEnrichment:

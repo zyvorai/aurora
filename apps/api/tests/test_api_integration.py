@@ -1,6 +1,6 @@
 """API integration tests (HTTP layer, mocked externals)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -31,10 +31,9 @@ class TestHealthEndpoint:
 
         with (
             patch("gtm_api.main.check_database", mock_db),
-            patch("gtm_api.main.check_llm_health", mock_llm),
+            patch("gtm_api.main.check_llm_health", mock_llm),TestClient(app) as client
         ):
-            with TestClient(app) as client:
-                response = client.get("/health")
+            response = client.get("/health")
 
         assert response.status_code == 200
         data = response.json()
@@ -62,10 +61,9 @@ class TestHealthEndpoint:
                         "message": "Run: make ollama-pull",
                     }
                 ),
-            ),
+            ),TestClient(app) as client
         ):
-            with TestClient(app) as client:
-                data = client.get("/health").json()
+            data = client.get("/health").json()
 
         assert data["status"] == "degraded"
         assert data["llm_ready"] is False

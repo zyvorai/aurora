@@ -1,7 +1,6 @@
 """Neo4j knowledge graph service with tenant isolation."""
 
 import uuid
-from typing import Optional
 
 from neo4j import AsyncGraphDatabase
 
@@ -44,9 +43,9 @@ class KnowledgeGraph:
         entity_type: str,
         name: str,
         canonical_name: str,
-        properties: Optional[dict] = None,
+        properties: dict | None = None,
         confidence: float = 0.0,
-        entity_id: Optional[str] = None,
+        entity_id: str | None = None,
     ) -> str:
         if entity_type not in ENTITY_TYPES:
             entity_type = "Feature"
@@ -88,7 +87,7 @@ class KnowledgeGraph:
         target_canonical: str,
         target_type: str,
         relation_type: str,
-        properties: Optional[dict] = None,
+        properties: dict | None = None,
     ) -> None:
         if relation_type not in RELATION_TYPES:
             relation_type = "HAS_FEATURE"
@@ -120,7 +119,7 @@ class KnowledgeGraph:
         self,
         tenant_id: uuid.UUID,
         product_id: uuid.UUID,
-        entity_type: Optional[str] = None,
+        entity_type: str | None = None,
         limit: int = 50,
     ) -> list[dict]:
         async with self._driver.session() as session:

@@ -5,9 +5,9 @@ down_revision = "008_channel_post_retry"
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 
 def upgrade() -> None:

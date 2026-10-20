@@ -1,19 +1,17 @@
 """Analytics service (Phase 9)."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.models import (
     AgentRun,
-    Approval,
     Artifact,
     Conversation,
     Lead,
     MetricEvent,
-    Product,
 )
 
 
@@ -39,7 +37,7 @@ async def get_analytics(
     product_id: uuid.UUID | None = None,
     days: int = 30,
 ) -> dict:
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.now(UTC) - timedelta(days=days)
     period = since.strftime("%Y-%m")
 
     base_filter = [MetricEvent.tenant_id == tenant_id, MetricEvent.created_at >= since]

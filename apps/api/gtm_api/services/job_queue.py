@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from arq import create_pool
 from arq.connections import RedisSettings
@@ -17,7 +16,7 @@ async def enqueue_source_ingest(
     source_id: uuid.UUID,
     tenant_id: uuid.UUID,
     product_id: uuid.UUID,
-) -> Optional[str]:
+) -> str | None:
     if not settings.redis_workers_enabled:
         return None
     redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))
@@ -33,7 +32,7 @@ async def enqueue_source_ingest(
 async def enqueue_product_refresh(
     product_id: uuid.UUID,
     tenant_id: uuid.UUID,
-) -> Optional[str]:
+) -> str | None:
     if not settings.redis_workers_enabled:
         return None
     redis = await create_pool(RedisSettings.from_dsn(settings.redis_url))

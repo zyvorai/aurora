@@ -6,6 +6,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gtm_api.agents.market_research_agent import invoke_market_research
 from gtm_api.auth import content_hash, get_current_user, require_permission
 from gtm_api.database import async_session_factory, get_db
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Campaign, User
@@ -16,11 +17,10 @@ from gtm_api.schemas import (
     DiscoverLeadsResponse,
     MarketResearchRequest,
     MarketResearchResponse,
+    PipelineLeadResponse,
     QualifyLeadsRequest,
     QualifyLeadsResponse,
-    PipelineLeadResponse,
 )
-from gtm_api.agents.market_research_agent import invoke_market_research
 from gtm_api.services.lead_discovery import discover_leads, list_discovered_accounts
 from gtm_api.services.lead_qualification import list_scored_leads, qualify_leads
 from gtm_api.tenant import get_product_for_tenant, get_tenant_context, record_usage
@@ -183,6 +183,7 @@ async def list_campaigns(
     db: AsyncSession = Depends(get_db),
 ):
     from sqlalchemy import select
+
     from gtm_api.models import Campaign as CampaignModel
 
     ctx = await get_tenant_context(user, db)

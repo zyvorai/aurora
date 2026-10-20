@@ -69,7 +69,7 @@ class TestRefreshAllActiveProducts:
     @pytest.mark.asyncio
     async def test_no_active_products_is_a_noop(self):
         mock_db = AsyncMock()
-        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=lambda: [])))
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=list)))
 
         result = await refresh_all_active_products(mock_db)
 

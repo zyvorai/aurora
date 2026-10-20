@@ -37,7 +37,7 @@ class AudioVideoLoader:
                     raise ValueError(
                         "ffmpeg is required for video transcription. Install ffmpeg or upload audio only."
                     )
-                subprocess.run(
+                subprocess.run(  # noqa: ASYNC221 - known blocking call; move to asyncio.to_thread later
                     [
                         "ffmpeg", "-y", "-i", str(input_path),
                         "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",

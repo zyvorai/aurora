@@ -1,17 +1,13 @@
 """Enterprise features: SSO hooks, RBAC enforcement, compliance (Phase 12)."""
 
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.models import (
     AuditLog,
-    Chunk,
-    Document,
-    Entity,
     Product,
     SuppressionEntry,
     Tenant,
@@ -20,7 +16,6 @@ from gtm_api.models import (
 from gtm_api.services.knowledge_graph import knowledge_graph
 from gtm_api.services.vector_store import vector_store
 from gtm_api.tenant import audit_log
-
 
 ENTERPRISE_FEATURES = {
     "starter": {"products": 1, "sso": False, "audit": True, "private_deploy": False, "custom_workflow_stages": False},
@@ -125,7 +120,7 @@ async def export_tenant_data(
 
     return {
         "tenant_id": str(tenant_id),
-        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "exported_at": datetime.now(UTC).isoformat(),
         "products": [
             {"id": str(p.id), "name": p.name, "profile": p.profile}
             for p in products.scalars().all()

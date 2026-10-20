@@ -1,7 +1,7 @@
 """Executive brief builder — Tier 0 (SQL only, no LLM)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -167,7 +167,7 @@ async def build_executive_brief(
         "metrics": analytics["metrics"],
         "narrative": narrative,
         "risks": risks,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
         "compute_tier": "T0",
     }
 

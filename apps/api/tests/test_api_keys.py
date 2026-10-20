@@ -2,7 +2,7 @@
 the /auth/api-keys management routes."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -13,7 +13,6 @@ from gtm_api.auth import (
     API_KEY_PREFIX,
     _resolve_api_key,
     generate_api_key,
-    get_current_user,
     hash_api_key,
 )
 from gtm_api.database import get_db
@@ -68,7 +67,7 @@ class TestResolveApiKey:
         raw_key, _, key_hash = generate_api_key()
         stored = ApiKey(
             id=uuid.uuid4(), tenant_id=uuid.uuid4(), name="old-bot", key_prefix="sk_live_",
-            key_hash=key_hash, role="admin", revoked_at=datetime.now(timezone.utc),
+            key_hash=key_hash, role="admin", revoked_at=datetime.now(UTC),
         )
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: stored))
@@ -143,7 +142,7 @@ class TestApiKeyManagementRoutes:
 
     def test_viewer_cannot_create_api_keys(self):
         from gtm_api.auth import get_current_user as gcu
-        from gtm_api.models import Tenant, PlanTier
+        from gtm_api.models import PlanTier, Tenant
 
         tenant_id = uuid.uuid4()
         tenant = Tenant(id=tenant_id, name="Acme", slug="acme", plan=PlanTier.GROWTH, is_active=True)
@@ -166,7 +165,7 @@ class TestApiKeyManagementRoutes:
 
     def test_admin_creates_and_receives_raw_key_once(self):
         from gtm_api.auth import get_current_user as gcu
-        from gtm_api.models import Tenant, PlanTier
+        from gtm_api.models import PlanTier, Tenant
 
         tenant_id = uuid.uuid4()
         tenant = Tenant(id=tenant_id, name="Acme", slug="acme", plan=PlanTier.GROWTH, is_active=True)
@@ -174,7 +173,7 @@ class TestApiKeyManagementRoutes:
 
         def _populate(entry):
             entry.id = uuid.uuid4()
-            entry.created_at = datetime.now(timezone.utc)
+            entry.created_at = datetime.now(UTC)
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: tenant))
@@ -201,7 +200,7 @@ class TestApiKeyManagementRoutes:
 
     def test_create_rejects_unknown_role(self):
         from gtm_api.auth import get_current_user as gcu
-        from gtm_api.models import Tenant, PlanTier
+        from gtm_api.models import PlanTier, Tenant
 
         tenant_id = uuid.uuid4()
         tenant = Tenant(id=tenant_id, name="Acme", slug="acme", plan=PlanTier.GROWTH, is_active=True)

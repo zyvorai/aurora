@@ -2,7 +2,7 @@
 
 import uuid
 from dataclasses import dataclass
-from typing import Optional
+from datetime import UTC
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -47,12 +47,12 @@ async def get_product_for_tenant(
 async def check_quota(
     db: AsyncSession, tenant_id: uuid.UUID, tokens: int = 0, pages: int = 0
 ) -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from gtm_api.config import get_settings
 
     settings = get_settings()
-    period = datetime.now(timezone.utc).strftime("%Y-%m")
+    period = datetime.now(UTC).strftime("%Y-%m")
 
     result = await db.execute(
         select(UsageMeter).where(UsageMeter.tenant_id == tenant_id, UsageMeter.period == period)
@@ -82,9 +82,9 @@ async def record_usage(
     pages: int = 0,
     agent_runs: int = 0,
 ) -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    period = datetime.now(timezone.utc).strftime("%Y-%m")
+    period = datetime.now(UTC).strftime("%Y-%m")
     result = await db.execute(
         select(UsageMeter).where(UsageMeter.tenant_id == tenant_id, UsageMeter.period == period)
     )
@@ -108,11 +108,11 @@ async def record_usage(
 async def audit_log(
     db: AsyncSession,
     tenant_id: uuid.UUID,
-    user_id: Optional[uuid.UUID],
+    user_id: uuid.UUID | None,
     action: str,
     resource_type: str,
-    resource_id: Optional[str] = None,
-    details: Optional[dict] = None,
+    resource_id: str | None = None,
+    details: dict | None = None,
 ) -> None:
     from gtm_api.models import AuditLog
 
