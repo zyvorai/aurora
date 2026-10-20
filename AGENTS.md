@@ -35,13 +35,13 @@ unit and integration tests specifically for provider parity.
 ## Validation before a PR
 
 ```bash
-cd apps/web && npm ci && npm run build
+cd apps/web && npm ci && npm run lint && npm run build
 
 make install-api   # once
-make test          # apps/api pytest suite (223 tests, see docs/test-cases.md)
+make test          # apps/api pytest suite (368 tests, see docs/test-cases.md)
 cd apps/api && .venv/bin/ruff check .
 ```
 
-(`npm run lint` isn't wired up yet — no ESLint config in `apps/web`.)
+(`cd apps/web && npm run lint` runs ESLint; errors fail CI, the existing warnings don't yet.)
 
 Update [`CHANGELOG.md`](CHANGELOG.md) for user-visible changes.

@@ -184,3 +184,50 @@ async def test_proof_flagged_when_cited_document_changes():
     db = _db([changed, same], [_doc("new")], [_doc("old")])
     assert await mark_stale_proofs(db, PRODUCT, TENANT) == 1
     assert changed.stale_reason == STALE_SOURCE_CHANGED and same.stale_reason is None
+
+
+def test_citations_from_results_covers_every_retrieved_passage():
+    from gtm_api.services.artifact_provenance import citations_from_results
+    from gtm_api.services.vector_store import SearchResult
+
+    long = "x" * 400
+    rs = [
+        SearchResult(chunk_id="a", content="short", score=0.9, document_title="A", url="https://a", metadata={}),
+        SearchResult(chunk_id="b", content=long, score=0.5, document_title="B", url=None, metadata={}),
+    ]
+    out = citations_from_results(rs)
+    assert [c["chunk_id"] for c in out] == ["a", "b"]
+    assert out[1]["excerpt"].endswith("...") and len(out[1]["excerpt"]) == 303
+    assert citations_from_results([]) == []
+
+
+@pytest.mark.asyncio
+async def test_superseded_versions_are_removed_from_db_and_vector_store():
+    from unittest.mock import patch
+
+    from gtm_api.models import Chunk, Source
+    from gtm_api.services.ingestion import _remove_superseded_versions
+
+    old = _doc("old")
+    chunks = [Chunk(document_id=old.id, qdrant_point_id="p1"), Chunk(document_id=old.id, qdrant_point_id="p2")]
+    db = _db([old], chunks, [], [])
+    source = Source(id=uuid.uuid4(), product_id=PRODUCT, tenant_id=TENANT)
+    with patch("gtm_api.services.ingestion.vector_store.delete_points", AsyncMock()) as delete_points:
+        await _remove_superseded_versions(db, source, "https://x/docs", "new")
+    delete_points.assert_awaited_once_with(["p1", "p2"])
+    assert db.execute.await_count == 4  # select docs, select chunks, delete chunks, delete docs
+
+
+@pytest.mark.asyncio
+async def test_superseded_cleanup_skips_pages_without_url_or_old_versions():
+    from gtm_api.models import Source
+    from gtm_api.services.ingestion import _remove_superseded_versions
+
+    source = Source(id=uuid.uuid4(), product_id=PRODUCT, tenant_id=TENANT)
+    db = _db()
+    await _remove_superseded_versions(db, source, None, "h")
+    db.execute.assert_not_called()
+
+    db = _db([])
+    await _remove_superseded_versions(db, source, "https://x/docs", "h")
+    assert db.execute.await_count == 1

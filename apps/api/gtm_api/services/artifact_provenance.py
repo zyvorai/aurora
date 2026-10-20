@@ -35,6 +35,20 @@ _CLAIM_BEARING = (
 )
 
 
+def citations_from_results(results: list) -> list[dict]:
+    """Citation dicts for every retrieved passage a generation was given. Used for agents
+    whose output cannot be tied to individual sentences: the artifact depends on all the
+    context it saw, which errs on the side of flagging too much rather than too little."""
+    out = []
+    for r in results or []:
+        excerpt = r.content[:300] + ("..." if len(r.content) > 300 else "")
+        out.append({
+            "chunk_id": r.chunk_id, "document_title": r.document_title,
+            "excerpt": excerpt, "url": r.url,
+        })
+    return out
+
+
 async def documents_for_citations(
     db: AsyncSession, tenant_id: uuid.UUID, citations: list[dict]
 ) -> list[Document]:

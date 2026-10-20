@@ -60,6 +60,7 @@ async def ingest_source(
                 )
                 if existing.scalar_one_or_none():
                     continue
+                await _remove_superseded_versions(db, source, page.url, page.content_hash)
 
             doc = Document(
                 product_id=product_id,
@@ -124,6 +125,35 @@ async def ingest_source(
         source.status = SourceStatus.FAILED
         source.error_message = str(exc)[:500]
         return {"status": "failed", "error": str(exc)}
+
+
+async def _remove_superseded_versions(
+    db: AsyncSession, source: Source, url: str | None, new_hash: str
+) -> None:
+    """Delete older versions of the page at ``url`` (same source, different content) so
+    retrieval stops serving the outdated text. No-op for pages without a URL."""
+    if not url:
+        return
+    old_docs = (
+        await db.execute(
+            select(Document).where(
+                Document.source_id == source.id,
+                Document.url == url,
+                Document.content_hash != new_hash,
+            )
+        )
+    ).scalars().all()
+    if not old_docs:
+        return
+    doc_ids = [d.id for d in old_docs]
+    chunks = (
+        await db.execute(select(Chunk).where(Chunk.document_id.in_(doc_ids)))
+    ).scalars().all()
+    point_ids = [c.qdrant_point_id for c in chunks if c.qdrant_point_id]
+    if point_ids:
+        await vector_store.delete_points(point_ids)
+    await db.execute(delete(Chunk).where(Chunk.document_id.in_(doc_ids)))
+    await db.execute(delete(Document).where(Document.id.in_(doc_ids)))
 
 
 async def _clear_source_documents(

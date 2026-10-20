@@ -269,7 +269,7 @@ Check provider status: `GET /health`
 
 Full plan, architecture, unit tests, and integration test guide: [docs/ollama-llm-integration.md](docs/ollama-llm-integration.md)
 
-**Test case document (223 tests):** [docs/test-cases.md](docs/test-cases.md)
+**Test case document (368 tests):** [docs/test-cases.md](docs/test-cases.md)
 
 Multi-agent composition plan (11 specialized agents, **lean hardware / persona-first**): [docs/multi-agent-composition-plan.md](docs/multi-agent-composition-plan.md)
 

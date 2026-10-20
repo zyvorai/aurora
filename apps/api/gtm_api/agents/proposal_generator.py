@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Product
+from gtm_api.services.artifact_provenance import citations_from_results, record_dependencies
 from gtm_api.services.chunking import truncate_to_token_budget
 from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED
 from gtm_api.services.llm import get_chat_model
@@ -172,9 +173,12 @@ async def run_proposal_generator(
         content=full_content,
         content_hash=content_hash(full_content),
         status=ApprovalStatus.DRAFT,
+        citations=citations_from_results(result.get("_search_results", [])),
         metadata_={**proposal, "sources_used": sources_used},
         created_by=user_id,
     )
     db.add(artifact)
+    await db.flush()
+    await record_dependencies(db, artifact)
     await record_usage(db, tenant_id, tokens=result.get("tokens_used", 0), agent_runs=1)
     return artifact
