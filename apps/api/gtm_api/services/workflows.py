@@ -25,6 +25,7 @@ from gtm_api.models import (
     WorkflowRun,
 )
 from gtm_api.services.analytics import emit_event
+from gtm_api.services.artifact_provenance import citations_from_results, record_dependencies
 from gtm_api.services.brief import build_executive_brief, upsert_dashboard_snapshot
 from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED, verify_grounding
 from gtm_api.services.crm import create_opportunity, opportunity_to_dict
@@ -338,10 +339,13 @@ async def run_technical_eval_workflow(run_id: uuid.UUID) -> None:
                 content=architect_content,
                 content_hash=content_hash(architect_content),
                 status=ApprovalStatus.DRAFT,
+                citations=list(se_result.get("citations") or []),
                 metadata_=se_result,
                 created_by=user_id,
             )
             db.add(architect_artifact)
+            await db.flush()
+            await record_dependencies(db, architect_artifact)
             await record_usage(db, tenant_id, tokens=se_tokens, agent_runs=1)
             await db.commit()
             await db.refresh(architect_artifact)
@@ -371,10 +375,13 @@ async def run_technical_eval_workflow(run_id: uuid.UUID) -> None:
                 content=prop_content,
                 content_hash=content_hash(prop_content),
                 status=ApprovalStatus.DRAFT,
+                citations=citations_from_results(prop_result.get("_search_results", [])),
                 metadata_=proposal,
                 created_by=user_id,
             )
             db.add(proposal_artifact)
+            await db.flush()
+            await record_dependencies(db, proposal_artifact)
             await record_usage(db, tenant_id, tokens=prop_result.get("tokens_used", 0), agent_runs=1)
             await db.commit()
             await db.refresh(proposal_artifact)
@@ -486,10 +493,13 @@ async def run_generate_proposal_workflow(run_id: uuid.UUID) -> None:
                 content=prop_content,
                 content_hash=content_hash(prop_content),
                 status=ApprovalStatus.DRAFT,
+                citations=citations_from_results(prop_result.get("_search_results", [])),
                 metadata_=proposal,
                 created_by=user_id,
             )
             db.add(proposal_artifact)
+            await db.flush()
+            await record_dependencies(db, proposal_artifact)
             await record_usage(db, tenant_id, tokens=prop_result.get("tokens_used", 0), agent_runs=1)
             await db.commit()
             await db.refresh(proposal_artifact)
