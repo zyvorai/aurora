@@ -235,7 +235,7 @@ All commands run from the **repository root**.
 | `make api` | Run API in **foreground** (uses venv uvicorn) |
 | `make web` | Run Next.js in **foreground** |
 | `make workers` | Run ARQ workers in **foreground** |
-| `make test` | Run pytest (223 tests) |
+| `make test` | Run pytest (368 tests) |
 | `make ollama-pull` | Pull MVP Ollama models |
 
 ### Important: always use the venv
@@ -375,7 +375,7 @@ make test
 cd apps/api && .venv/bin/python -m pytest tests/ -v
 ```
 
-223 tests covering auth, RBAC, chunking, citation gate, crawler SSRF, supervisor routing, LLM factory, publishing/suppression, admin routes, and HTTP health checks.
+368 tests covering auth, RBAC, chunking, citation gate, crawler SSRF, supervisor routing, LLM factory, publishing/suppression, admin routes, and HTTP health checks.
 
 See also:
 
@@ -571,7 +571,7 @@ make stop
 | [source-management.md](./source-management.md) | Source types, ingest status, workers, troubleshooting |
 | [sso-oidc.md](./sso-oidc.md) | Keycloak / OIDC SSO, demo logins (`demo`/`demo`, `marketing@zyvor.dev`/`Admin@321`) |
 | [role-based-landing.md](./role-based-landing.md) | Persona default routes by RBAC role (login redirect, dashboard CTAs) |
-| [test-cases.md](./test-cases.md) | Full test case document — 223 tests with IDs, preconditions, expected results |
+| [test-cases.md](./test-cases.md) | Full test case document — 368 tests with IDs, preconditions, expected results |
 | [gtm-platform-phases.md](./gtm-platform-phases.md) | 12-phase implementation status + acceptance criteria |
 | [ollama-llm-integration.md](./ollama-llm-integration.md) | Dual LLM provider (Ollama + OpenAI) + tests |
 | [README.md](../README.md) | Project overview + API endpoint list |

@@ -2,7 +2,7 @@
 
 Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 
-**Last verified:** 223 tests passing (2026-08-08)
+**Last verified:** 368 tests passing (2026-10-20)
 **Run command:** `make test` or `cd apps/api && .venv/bin/python -m pytest tests/ -v`
 
 > Sections 5–7 below itemize the original 9 test files with per-case TC-IDs (still accurate
@@ -12,7 +12,8 @@ Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 > `test_loaders.py`, `test_mcp_context.py`, `test_rbac_enforcement.py`, `test_audit_log.py`,
 > `test_proposal_export.py`, `test_api_keys.py`, `test_publish_scheduler.py`,
 > `test_learning_scheduler.py`, `test_crawler_playwright.py`, `test_oauth_adapters.py`,
-> `test_sso.py`, `test_bootstrap.py`) are listed in the file map (Section 6) but not
+> `test_sso.py`, `test_bootstrap.py`, `test_artifact_provenance.py`, `test_analytics.py`,
+> `test_requirements.py`, `test_action_list.py`, `test_stale_publish_gate.py`) are listed in the file map (Section 6) but not
 > individually TC-ID'd — see
 > the file itself for per-test detail, or `docs/gtm-platform-phases.md`'s per-phase Tests
 > tables.
@@ -23,10 +24,10 @@ Canonical inventory of automated tests for the API backend (`apps/api/tests/`).
 
 | Metric | Value |
 |--------|-------|
-| Total test cases | 223 |
-| Test files | 33 (+ `conftest.py` shared fixtures) |
+| Total test cases | 368 |
+| Test files | 45 (+ `conftest.py` shared fixtures) |
 | External services required | **None** (Ollama, Postgres, Qdrant, Neo4j are mocked, run in-memory, or not invoked — including `test_vector_store.py`'s tenant-isolation test, which uses qdrant-client's in-memory backend rather than mocking the filter logic away) |
-| Typical runtime | ~3 seconds |
+| Typical runtime | ~7 minutes |
 
 Tests are grouped by platform concern: authentication, ingestion safety, RAG grounding, LLM provider wiring, multi-agent routing, and HTTP health/error handling.
 
@@ -205,7 +206,7 @@ cd apps/api
 |------|--------------|-------|
 | `tests/test_api.py` | `TestAuth`, `TestChunking`, `TestEnterprise`, `TestLLMFactory` | 12 |
 | `tests/test_auth_rbac.py` | `TestJWT`, `TestRBAC` | 4 |
-| `tests/test_citation_gate.py` | `TestCitationGate` | 6 |
+| `tests/test_citation_gate.py` | `TestCitationGate` (claim-level grounding: no fallback citations, `[Source N]`, unsupported/conflicting claims) | 11 |
 | `tests/test_config.py` | `TestConfig` | 3 |
 | `tests/test_crawler.py` | `TestValidateUrl`, `TestExtractContent` | 8 |
 | `tests/test_llm_integration.py` | `TestLLMIntegration` | 11 |
@@ -236,6 +237,11 @@ cd apps/api
 | `tests/test_oauth_adapters.py` | LinkedIn/X/Medium/Dev.to/Reddit adapters: not_configured gate, real (mocked) call, error mapping | 13 |
 | `tests/test_sso.py` | OIDC discovery/token-exchange/userinfo + login/callback routes incl. 404/409 email cases | 9 |
 | `tests/test_bootstrap.py` | default admin seed (marketing@zyvor.dev/Admin@321): idempotent creation, never resets an existing password | 3 |
+| `tests/test_artifact_provenance.py` | artifact/proof source-version dependencies, stale flagging, re-approval re-pinning, superseded document cleanup | 14 |
+| `tests/test_analytics.py` | funnel counts honour product + window; qualified vs total leads; definitions | 4 |
+| `tests/test_requirements.py` | requirement extraction (LLM + fallback, windows, RFP upload text), verdict enforcement, response document, workspace summary | 24 |
+| `tests/test_action_list.py` | daily action list grouping, ordering and thresholds | 7 |
+| `tests/test_stale_publish_gate.py` | HTTP-level: stale artifact blocked from publishing until re-approved | 2 |
 | `tests/conftest.py` | Shared fixtures | — |
 
 ---
@@ -307,6 +313,7 @@ Mark live-service tests with a pytest marker so default CI stays fast and offlin
 
 | Date | Change |
 |------|--------|
+| 2026-10-20 | Corrected 223/33-file count to 368/45 files: claim-level citation gate, stale-artifact provenance, scoped analytics, requirement-to-proof deal workspace (+RFP upload), daily action list and the stale-publish gate. Runtime is ~7 minutes, not ~3 seconds. The new DB-touching tests use mocked sessions, so they have the same blind spot as noted below: migrations 018/019 and the real queries have not been exercised against Postgres |
 | 2026-08-10 | Documented the mocked-`AsyncSession` blind spot in Section 8 that let `approve_artifact` (`b1aba20`) and `publish_artifact` (`39b9ee7`) ship with a missing `flush`/`commit` before their response was serialized — both silently 500'd on every real call despite `test_publishing.py`'s approval-gate tests passing throughout |
 | 2026-08-08 | Corrected stale 220/32-file count to actual 223/33 files: added `test_bootstrap.py` for the new default admin seed (marketing@zyvor.dev/Admin@321) |
 | 2026-08-08 | Corrected stale 151/23-file count to actual 220/32 files: added 9 new test files closing the RBAC/audit-log/proposal-export test gaps and covering newly-built API-key auth, publish scheduler/retry, scheduled learning cron, Playwright crawler fallback, real OAuth publish adapters, and generic OIDC SSO |
