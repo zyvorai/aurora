@@ -5,6 +5,10 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Changed
+
+- Citation gate now checks claims, not just retrieval scores: a response is `grounded` only if it cites real sources (chunk id, verbatim quote, or the `[Source N]` form the prompt asks for) and every factual sentence is backed by a retrieved passage. Unsupported and conflicting claims are listed in `blocked_claims` / `GroundingResult.claims`. The old fallback that attached the top-3 retrieved chunks to uncited answers is removed.
+
 ### Fixed
 
 - `ruff check` is now clean and blocks CI (it was `continue-on-error` with ~870 findings). Autofixes applied across `apps/api`; stylistic rules with a large footprint are ignored in `[tool.ruff.lint]`. This also fixed a real bug: `solution_architect.py` used `json` without importing it, so parsing the agent's LLM reply raised `NameError`.

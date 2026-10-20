@@ -33,10 +33,47 @@ class TestCitationGate:
                 score=0.85,
             )
         ]
-        answer = "Our product validates Kubernetes clusters automatically using Playwright tests."
+        answer = "Our product validates Kubernetes clusters automatically [Source 1]."
         result = verify_grounding(answer, results)
         assert result.grounded
-        assert len(result.citations) > 0
+        assert [c.chunk_id for c in result.citations] == ["abc123"]
+        assert [c.status for c in result.claims] == ["supported"]
+
+    def test_uncited_response_gets_no_fallback_citations(self):
+        results = [_result("abc123", "Our product validates Kubernetes clusters automatically.")]
+        answer = "Our product validates Kubernetes clusters automatically using Playwright tests."
+        assert extract_citations_from_response(answer, results) == []
+        result = verify_grounding(answer, results)
+        assert not result.grounded
+        assert result.citations == []
+
+    def test_unsupported_claim_blocks_even_when_cited(self):
+        results = [_result("c1", "The agent supports Linux hosts and runs as a systemd service.")]
+        answer = (
+            "The agent supports Linux hosts and runs as a systemd service [Source 1]. "
+            "It also provides a fully managed disconnected deployment with offline licensing."
+        )
+        result = verify_grounding(answer, results)
+        assert not result.grounded
+        statuses = [c.status for c in result.claims]
+        assert statuses == ["supported", "unsupported"]
+        assert any("offline licensing" in b for b in result.blocked_claims)
+
+    def test_conflicting_claim_detected(self):
+        results = [_result("c1", "The product does not support Windows guests today.")]
+        answer = "The product supports Windows guests today [Source 1]."
+        result = verify_grounding(answer, results)
+        assert not result.grounded
+        assert result.claims[0].status == "conflicting"
+
+    def test_source_number_out_of_range_is_not_a_citation(self):
+        results = [_result("c1", "Feature X supports YAML configuration files.")]
+        assert extract_citations_from_response("Feature X supports YAML [Source 7].", results) == []
+
+    def test_high_retrieval_score_alone_is_not_grounding(self):
+        results = [_result("c1", "Unrelated pricing text.", score=0.99)]
+        result = verify_grounding("The platform encrypts every backup with hardware keys.", results)
+        assert not result.grounded
 
     def test_build_context_includes_chunk_id(self):
         ctx = build_context_from_results([_result("abc123", "Feature X supports YAML.")])
