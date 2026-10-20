@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Product
+from gtm_api.services.artifact_provenance import record_dependencies
 from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
     build_context_from_results,
@@ -166,5 +167,7 @@ async def run_content_generation(
         created_by=user_id,
     )
     db.add(artifact)
+    await db.flush()
+    await record_dependencies(db, artifact)
     await record_usage(db, tenant_id, tokens=result.get("tokens_used", 0), agent_runs=1)
     return artifact

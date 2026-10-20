@@ -23,6 +23,7 @@ from gtm_api.schemas import (
     StrategyRequest,
     StrategyResponse,
 )
+from gtm_api.services.artifact_provenance import acknowledge_current_sources
 from gtm_api.services.publishing import publish_artifact
 from gtm_api.tenant import audit_log, get_product_for_tenant, get_tenant_context, record_usage
 
@@ -134,6 +135,8 @@ async def list_artifacts(
             "title": a.title,
             "status": a.status.value,
             "channel": a.channel,
+            "stale_reason": a.stale_reason,
+            "stale_since": a.stale_since.isoformat() if a.stale_since else None,
             "created_at": a.created_at.isoformat(),
         }
         for a in artifacts
@@ -157,6 +160,9 @@ async def approve_artifact(
 
     status = ApprovalStatus.APPROVED if req.status == "approved" else ApprovalStatus.REJECTED
     artifact.status = status
+    if status == ApprovalStatus.APPROVED:
+        # Approval is the re-review: pin the artifact to the current source versions.
+        await acknowledge_current_sources(db, artifact)
 
     approval = Approval(
         artifact_id=artifact.id,
@@ -188,6 +194,11 @@ async def publish_content(
     artifact = result.scalar_one_or_none()
     if not artifact:
         raise HTTPException(status_code=404, detail="Artifact not found")
+    if artifact.stale_reason:
+        raise HTTPException(
+            status_code=409,
+            detail="Artifact is based on source content that has changed; re-review and approve it before publishing",
+        )
 
     try:
         post = await publish_artifact(

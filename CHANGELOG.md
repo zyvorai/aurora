@@ -9,6 +9,8 @@ All notable changes to Aurora are documented here. Format loosely follows
 
 - Citation gate now checks claims, not just retrieval scores: a response is `grounded` only if it cites real sources (chunk id, verbatim quote, or the `[Source N]` form the prompt asks for) and every factual sentence is backed by a retrieved passage. Unsupported and conflicting claims are listed in `blocked_claims` / `GroundingResult.claims`. The old fallback that attached the top-3 retrieved chunks to uncited answers is removed.
 
+- Knowledge refresh now flags stale artifacts instead of just counting them. Artifacts remember which source document version their citations relied on (`artifact_dependencies`, migration 018); when a refresh ingests a changed document the affected artifacts get `stale_reason=source_changed`. Approved/pending proposals, content, emails, presentations and outreach with no recorded citations are flagged `source_changed_unverified`. Stale artifacts can't be published until re-approved (approval re-pins them to the current sources), and the artifact list returns `stale_reason` / `stale_since`. Currently only content-studio artifacts store citations, so other agents' artifacts fall into the "unverified" bucket.
+
 ### Fixed
 
 - `ruff check` is now clean and blocks CI (it was `continue-on-error` with ~870 findings). Autofixes applied across `apps/api`; stylistic rules with a large footprint are ignored in `[tool.ruff.lint]`. This also fixed a real bug: `solution_architect.py` used `json` without importing it, so parsing the agent's LLM reply raised `NameError`.

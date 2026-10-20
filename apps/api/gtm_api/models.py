@@ -306,6 +306,9 @@ class Artifact(Base):
     citations: Mapped[list | None] = mapped_column(JSONB, default=list)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=dict)
     prompt_version: Mapped[str | None] = mapped_column(String(50))
+    # Set by knowledge refresh when a source this artifact relied on changed; cleared on re-approval.
+    stale_reason: Mapped[str | None] = mapped_column(String(50))
+    stale_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -314,6 +317,30 @@ class Artifact(Base):
 
     product: Mapped["Product"] = relationship(back_populates="artifacts")
     approvals: Mapped[list["Approval"]] = relationship(back_populates="artifact")
+    dependencies: Mapped[list["ArtifactDependency"]] = relationship(
+        back_populates="artifact", cascade="all, delete-orphan"
+    )
+
+
+class ArtifactDependency(Base):
+    """The source document version an artifact's citations relied on.
+
+    ``document_id`` is deliberately not a foreign key: re-ingestion deletes and recreates
+    documents, and the dependency must outlive them so the change can be detected.
+    """
+
+    __tablename__ = "artifact_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    artifact_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("artifacts.id"), nullable=False, index=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    document_url: Mapped[str | None] = mapped_column(String(2048))
+    document_title: Mapped[str] = mapped_column(String(512), default="")
+    content_hash_at_use: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    artifact: Mapped["Artifact"] = relationship(back_populates="dependencies")
 
 
 class Approval(Base):
