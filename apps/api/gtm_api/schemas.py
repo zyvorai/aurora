@@ -1012,6 +1012,26 @@ class DealWorkspaceResponse(BaseModel):
     next_actions: list[str]
 
 
+class ActionItemResponse(BaseModel):
+    id: str
+    kind: str
+    title: str
+    detail: str
+    product_id: uuid.UUID
+    product_name: str
+    href: str
+    count: int = 1
+    opportunity_id: uuid.UUID | None = None
+    artifact_id: uuid.UUID | None = None
+    age_days: int = 0
+
+
+class ActionListResponse(BaseModel):
+    items: list[ActionItemResponse]
+    counts: dict[str, int]
+    follow_up_after_days: int
+
+
 class RequirementResponseDocument(BaseModel):
     artifact_id: uuid.UUID
     included: int

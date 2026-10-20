@@ -917,6 +917,37 @@ export const workers = {
   },
 };
 
+export type ActionKind =
+  | 'stale_proof' | 'stale_artifact' | 'proof_review' | 'needs_answer' | 'artifact_review' | 'follow_up';
+
+export interface ActionItem {
+  id: string;
+  kind: ActionKind;
+  title: string;
+  detail: string;
+  product_id: string;
+  product_name: string;
+  href: string;
+  count: number;
+  opportunity_id?: string | null;
+  artifact_id?: string | null;
+  age_days: number;
+}
+
+export interface ActionList {
+  items: ActionItem[];
+  counts: Record<string, number>;
+  follow_up_after_days: number;
+}
+
+export const actions = {
+  list(productId?: string, limit = 50): Promise<ActionList> {
+    const qs = new URLSearchParams({ limit: String(limit) });
+    if (productId) qs.set('product_id', productId);
+    return request(`/action-list?${qs.toString()}`);
+  },
+};
+
 export const artifacts = {
   approve(artifactId: string, data: { status: 'approved' | 'rejected'; comment?: string }): Promise<ApprovalResponse> {
     return request(`/artifacts/${artifactId}/approve`, {

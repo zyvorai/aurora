@@ -2,8 +2,9 @@
 
 import uuid
 from collections import Counter
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,8 @@ from gtm_api.models import (
     User,
 )
 from gtm_api.schemas import (
+    ActionItemResponse,
+    ActionListResponse,
     DealWorkspaceResponse,
     OpportunityResponse,
     ProofResponse,
@@ -28,6 +31,7 @@ from gtm_api.schemas import (
     RequirementResponse,
     RequirementResponseDocument,
 )
+from gtm_api.services.action_list import FOLLOW_UP_AFTER_DAYS, build_action_list
 from gtm_api.services.artifact_provenance import documents_for_citations, record_dependencies
 from gtm_api.services.crm import get_opportunity
 from gtm_api.services.embeddings import embedding_service
@@ -299,4 +303,23 @@ async def create_response_document(
     return RequirementResponseDocument(
         artifact_id=artifact.id, included=len(items),
         skipped_unapproved=skipped_unapproved, skipped_stale=skipped_stale,
+    )
+
+
+@router.get("/action-list", response_model=ActionListResponse)
+async def action_list(
+    product_id: uuid.UUID | None = None,
+    limit: int = Query(50, ge=1, le=200),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """What needs attention today across deals and drafts (tenant-wide, or one product)."""
+    ctx = await get_tenant_context(user, db)
+    if product_id:
+        await get_product_for_tenant(db, product_id, ctx.tenant_id)
+    items = await build_action_list(db, ctx.tenant_id, datetime.now(UTC), product_id)
+    return ActionListResponse(
+        items=[ActionItemResponse(**vars(i)) for i in items[:limit]],
+        counts=dict(Counter(i.kind for i in items)),  # over the full list, not just this page
+        follow_up_after_days=FOLLOW_UP_AFTER_DAYS,
     )

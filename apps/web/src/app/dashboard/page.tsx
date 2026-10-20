@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/Card';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import OnboardingChecklist from '@/components/OnboardingChecklist';
+import ActionList from '@/components/ActionList';
 import { TextSmall, StatGrid } from '@/components/ui/Typography';
 import { SkeletonHero, SkeletonCard } from '@/components/ui/Skeleton';
 import { SourceLink } from '@/components/sources/SourceLink';
@@ -194,6 +195,8 @@ export default function DashboardPage() {
           firstProductId={productList[0]?.id}
           onCreateProduct={openCreateModal}
         />
+
+        {!isEmpty && <ActionList />}
 
         {!isEmpty && (
           <section>
