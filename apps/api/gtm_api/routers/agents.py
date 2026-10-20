@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -178,11 +178,12 @@ async def export_proposal(
 @router.get("/products/{product_id}/analytics", response_model=AnalyticsResponse)
 async def product_analytics(
     product_id: uuid.UUID,
+    days: int = Query(30, ge=1, le=365),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     ctx = await get_tenant_context(user, db)
-    data = await get_analytics(db, ctx.tenant_id, product_id)
+    data = await get_analytics(db, ctx.tenant_id, product_id, days=days)
     return AnalyticsResponse(**data)
 
 

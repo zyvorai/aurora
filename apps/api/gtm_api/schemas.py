@@ -536,8 +536,10 @@ class ProposalResponse(BaseModel):
 # Analytics
 class AnalyticsResponse(BaseModel):
     period: str
+    window: dict[str, Any] = Field(default_factory=dict)
     metrics: dict[str, Any]
     funnel: dict[str, int]
+    definitions: dict[str, str] = Field(default_factory=dict)
     top_questions: list[dict]
     knowledge_gaps: list[dict]
 
