@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,8 +17,8 @@ from gtm_api.models import (
     SourceStatus,
 )
 from gtm_api.services.chunking import chunk_text
-from gtm_api.services.loaders import load_source_pages
 from gtm_api.services.embeddings import embedding_service
+from gtm_api.services.loaders import load_source_pages
 from gtm_api.services.vector_store import vector_store
 from gtm_api.tenant import record_usage
 
@@ -112,7 +111,7 @@ async def ingest_source(
         source.pages_processed = len(pages)
         source.status = SourceStatus.COMPLETED
         source.content_hash = combined_hash.hexdigest()
-        source.last_crawled_at = datetime.now(timezone.utc)
+        source.last_crawled_at = datetime.now(UTC)
         await record_usage(db, tenant_id, pages=len(pages))
 
         return {
@@ -158,7 +157,7 @@ async def ingest_all_sources(
     db: AsyncSession,
     product_id: uuid.UUID,
     tenant_id: uuid.UUID,
-    source_ids: Optional[list[uuid.UUID]] = None,
+    source_ids: list[uuid.UUID] | None = None,
     *,
     force: bool = False,
 ) -> dict:

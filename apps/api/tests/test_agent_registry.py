@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from gtm_api.agents.base import AgentOutput
 from gtm_api.agents.executor import dispatch_agent
 from gtm_api.agents.registry import (
     AGENT_REGISTRY,
@@ -155,18 +154,17 @@ class TestSupervisorExecution:
         with patch(
             "gtm_api.agents.executor.invoke_marketing_strategy",
             AsyncMock(return_value=strategy_payload),
-        ):
-            with patch("gtm_api.agents.executor.record_usage", AsyncMock()):
-                with patch("gtm_api.agents.executor.Artifact") as artifact_cls:
-                    artifact_cls.return_value = mock_artifact
-                    result = await run_supervisor(
-                        mock_db,
-                        product,
-                        tenant_id,
-                        user_id,
-                        "strategy",
-                        {"focus_areas": ["fintech"]},
-                    )
+        ), patch("gtm_api.agents.executor.record_usage", AsyncMock()):
+            with patch("gtm_api.agents.executor.Artifact") as artifact_cls:
+                artifact_cls.return_value = mock_artifact
+                result = await run_supervisor(
+                    mock_db,
+                    product,
+                    tenant_id,
+                    user_id,
+                    "strategy",
+                    {"focus_areas": ["fintech"]},
+                )
 
         assert result["request_type"] == "strategy"
         assert result["routed_agent"] == "marketing"

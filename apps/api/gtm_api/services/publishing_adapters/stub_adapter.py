@@ -5,8 +5,6 @@ platform to integrate against."""
 
 from __future__ import annotations
 
-from typing import Optional
-
 from gtm_api.models import Artifact, ChannelPost
 from gtm_api.services.publishing_adapters.base import ProviderResult
 
@@ -15,7 +13,7 @@ def make_stub_adapter(channel_label: str):
     async def publish(
         artifact: Artifact,
         channel_post: ChannelPost,
-        recipient: Optional[str] = None,
+        recipient: str | None = None,
     ) -> ProviderResult:
         return ProviderResult(
             status="not_configured",

@@ -1,19 +1,19 @@
 """Wave 4 success & intelligence tests."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from gtm_api.models import Opportunity
+from gtm_api.services.campaign_monitor import get_campaign_status
+from gtm_api.services.crm_sync import sync_status
 from gtm_api.services.customer_success import (
     build_cs_brief,
     build_playbook,
     score_health,
 )
-from gtm_api.services.campaign_monitor import get_campaign_status
-from gtm_api.services.crm_sync import sync_status
 from gtm_api.services.insights import _snapshot_is_fresh
 
 
@@ -70,12 +70,12 @@ class TestCampaignMonitor:
 class TestInsights:
     def test_snapshot_fresh_within_week(self):
         snap = MagicMock()
-        snap.updated_at = datetime.now(timezone.utc)
+        snap.updated_at = datetime.now(UTC)
         assert _snapshot_is_fresh(snap) is True
 
     def test_snapshot_stale_after_week(self):
         snap = MagicMock()
-        snap.updated_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        snap.updated_at = datetime(2020, 1, 1, tzinfo=UTC)
         assert _snapshot_is_fresh(snap) is False
 
 

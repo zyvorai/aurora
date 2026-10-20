@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import io
 import uuid
-from typing import Optional
 
 from minio import Minio
 from minio.error import S3Error
@@ -16,8 +15,8 @@ settings = get_settings()
 
 class StorageService:
     def __init__(self) -> None:
-        self._client: Optional[Minio] = None
-        self._public_client: Optional[Minio] = None
+        self._client: Minio | None = None
+        self._public_client: Minio | None = None
 
     @property
     def client(self) -> Minio:

@@ -96,7 +96,7 @@ class GitHubLoader:
             path = item.get("path", "")
             if item.get("type") != "blob":
                 continue
-            if not re.search(r"\.(md|txt|rst)$", path, re.I):
+            if not re.search(r"\.(md|txt|rst)$", path, re.IGNORECASE):
                 continue
             if path.startswith("docs/") or path.startswith("doc/") or "/" not in path:
                 paths.append(path)

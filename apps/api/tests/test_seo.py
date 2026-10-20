@@ -3,7 +3,7 @@
 import httpx
 import pytest
 
-from gtm_api.services.seo import audit_html, score_content, suggest_meta, article_jsonld
+from gtm_api.services.seo import article_jsonld, audit_html, score_content, suggest_meta
 from gtm_api.services.seo.keywords import (
     DataForSEOProvider,
     GroundedProvider,

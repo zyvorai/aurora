@@ -1,11 +1,21 @@
 """Citation gate for grounded generation."""
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from gtm_api.schemas import Citation
-from gtm_api.services.vector_store import SearchResult
 from gtm_api.services.chunking import truncate_to_token_budget
+from gtm_api.services.vector_store import SearchResult
+
+
+@dataclass
+class ClaimVerdict:
+    """Support status of one sentence of a response against retrieved passages."""
+
+    claim: str
+    status: str  # "supported" | "unsupported" | "conflicting"
+    chunk_id: str | None = None
+    support: float = 0.0
 
 
 @dataclass
@@ -14,6 +24,7 @@ class GroundingResult:
     citations: list[Citation]
     confidence: float
     blocked_claims: list[str]
+    claims: list[ClaimVerdict] = field(default_factory=list)
 
 
 def build_context_from_results(
@@ -34,37 +45,93 @@ def build_context_from_results(
     return "\n---\n".join(parts)
 
 
+_SOURCE_REF = re.compile(r"\[?\bSource\s+(\d+)\b\]?", re.IGNORECASE)
+
+_ABSTENTION_PATTERNS = [
+    r"I don't have (?:specific )?information",
+    r"I cannot (?:find|locate|determine)",
+    r"based on my (?:general )?knowledge",
+    r"as an AI",
+]
+_STOPWORDS = frozenset(
+    ["a", "an", "the", "and", "or", "but", "of", "to", "in", "on", "for", "with", "by", "at", "from", "as", "is", "are", "was", "were", "be", "been", "it", "its", "this", "that", "these", "those", "our", "your", "their", "we", "you", "they", "can", "will", "may", "also", "which", "who", "has", "have", "had", "using", "use", "used", "into", "than", "then", "so", "such", "not", "no"]
+)
+_NEGATIONS = frozenset({"not", "no", "cannot", "never", "without", "doesn't", "isn't", "don't"})
+_MIN_CLAIM_TOKENS = 4
+_SUPPORT_THRESHOLD = 0.6
+
+
+def _citation(r: SearchResult) -> Citation:
+    excerpt = r.content[:300] + ("..." if len(r.content) > 300 else "")
+    return Citation(
+        chunk_id=r.chunk_id,
+        document_title=r.document_title,
+        excerpt=excerpt,
+        url=r.url,
+    )
+
+
 def extract_citations_from_response(
     response: str, results: list[SearchResult]
 ) -> list[Citation]:
-    citations = []
-    chunk_map = {r.chunk_id: r for r in results}
+    """Citations the response actually makes: a chunk id, a ``[Source N]`` marker
+    (the form the grounded system prompt asks for, numbered as in
+    build_context_from_results), or a verbatim quote. Retrieved-but-uncited chunks
+    are never attached."""
+    cited: dict[str, SearchResult] = {}
+    for r in results:
+        if r.chunk_id in response or r.content[:100] in response:
+            cited[r.chunk_id] = r
+    for m in _SOURCE_REF.finditer(response):
+        idx = int(m.group(1))
+        if 1 <= idx <= len(results):
+            cited.setdefault(results[idx - 1].chunk_id, results[idx - 1])
+    return [_citation(r) for r in cited.values()]
 
-    for chunk_id, result in chunk_map.items():
-        if chunk_id in response or result.content[:100] in response:
-            excerpt = result.content[:300] + ("..." if len(result.content) > 300 else "")
-            citations.append(
-                Citation(
-                    chunk_id=chunk_id,
-                    document_title=result.document_title,
-                    excerpt=excerpt,
-                    url=result.url,
-                )
-            )
 
-    if not citations and results:
-        for r in results[:3]:
-            excerpt = r.content[:300] + ("..." if len(r.content) > 300 else "")
-            citations.append(
-                Citation(
-                    chunk_id=r.chunk_id,
-                    document_title=r.document_title,
-                    excerpt=excerpt,
-                    url=r.url,
-                )
-            )
+def _norm(text: str) -> str:
+    return text.lower().replace("\u2019", "'")
 
-    return citations
+
+def _tokens(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9][a-z0-9.+#-]*", _norm(text)) if w not in _STOPWORDS}
+
+
+def _split_claims(response: str) -> list[str]:
+    text = _SOURCE_REF.sub("", response)
+    parts = re.split(r"(?<=[.!?])\s+|\n+", text)
+    return [p.strip(" -*#>\t") for p in parts if p.strip(" -*#>\t")]
+
+
+def check_claims(response: str, results: list[SearchResult]) -> list[ClaimVerdict]:
+    """Judge each factual sentence of ``response`` against the retrieved passages.
+
+    Lexical and deterministic (no LLM call, so Ollama and OpenAI behave identically):
+    a claim is *supported* when most of its content words appear in one passage,
+    *conflicting* when they do but negation differs, otherwise *unsupported*.
+    Questions, abstentions and short fragments are not claims.
+    """
+    passages = [(r.chunk_id, r.content, _tokens(r.content)) for r in results]
+    verdicts: list[ClaimVerdict] = []
+    for sentence in _split_claims(response):
+        toks = _tokens(sentence)
+        if len(toks) < _MIN_CLAIM_TOKENS or sentence.endswith("?"):
+            continue
+        if any(re.search(p, sentence, re.IGNORECASE) for p in _ABSTENTION_PATTERNS):
+            continue
+        best_id, best_score, best_text = None, 0.0, ""
+        for chunk_id, text, ptoks in passages:
+            score = len(toks & ptoks) / len(toks)
+            if score > best_score:
+                best_id, best_score, best_text = chunk_id, score, text
+        if best_score >= _SUPPORT_THRESHOLD:
+            claim_neg = bool(_NEGATIONS & set(_norm(sentence).split()))
+            text_neg = bool(_NEGATIONS & set(_norm(best_text).split()))
+            status = "supported" if claim_neg == text_neg else "conflicting"
+        else:
+            status = "unsupported"
+        verdicts.append(ClaimVerdict(sentence, status, best_id, round(best_score, 2)))
+    return verdicts
 
 
 def verify_grounding(
@@ -81,23 +148,19 @@ def verify_grounding(
         )
 
     citations = extract_citations_from_response(response, results)
-    avg_score = sum(r.score for r in results) / len(results) if results else 0.0
+    claims = check_claims(response, results)
+    avg_score = sum(r.score for r in results) / len(results)
+    has_abstention = any(re.search(p, response, re.IGNORECASE) for p in _ABSTENTION_PATTERNS)
 
-    ungrounded_patterns = [
-        r"I don't have (?:specific )?information",
-        r"I cannot (?:find|locate|determine)",
-        r"based on my (?:general )?knowledge",
-        r"as an AI",
-    ]
-    has_abstention = any(re.search(p, response, re.IGNORECASE) for p in ungrounded_patterns)
+    bad = [c for c in claims if c.status != "supported"]
+    # Grounded means the response cites real sources and every checked claim is backed by
+    # them. Retrieval score only scales confidence; it no longer decides grounding.
+    pure_abstention = has_abstention and not claims
+    grounded = (len(citations) >= min_citations and not bad) or pure_abstention
 
-    grounded = len(citations) >= min_citations and avg_score > 0.3
-    if has_abstention and not citations:
-        grounded = True
-
-    blocked = []
-    if not grounded:
-        blocked.append("Response lacks sufficient citation support")
+    blocked = [f"{c.status}: {c.claim}" for c in bad]
+    if len(citations) < min_citations and not pure_abstention:
+        blocked.append("Response cites no retrieved source")
 
     confidence = min(avg_score, 1.0) if grounded else avg_score * 0.5
 
@@ -106,6 +169,7 @@ def verify_grounding(
         citations=citations,
         confidence=confidence,
         blocked_claims=blocked,
+        claims=claims,
     )
 
 

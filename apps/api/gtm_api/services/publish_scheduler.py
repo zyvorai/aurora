@@ -9,7 +9,7 @@ Both reuse services.publishing.dispatch_channel_post so scheduled/retried posts 
 through identical suppression-check + adapter-call logic as an immediate publish.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,7 +23,7 @@ RETRY_BACKOFF_MINUTES = [1, 5, 15, 60, 240]
 
 
 async def process_due_scheduled_posts(db: AsyncSession) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     result = await db.execute(
         select(ChannelPost).where(
             ChannelPost.status == "scheduled",
@@ -52,7 +52,7 @@ async def process_due_scheduled_posts(db: AsyncSession) -> dict:
 
 
 async def retry_failed_posts(db: AsyncSession) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     result = await db.execute(
         select(ChannelPost).where(
             ChannelPost.status == "failed",

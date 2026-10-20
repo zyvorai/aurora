@@ -2,8 +2,8 @@
 including the deliberate multi-tenant-email-ambiguity behavior (404/409)."""
 
 import uuid
-from urllib.parse import unquote_plus
 from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import unquote_plus
 
 import pytest
 from fastapi.testclient import TestClient
@@ -112,7 +112,7 @@ class TestSsoRoutes:
         monkeypatch.setattr(auth_router.settings, "sso_issuer", "https://idp.example.com")
 
         mock_db = AsyncMock()
-        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=lambda: [])))
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=list)))
 
         async def _get_db():
             yield mock_db

@@ -8,8 +8,9 @@ schedule_post) -- this is not a general plugin framework.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Awaitable, Callable
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,7 +51,7 @@ async def create_artifact(
     artifact_type: str,
     title: str,
     content: str,
-    metadata: Optional[dict] = None,
+    metadata: dict | None = None,
 ) -> Artifact:
     """Persist a draft artifact. Callable by any agent handler that needs to
     hand off structured output without duplicating this persistence logic."""
@@ -77,7 +78,7 @@ async def schedule_post(
     user_id: uuid.UUID,
     artifact_id: uuid.UUID,
     channel: str,
-    scheduled_at: Optional[datetime] = None,
+    scheduled_at: datetime | None = None,
 ) -> ChannelPost:
     """Schedule (or immediately publish) an approved artifact on a channel."""
     from gtm_api.services.publishing import publish_artifact

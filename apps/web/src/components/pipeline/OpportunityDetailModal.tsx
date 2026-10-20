@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { products, type Opportunity, type SuccessPlanResponse } from '@/lib/api';
 import { showToast } from '@/lib/toast';
 import { useWorkflowPolling } from '@/lib/useWorkflowPolling';
@@ -96,6 +97,16 @@ export default function OpportunityDetailModal({ productId, opportunityId, onClo
             <div><TextSmall className="text-muted">Stage</TextSmall><p><Badge>{opp.stage}</Badge></p></div>
             <div><TextSmall className="text-muted">Amount</TextSmall><p>{opp.amount ? `$${opp.amount.toLocaleString()}` : '—'}</p></div>
             <div><TextSmall className="text-muted">Probability</TextSmall><p>{Math.round(opp.probability * 100)}%</p></div>
+          </div>
+
+          <div>
+            <TextSmall className="mb-2 block text-muted">Technical requirements</TextSmall>
+            <Link
+              href={`/products/${productId}/deals/${opportunityId}`}
+              className="text-[14px] text-[var(--accent-blue)] hover:underline"
+            >
+              Open deal workspace →
+            </Link>
           </div>
 
           <div>

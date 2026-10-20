@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +12,6 @@ from gtm_api.services.credentials import encrypt_secret
 from gtm_api.services.loaders.database import DatabaseLoader
 from gtm_api.services.storage import storage_service
 from gtm_api.services.vector_store import vector_store
-
 
 VALID_SOURCE_TYPES = {t.value for t in SourceType}
 

@@ -9,8 +9,8 @@ from gtm_api.auth import get_current_user
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
 from gtm_api.models import User
-from gtm_api.tenant import get_product_for_tenant, get_tenant_context
 from gtm_api.services.mcp import gather_decision_context, list_available_providers
+from gtm_api.tenant import get_product_for_tenant, get_tenant_context
 
 router = APIRouter(prefix="/mcp", tags=["mcp"])
 

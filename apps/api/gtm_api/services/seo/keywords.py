@@ -13,7 +13,7 @@ import re
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import date, timedelta
-from typing import Optional, Protocol
+from typing import Protocol
 from urllib.parse import quote
 
 import httpx
@@ -21,8 +21,7 @@ import httpx
 from gtm_api.config import get_settings
 
 _STOP = frozenset(
-    "a an and are as at be by for from has have how in is it its of on or that the their this to was we with you your our can will not "
-    "more most other such than then they them these those which who what when where why into over also any all each both about".split()
+    ["a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "have", "how", "in", "is", "it", "its", "of", "on", "or", "that", "the", "their", "this", "to", "was", "we", "with", "you", "your", "our", "can", "will", "not", "more", "most", "other", "such", "than", "then", "they", "them", "these", "those", "which", "who", "what", "when", "where", "why", "into", "over", "also", "any", "all", "each", "both", "about"]
 )
 _TRANSACTIONAL = ("buy", "pricing", "price", "cost", "demo", "trial", "quote", "subscribe", "download")
 _COMMERCIAL = ("best", "vs", "versus", "alternative", "alternatives", "compare", "comparison", "review", "reviews", "top")
@@ -35,11 +34,11 @@ class Keyword:
     keyword: str
     intent: str  # informational | commercial | transactional | navigational
     source: str  # estimate | dataforseo | search_console
-    volume: Optional[int] = None  # monthly searches (provider-measured only)
-    difficulty: Optional[int] = None  # 0-100 (provider-measured only)
-    clicks: Optional[int] = None  # first-party (Search Console only)
-    impressions: Optional[int] = None
-    position: Optional[float] = None
+    volume: int | None = None  # monthly searches (provider-measured only)
+    difficulty: int | None = None  # 0-100 (provider-measured only)
+    clicks: int | None = None  # first-party (Search Console only)
+    impressions: int | None = None
+    position: float | None = None
     score: float = 0.0  # ordering key within the provider's own scale
 
     def to_dict(self) -> dict:
@@ -162,7 +161,7 @@ class SearchConsoleProvider:
         return out[:limit]
 
 
-def get_provider(name: Optional[str] = None) -> KeywordProvider:
+def get_provider(name: str | None = None) -> KeywordProvider:
     """Resolve the configured provider; falls back to the grounded estimator when credentials are missing."""
     s = get_settings()
     choice = (name or s.seo_provider or "grounded").lower()

@@ -2,7 +2,6 @@
 
 import uuid
 from dataclasses import dataclass
-from typing import Optional
 
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import (
@@ -25,7 +24,7 @@ class SearchResult:
     content: str
     score: float
     document_title: str
-    url: Optional[str]
+    url: str | None
     metadata: dict
 
 
@@ -88,7 +87,7 @@ class VectorStore:
         product_id: uuid.UUID,
         query_vector: list[float],
         limit: int = 5,
-        provenance_filter: Optional[str] = "tenant_authoritative",
+        provenance_filter: str | None = "tenant_authoritative",
     ) -> list[SearchResult]:
         await self.ensure_collection()
         must_conditions = [

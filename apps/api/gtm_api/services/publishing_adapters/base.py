@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Protocol
 
 from gtm_api.models import Artifact, ChannelPost
 
@@ -11,8 +11,8 @@ from gtm_api.models import Artifact, ChannelPost
 @dataclass
 class ProviderResult:
     status: str  # "published" | "scheduled" | "failed" | "not_configured"
-    provider_message_id: Optional[str] = None
-    error: Optional[str] = None
+    provider_message_id: str | None = None
+    error: str | None = None
 
 
 class PublishAdapter(Protocol):
@@ -20,6 +20,6 @@ class PublishAdapter(Protocol):
         self,
         artifact: Artifact,
         channel_post: ChannelPost,
-        recipient: Optional[str] = None,
+        recipient: str | None = None,
     ) -> ProviderResult:
         ...

@@ -15,7 +15,6 @@ from gtm_api.schemas import (
     InboundLeadResponse,
     PublicInboundLeadRequest,
     SequenceListResponse,
-    SequenceStepInput,
     UpdateSequenceRequest,
     UpdateSequenceResponse,
 )

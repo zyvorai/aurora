@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gtm_api.agents.product_understanding import run_product_understanding
 from gtm_api.auth import get_current_user, require_permission
 from gtm_api.config import get_settings
 from gtm_api.database import get_db
@@ -25,16 +26,16 @@ from gtm_api.schemas import (
     SourceCreate,
     SourceResponse,
 )
-from gtm_api.agents.product_understanding import run_product_understanding
 from gtm_api.services.analytics import emit_event
 from gtm_api.services.citation_gate import (
     SYSTEM_PROMPT_GROUNDED,
     verify_grounding,
 )
-from gtm_api.services.mcp import gather_decision_context
 from gtm_api.services.enterprise import check_product_limit
-from gtm_api.services.ingestion import ingest_all_sources, ingest_source
+from gtm_api.services.ingestion import ingest_all_sources
 from gtm_api.services.job_queue import enqueue_source_ingest
+from gtm_api.services.llm import get_chat_model
+from gtm_api.services.mcp import gather_decision_context
 from gtm_api.services.source_service import (
     create_credential,
     delete_source,
@@ -43,7 +44,6 @@ from gtm_api.services.source_service import (
     validate_source_type,
 )
 from gtm_api.tenant import audit_log, get_product_for_tenant, get_tenant_context
-from gtm_api.services.llm import get_chat_model
 
 settings = get_settings()
 router = APIRouter(prefix="/products", tags=["products"])

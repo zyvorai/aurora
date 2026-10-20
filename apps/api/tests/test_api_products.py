@@ -35,7 +35,7 @@ async def test_create_product_creates_website_source():
     mock_db.execute = AsyncMock(
         side_effect=[
             MagicMock(scalar_one_or_none=lambda: tenant),  # get_tenant_context
-            MagicMock(scalars=lambda: MagicMock(all=lambda: [])),  # check_product_limit
+            MagicMock(scalars=lambda: MagicMock(all=list)),  # check_product_limit
         ]
     )
     mock_db.get = AsyncMock(return_value=tenant)

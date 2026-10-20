@@ -10,10 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import content_hash
 from gtm_api.config import get_settings
-from gtm_api.services.llm import get_chat_model
 from gtm_api.models import ApprovalStatus, Artifact, ArtifactType, Campaign, Product
-from gtm_api.services.crawler import fetch_single_page
 from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED
+from gtm_api.services.crawler import fetch_single_page
+from gtm_api.services.llm import get_chat_model
 from gtm_api.tenant import record_usage
 
 settings = get_settings()

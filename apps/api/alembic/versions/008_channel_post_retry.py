@@ -5,8 +5,8 @@ down_revision = "007_api_keys"
 branch_labels = None
 depends_on = None
 
+
 from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade() -> None:

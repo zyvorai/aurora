@@ -2,36 +2,35 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gtm_api.agents.outreach import run_outreach
+from gtm_api.agents.proposal_generator import run_proposal_generator
+from gtm_api.agents.sales_agent import run_sales_chat
+from gtm_api.agents.solution_architect import invoke_solution_architect
+from gtm_api.agents.supervisor import run_supervisor
 from gtm_api.auth import get_current_user, require_permission
+from gtm_api.config import get_settings
 from gtm_api.database import async_session_factory, get_db
 from gtm_api.models import Artifact, User
 from gtm_api.schemas import (
+    AnalyticsResponse,
     ArchitectRequest,
     ArchitectResponse,
     ChatRequest,
     ChatResponse,
-    Citation,
     OutreachRequest,
     OutreachResponse,
     ProposalRequest,
     ProposalResponse,
-    AnalyticsResponse,
 )
-from gtm_api.agents.sales_agent import run_sales_chat
-from gtm_api.agents.outreach import run_outreach
-from gtm_api.agents.solution_architect import invoke_solution_architect, run_solution_architect
-from gtm_api.agents.proposal_generator import run_proposal_generator
-from gtm_api.agents.supervisor import run_supervisor
-from gtm_api.config import get_settings
 from gtm_api.services.analytics import get_analytics
+from gtm_api.services.enterprise import get_audit_trail
 from gtm_api.services.job_queue import enqueue_product_refresh
 from gtm_api.services.learning import refresh_product
-from gtm_api.services.enterprise import get_audit_trail, add_suppression
 from gtm_api.services.proposal_export import EXPORT_RENDERERS
 from gtm_api.tenant import get_product_for_tenant, get_tenant_context, record_usage
 
@@ -179,11 +178,12 @@ async def export_proposal(
 @router.get("/products/{product_id}/analytics", response_model=AnalyticsResponse)
 async def product_analytics(
     product_id: uuid.UUID,
+    days: int = Query(30, ge=1, le=365),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     ctx = await get_tenant_context(user, db)
-    data = await get_analytics(db, ctx.tenant_id, product_id)
+    data = await get_analytics(db, ctx.tenant_id, product_id, days=days)
     return AnalyticsResponse(**data)
 
 
@@ -235,7 +235,7 @@ async def list_agent_registry(
 async def supervisor_route(
     product_id: uuid.UUID,
     request_type: str,
-    input_data: dict = {},
+    input_data: dict = {},  # noqa: B006 - FastAPI body default, never mutated
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):

@@ -1,7 +1,7 @@
 """Publish scheduler (due scheduled_at posts) and retry queue (failed posts, backoff)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -77,7 +77,7 @@ class TestProcessDueScheduledPosts:
     @pytest.mark.asyncio
     async def test_no_due_posts_is_a_noop(self):
         mock_db = AsyncMock()
-        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=lambda: [])))
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=list)))
 
         result = await process_due_scheduled_posts(mock_db)
 
@@ -123,7 +123,7 @@ class TestRetryFailedPosts:
             "gtm_api.services.publishing.ADAPTER_REGISTRY",
             {"linkedin": AsyncMock(return_value=ProviderResult(status="failed", error="rate limited"))},
         ):
-            before = datetime.now(timezone.utc)
+            before = datetime.now(UTC)
             result = await retry_failed_posts(mock_db)
 
         assert result == {"checked": 1, "retried": 1, "exhausted": 0}
@@ -158,7 +158,7 @@ class TestRetryFailedPosts:
         """Suppression-blocked posts have status='blocked', not 'failed' -> the retry
         query must never pick them up (retrying won't un-suppress a recipient)."""
         mock_db = AsyncMock()
-        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=lambda: [])))
+        mock_db.execute = AsyncMock(return_value=MagicMock(scalars=lambda: MagicMock(all=list)))
 
         result = await retry_failed_posts(mock_db)
 

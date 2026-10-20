@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-import httpx
 import yaml
 from sqlalchemy.ext.asyncio import AsyncSession
 

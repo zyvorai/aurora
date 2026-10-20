@@ -80,7 +80,7 @@ class TestAuditLogWiredToRoute:
         def _populate_generated_fields(entry):
             import datetime as dt
             entry.id = uuid.uuid4()
-            entry.created_at = dt.datetime.now(dt.timezone.utc)
+            entry.created_at = dt.datetime.now(dt.UTC)
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: tenant))

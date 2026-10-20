@@ -2,7 +2,7 @@
 customer only ever sees their own tickets, and admin triage covers the whole tenant."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
@@ -31,7 +31,7 @@ def _customer_account(**overrides):
         id=uuid.uuid4(), tenant_id=uuid.uuid4(), product_id=uuid.uuid4(),
         email="cust@example.com", hashed_password=hash_password("password123"),
         status=PortalAccountStatus.APPROVED, is_active=True,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     defaults.update(overrides)
     return CustomerAccount(**defaults)
@@ -42,7 +42,7 @@ def _ticket(**overrides):
         id=uuid.uuid4(), tenant_id=uuid.uuid4(), customer_account_id=uuid.uuid4(),
         subject="Can't log in", description="Getting a 500 error on login.",
         status=TicketStatus.OPEN, priority=TicketPriority.MEDIUM,
-        created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC), updated_at=datetime.now(UTC),
     )
     defaults.update(overrides)
     return CustomerTicket(**defaults)
@@ -80,8 +80,8 @@ class TestCreateTicket:
         def _populate(entry):
             entry.id = uuid.uuid4()
             entry.status = TicketStatus.OPEN
-            entry.created_at = datetime.now(timezone.utc)
-            entry.updated_at = datetime.now(timezone.utc)
+            entry.created_at = datetime.now(UTC)
+            entry.updated_at = datetime.now(UTC)
 
         mock_db = AsyncMock()
         mock_db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: account))
@@ -123,7 +123,7 @@ class TestCreateTicket:
         reseller = ResellerAccount(
             id=uuid.uuid4(), tenant_id=uuid.uuid4(), email="r@example.com",
             hashed_password=hash_password("x"), status=PortalAccountStatus.APPROVED, is_active=True,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         token = create_portal_token(reseller.id, reseller.tenant_id, portal_type="reseller")
 

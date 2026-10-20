@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.config import get_settings
-from gtm_api.models import Lead, PortalAccountStatus, Product, SalesPersonAccount
+from gtm_api.models import DiscoveredAccount, Lead, PortalAccountStatus, Product, SalesPersonAccount
 from gtm_api.services.attribution import record_touchpoint
 from gtm_api.services.crm_sync import sync_lead_to_external
 from gtm_api.services.enrichment.waterfall import enrich_contact
 from gtm_api.services.lead_qualification import score_account
-from gtm_api.models import DiscoveredAccount
 
 settings = get_settings()
 
@@ -98,7 +97,7 @@ async def ingest_inbound_lead(
             "enrichment_provider": enrichment.provider,
             "enrichment_emails": enrichment.emails,
             "factors": factors,
-            "ingested_at": datetime.now(timezone.utc).isoformat(),
+            "ingested_at": datetime.now(UTC).isoformat(),
         },
     )
     db.add(lead)

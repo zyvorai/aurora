@@ -2,11 +2,18 @@
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gtm_api.agents.content_studio import run_content_generation
+from gtm_api.agents.market_research_agent import invoke_market_research
+from gtm_api.agents.marketing_strategy import invoke_marketing_strategy
+from gtm_api.agents.outreach import run_outreach
+from gtm_api.agents.product_understanding import run_product_understanding
+from gtm_api.agents.proposal_generator import invoke_proposal_generator
+from gtm_api.agents.solution_architect import invoke_solution_architect
 from gtm_api.auth import content_hash
 from gtm_api.database import async_session_factory
 from gtm_api.models import (
@@ -17,17 +24,10 @@ from gtm_api.models import (
     Product,
     WorkflowRun,
 )
-from gtm_api.agents.content_studio import run_content_generation
-from gtm_api.agents.market_research_agent import invoke_market_research
-from gtm_api.agents.marketing_strategy import invoke_marketing_strategy
-from gtm_api.agents.outreach import run_outreach
-from gtm_api.agents.proposal_generator import invoke_proposal_generator
-from gtm_api.agents.product_understanding import run_product_understanding
-from gtm_api.agents.solution_architect import invoke_solution_architect
 from gtm_api.services.analytics import emit_event
 from gtm_api.services.brief import build_executive_brief, upsert_dashboard_snapshot
 from gtm_api.services.citation_gate import SYSTEM_PROMPT_GROUNDED, verify_grounding
-from gtm_api.services.crm import create_opportunity, opportunity_to_dict, update_opportunity_stage
+from gtm_api.services.crm import create_opportunity, opportunity_to_dict
 from gtm_api.services.lead_discovery import discover_leads
 from gtm_api.services.lead_qualification import qualify_leads
 from gtm_api.services.llm import get_chat_model
@@ -36,7 +36,7 @@ from gtm_api.tenant import record_usage
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _step(name: str, status: str, error: str | None = None) -> dict:

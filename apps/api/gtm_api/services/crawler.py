@@ -5,7 +5,6 @@ import ipaddress
 import re
 import socket
 from dataclasses import dataclass
-from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -102,7 +101,7 @@ def extract_links(html: str, base_url: str) -> list[str]:
     return links
 
 
-async def _render_with_playwright(url: str) -> Optional[str]:
+async def _render_with_playwright(url: str) -> str | None:
     """Best-effort JS-rendered fetch for SPA/JS-heavy pages. Returns None (never raises)
     on any failure — playwright not installed, browser not installed, navigation error,
     timeout — so callers always have the plain httpx-fetched page as a safe fallback."""
@@ -134,7 +133,7 @@ async def _render_with_playwright(url: str) -> Optional[str]:
 
 async def crawl_website(
     start_url: str,
-    max_pages: Optional[int] = None,
+    max_pages: int | None = None,
 ) -> list[CrawledPage]:
     max_pages = max_pages or settings.crawl_max_pages
     start_url = validate_url(start_url)

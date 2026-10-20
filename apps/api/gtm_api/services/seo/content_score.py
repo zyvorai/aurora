@@ -50,14 +50,14 @@ def score_content(
 ) -> ContentScore:
     kw = keyword.strip().lower()
     text = markdown or ""
-    plain = re.sub(r"[#>*_`\[\]()]", " ", re.sub(r"```.*?```", " ", text, flags=re.S))
+    plain = re.sub(r"[#>*_`\[\]()]", " ", re.sub(r"```.*?```", " ", text, flags=re.DOTALL))
     words = re.findall(r"\b[\w'’-]+\b", plain)
     wc = len(words)
     lower = plain.lower()
     kw_count = len(re.findall(re.escape(kw), lower)) if kw else 0
     density = round(100 * kw_count * max(1, len(kw.split())) / wc, 2) if wc and kw else 0.0
 
-    headings = re.findall(r"^(#{1,6})\s+(.+)$", text, flags=re.M)
+    headings = re.findall(r"^(#{1,6})\s+(.+)$", text, flags=re.MULTILINE)
     h1 = [t for h, t in headings if len(h) == 1]
     h2 = [t for h, t in headings if len(h) == 2]
     suggestions: list[str] = []

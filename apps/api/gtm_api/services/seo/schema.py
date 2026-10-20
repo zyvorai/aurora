@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 
 def _clip(text: str, limit: int) -> str:
@@ -30,7 +29,7 @@ def article_jsonld(
     url: str = "",
     author: str = "",
     publisher: str = "",
-    date_published: Optional[str] = None,
+    date_published: str | None = None,
 ) -> dict:
     data: dict = {"@context": "https://schema.org", "@type": "Article", "headline": _clip(headline, 110), "description": description}
     if url:

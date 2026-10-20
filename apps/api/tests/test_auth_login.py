@@ -32,7 +32,7 @@ class TestLoginDuplicateEmail:
     @pytest.mark.asyncio
     async def test_login_uses_newest_when_duplicate_emails(self):
         """Same email registered on multiple tenants must not 500."""
-        user_old = _make_user("dup@test.com", "secret123", created_offset=0)
+        _make_user("dup@test.com", "secret123", created_offset=0)
         user_new = _make_user("dup@test.com", "secret123", created_offset=1)
 
         mock_result = MagicMock()

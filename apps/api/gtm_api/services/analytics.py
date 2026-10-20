@@ -1,20 +1,32 @@
 """Analytics service (Phase 9)."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.models import (
     AgentRun,
-    Approval,
     Artifact,
     Conversation,
     Lead,
     MetricEvent,
-    Product,
 )
+
+# Lead.stage value set by lead qualification, inbound routing and the sales agent.
+QUALIFIED_STAGE = "qualified"
+
+FUNNEL_DEFINITIONS = {
+    "visitors": "page_view events in the window",
+    "content_views": "content_view events in the window",
+    "conversations": "Conversations started in the window",
+    "leads_total": "Leads created in the window, any stage",
+    "qualified_leads": "Leads created in the window whose stage is 'qualified'",
+    "artifacts_created": "Artifacts (drafts, proposals, content) created in the window",
+    "agent_runs": "Agent runs started in the window",
+    "_scope": "Counts are limited to the selected product when one is given, else the whole tenant",
+}
 
 
 async def emit_event(
@@ -39,7 +51,7 @@ async def get_analytics(
     product_id: uuid.UUID | None = None,
     days: int = 30,
 ) -> dict:
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.now(UTC) - timedelta(days=days)
     period = since.strftime("%Y-%m")
 
     base_filter = [MetricEvent.tenant_id == tenant_id, MetricEvent.created_at >= since]
@@ -53,24 +65,27 @@ async def get_analytics(
     )
     metrics = {row[0]: row[1] for row in event_counts.all()}
 
-    lead_count = await db.execute(
-        select(func.count(Lead.id)).where(Lead.tenant_id == tenant_id)
+    def _scoped(model, created_col, *extra):
+        """Count rows for this tenant, in the reporting window, for the selected product."""
+        conds = [model.tenant_id == tenant_id, created_col >= since, *extra]
+        if product_id:
+            conds.append(model.product_id == product_id)
+        return select(func.count(model.id)).where(*conds)
+
+    leads_total = await db.execute(_scoped(Lead, Lead.created_at))
+    qualified = await db.execute(
+        _scoped(Lead, Lead.created_at, Lead.stage == QUALIFIED_STAGE)
     )
-    conversation_count = await db.execute(
-        select(func.count(Conversation.id)).where(Conversation.tenant_id == tenant_id)
-    )
-    artifact_count = await db.execute(
-        select(func.count(Artifact.id)).where(Artifact.tenant_id == tenant_id)
-    )
-    agent_run_count = await db.execute(
-        select(func.count(AgentRun.id)).where(AgentRun.tenant_id == tenant_id)
-    )
+    conversation_count = await db.execute(_scoped(Conversation, Conversation.created_at))
+    artifact_count = await db.execute(_scoped(Artifact, Artifact.created_at))
+    agent_run_count = await db.execute(_scoped(AgentRun, AgentRun.started_at))
 
     funnel = {
         "visitors": metrics.get("page_view", 0),
         "content_views": metrics.get("content_view", 0),
         "conversations": conversation_count.scalar() or 0,
-        "qualified_leads": lead_count.scalar() or 0,
+        "leads_total": leads_total.scalar() or 0,
+        "qualified_leads": qualified.scalar() or 0,
         "artifacts_created": artifact_count.scalar() or 0,
         "agent_runs": agent_run_count.scalar() or 0,
     }
@@ -99,8 +114,10 @@ async def get_analytics(
 
     return {
         "period": period,
+        "window": {"days": days, "since": since.isoformat(), "product_id": str(product_id) if product_id else None},
         "metrics": metrics,
         "funnel": funnel,
+        "definitions": FUNNEL_DEFINITIONS,
         "top_questions": [{"question": q} for q in questions if q],
         "knowledge_gaps": [{"query": g} for g in gaps if g],
     }

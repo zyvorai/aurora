@@ -67,3 +67,14 @@ packages = ["gtm_api"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint]
+# Stylistic rules with a large pre-existing footprint. Correctness rules
+# (F, E, B except B008, ASYNC) stay enforced; CI now fails on new findings.
+ignore = [
+    "B008",    # FastAPI Depends()/Query() in argument defaults is the idiom
+    "BLE001",  # blind except is deliberate around LLM/network calls
+    "S110", "S112",
+    "C408", "SIM102", "SIM117", "SIM118", "PIE810",
+    "RUF007", "RUF046", "RUF059",
+]

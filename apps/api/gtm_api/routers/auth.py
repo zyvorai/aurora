@@ -2,7 +2,7 @@
 
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -156,7 +156,7 @@ async def revoke_api_key(
     if api_key is None:
         raise HTTPException(status_code=404, detail="API key not found")
 
-    api_key.revoked_at = datetime.now(timezone.utc)
+    api_key.revoked_at = datetime.now(UTC)
     await audit_log(db, ctx.tenant_id, user.id, "revoke_api_key", "api_key", resource_id=str(key_id))
     await db.flush()
     await db.refresh(api_key)
