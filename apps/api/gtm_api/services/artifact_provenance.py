@@ -17,6 +17,8 @@ from gtm_api.models import (
     ArtifactType,
     Chunk,
     Document,
+    Requirement,
+    RequirementProof,
 )
 
 STALE_SOURCE_CHANGED = "source_changed"
@@ -33,23 +35,31 @@ _CLAIM_BEARING = (
 )
 
 
+async def documents_for_citations(
+    db: AsyncSession, tenant_id: uuid.UUID, citations: list[dict]
+) -> list[Document]:
+    """Documents behind citations (``chunk_id`` = ``Chunk.qdrant_point_id``)."""
+    chunk_ids = {c.get("chunk_id") for c in citations if c.get("chunk_id")}
+    if not chunk_ids:
+        return []
+    rows = await db.execute(
+        select(Document)
+        .join(Chunk, Chunk.document_id == Document.id)
+        .where(Chunk.qdrant_point_id.in_(chunk_ids), Document.tenant_id == tenant_id)
+        .distinct()
+    )
+    return list(rows.scalars().all())
+
+
 async def record_dependencies(db: AsyncSession, artifact: Artifact) -> int:
     """Store the document version behind each of ``artifact.citations``. Returns rows added.
 
     Citations carry ``chunk_id`` = ``Chunk.qdrant_point_id``. The artifact must have been
     flushed (it needs an id).
     """
-    chunk_ids = {c.get("chunk_id") for c in (artifact.citations or []) if c.get("chunk_id")}
-    if not chunk_ids:
-        return 0
-    rows = await db.execute(
-        select(Document)
-        .join(Chunk, Chunk.document_id == Document.id)
-        .where(Chunk.qdrant_point_id.in_(chunk_ids), Document.tenant_id == artifact.tenant_id)
-        .distinct()
-    )
+    docs = await documents_for_citations(db, artifact.tenant_id, artifact.citations or [])
     added = 0
-    for doc in rows.scalars().all():
+    for doc in docs:
         db.add(
             ArtifactDependency(
                 tenant_id=artifact.tenant_id,
@@ -142,3 +152,30 @@ async def acknowledge_current_sources(db: AsyncSession, artifact: Artifact) -> N
             dep.content_hash_at_use = current.content_hash
     artifact.stale_reason = None
     artifact.stale_since = None
+
+
+async def mark_stale_proofs(db: AsyncSession, product_id: uuid.UUID, tenant_id: uuid.UUID) -> int:
+    """Flag requirement proofs whose cited document changed or disappeared."""
+    rows = await db.execute(
+        select(RequirementProof)
+        .join(Requirement, Requirement.id == RequirementProof.requirement_id)
+        .where(
+            Requirement.product_id == product_id,
+            RequirementProof.tenant_id == tenant_id,
+            RequirementProof.stale_reason.is_(None),
+        )
+    )
+    flagged = 0
+    for proof in rows.scalars().all():
+        for ver in proof.source_versions or []:
+            dep = ArtifactDependency(
+                document_id=uuid.UUID(ver["document_id"]),
+                document_url=ver.get("url"),
+                content_hash_at_use=ver["content_hash"],
+            )
+            current = await _current_document(db, dep, product_id)
+            if current is None or current.content_hash != ver["content_hash"]:
+                proof.stale_reason = STALE_SOURCE_CHANGED
+                flagged += 1
+                break
+    return flagged

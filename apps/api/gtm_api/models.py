@@ -530,6 +530,59 @@ class OpportunityActivity(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+PROOF_VERDICTS = ("supported", "partial", "gap", "roadmap", "unknown")
+
+
+class Requirement(Base):
+    """One customer requirement attached to an opportunity (from an RFP or pasted text)."""
+
+    __tablename__ = "requirements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    opportunity_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("opportunities.id"), nullable=False, index=True
+    )
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    source: Mapped[str] = mapped_column(String(255), default="pasted")
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    proofs: Mapped[list["RequirementProof"]] = relationship(
+        back_populates="requirement", order_by="RequirementProof.created_at.desc()"
+    )
+
+
+class RequirementProof(Base):
+    """Evidence-backed answer to a Requirement. The newest proof per requirement is current."""
+
+    __tablename__ = "requirement_proofs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), nullable=False, index=True)
+    requirement_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("requirements.id"), nullable=False, index=True
+    )
+    verdict: Mapped[str] = mapped_column(String(20), nullable=False, default="unknown")
+    answer: Mapped[str] = mapped_column(Text, default="")
+    conditions: Mapped[str | None] = mapped_column(Text)
+    validation_test: Mapped[str | None] = mapped_column(Text)
+    citations: Mapped[list | None] = mapped_column(JSONB, default=list)
+    claims: Mapped[list | None] = mapped_column(JSONB, default=list)
+    # [{document_id, url, content_hash}] the evidence relied on, for stale detection.
+    source_versions: Mapped[list | None] = mapped_column(JSONB, default=list)
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    review_status: Mapped[str] = mapped_column(String(20), default="pending")
+    reviewer_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    review_comment: Mapped[str | None] = mapped_column(Text)
+    stale_reason: Mapped[str | None] = mapped_column(String(50))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    requirement: Mapped["Requirement"] = relationship(back_populates="proofs")
+
+
 class AccountHealth(Base):
     __tablename__ = "account_health"
 

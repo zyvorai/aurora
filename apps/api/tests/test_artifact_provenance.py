@@ -147,10 +147,11 @@ async def test_refresh_product_reports_real_stale_count():
             "gtm_api.services.learning.mark_stale_artifacts",
             AsyncMock(return_value={"stale": 2, "unverified": 1}),
         ),
+        patch("gtm_api.services.learning.mark_stale_proofs", AsyncMock(return_value=4)),
     ):
         out = await refresh_product(db, PRODUCT, TENANT)
     assert out["stale_artifacts_flagged"] == 3
-    assert out["stale_artifacts"] == {"stale": 2, "unverified": 1}
+    assert out["stale_artifacts"] == {"stale": 2, "unverified": 1, "proofs": 4}
 
 
 @pytest.mark.asyncio
@@ -169,3 +170,17 @@ async def test_refresh_product_without_changes_flags_nothing():
         out = await refresh_product(db, PRODUCT, TENANT)
     mark.assert_not_called()
     assert out["stale_artifacts_flagged"] == 0
+
+
+@pytest.mark.asyncio
+async def test_proof_flagged_when_cited_document_changes():
+    from types import SimpleNamespace
+
+    from gtm_api.services.artifact_provenance import mark_stale_proofs
+
+    ver = {"document_id": str(uuid.uuid4()), "url": "https://x/docs", "content_hash": "old"}
+    changed = SimpleNamespace(source_versions=[ver], stale_reason=None)
+    same = SimpleNamespace(source_versions=[ver], stale_reason=None)
+    db = _db([changed, same], [_doc("new")], [_doc("old")])
+    assert await mark_stale_proofs(db, PRODUCT, TENANT) == 1
+    assert changed.stale_reason == STALE_SOURCE_CHANGED and same.stale_reason is None

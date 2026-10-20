@@ -17,6 +17,7 @@ from gtm_api.routers import (
     agents,
     auth,
     crm,
+    deals,
     inbound,
     marketing,
     mcp,
@@ -140,6 +141,7 @@ app.include_router(agents.router, prefix=settings.api_prefix)
 app.include_router(workflows.router, prefix=settings.api_prefix)
 app.include_router(pipeline.router, prefix=settings.api_prefix)
 app.include_router(crm.router, prefix=settings.api_prefix)
+app.include_router(deals.router, prefix=settings.api_prefix)
 app.include_router(success.router, prefix=settings.api_prefix)
 app.include_router(inbound.router, prefix=settings.api_prefix)
 app.include_router(mcp.router, prefix=settings.api_prefix)

@@ -962,3 +962,58 @@ class WorkflowStageUpdateRequest(BaseModel):
 class MessageResponse(BaseModel):
     message: str
     detail: str | None = None
+
+
+# Deal workspace: requirement-to-proof
+class RequirementCreateRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=50000)
+    source: str = Field(default="pasted", max_length=255)
+
+
+class RequirementAnalyzeRequest(BaseModel):
+    requirement_ids: list[uuid.UUID] | None = None  # default: requirements with no proof yet
+
+
+class ProofReviewRequest(BaseModel):
+    status: str = Field(pattern="^(approved|rejected)$")
+    comment: str | None = None
+    conditions: str | None = None  # reviewer may tighten the stated conditions
+
+
+class ProofResponse(BaseModel):
+    id: uuid.UUID
+    verdict: str
+    answer: str
+    conditions: str | None = None
+    validation_test: str | None = None
+    citations: list[dict] = Field(default_factory=list)
+    claims: list[dict] = Field(default_factory=list)
+    confidence: float = 0.0
+    review_status: str
+    reviewer_id: uuid.UUID | None = None
+    review_comment: str | None = None
+    stale_reason: str | None = None
+    created_at: datetime | None = None
+
+
+class RequirementResponse(BaseModel):
+    id: uuid.UUID
+    text: str
+    position: int
+    source: str
+    owner_user_id: uuid.UUID | None = None
+    proof: ProofResponse | None = None
+
+
+class DealWorkspaceResponse(BaseModel):
+    opportunity: OpportunityResponse
+    requirements: list[RequirementResponse]
+    summary: dict[str, int]
+    next_actions: list[str]
+
+
+class RequirementResponseDocument(BaseModel):
+    artifact_id: uuid.UUID
+    included: int
+    skipped_unapproved: int
+    skipped_stale: int

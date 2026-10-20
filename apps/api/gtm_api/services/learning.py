@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.models import Product, Source, SourceStatus
-from gtm_api.services.artifact_provenance import mark_stale_artifacts
+from gtm_api.services.artifact_provenance import mark_stale_artifacts, mark_stale_proofs
 from gtm_api.services.crawler import fetch_single_page
 from gtm_api.services.ingestion import ingest_source
 
@@ -51,14 +51,15 @@ async def refresh_product(
             r = await ingest_source(db, source, tenant_id, product_id)
             refreshed.append({"source_id": str(source.id), **r})
 
-    stale = {"stale": 0, "unverified": 0}
+    stale = {"stale": 0, "unverified": 0, "proofs": 0}
     if refreshed:
         stale = await mark_stale_artifacts(db, product_id, tenant_id, started_at, datetime.now(UTC))
+        stale["proofs"] = await mark_stale_proofs(db, product_id, tenant_id)
 
     return {
         "sources_refreshed": len(refreshed),
         "refresh_details": refreshed,
-        "stale_artifacts_flagged": stale["stale"] + stale["unverified"],
+        "stale_artifacts_flagged": stale["stale"] + stale["unverified"],  # artifacts only; proofs counted separately
         "stale_artifacts": stale,
         "timestamp": datetime.now(UTC).isoformat(),
     }
