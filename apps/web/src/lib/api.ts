@@ -616,7 +616,84 @@ export const products = {
   getOpportunity(id: string, opportunityId: string): Promise<Opportunity> {
     return request(`/products/${id}/opportunities/${opportunityId}`);
   },
+
+  dealWorkspace(id: string, opportunityId: string): Promise<DealWorkspace> {
+    return request(`/products/${id}/opportunities/${opportunityId}/workspace`);
+  },
+
+  addRequirements(id: string, opportunityId: string, text: string, source = 'pasted'): Promise<DealRequirement[]> {
+    return request(`/products/${id}/opportunities/${opportunityId}/requirements`, {
+      method: 'POST',
+      body: JSON.stringify({ text, source }),
+      timeoutMs: AGENT_TIMEOUT_MS,
+    });
+  },
+
+  analyzeRequirements(id: string, opportunityId: string, requirementIds?: string[]): Promise<DealWorkspace> {
+    return request(`/products/${id}/opportunities/${opportunityId}/requirements/analyze`, {
+      method: 'POST',
+      body: JSON.stringify({ requirement_ids: requirementIds ?? null }),
+      timeoutMs: AGENT_TIMEOUT_MS,
+    });
+  },
+
+  reviewProof(
+    id: string,
+    opportunityId: string,
+    requirementId: string,
+    data: { status: 'approved' | 'rejected'; comment?: string; conditions?: string },
+  ): Promise<DealProof> {
+    return request(`/products/${id}/opportunities/${opportunityId}/requirements/${requirementId}/review`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  draftRequirementResponse(id: string, opportunityId: string): Promise<RequirementResponseDraft> {
+    return request(`/products/${id}/opportunities/${opportunityId}/requirements/response`, { method: 'POST' });
+  },
 };
+
+export type ProofVerdict = 'supported' | 'partial' | 'roadmap' | 'gap' | 'unknown';
+
+export interface DealProof {
+  id: string;
+  verdict: ProofVerdict;
+  answer: string;
+  conditions?: string | null;
+  validation_test?: string | null;
+  citations: { chunk_id: string; document_title: string; excerpt: string; url?: string | null }[];
+  claims: { claim: string; status: string; chunk_id?: string | null }[];
+  confidence: number;
+  review_status: 'pending' | 'approved' | 'rejected';
+  reviewer_id?: string | null;
+  review_comment?: string | null;
+  stale_reason?: string | null;
+  created_at?: string | null;
+}
+
+export interface DealRequirement {
+  id: string;
+  text: string;
+  position: number;
+  source: string;
+  owner_user_id?: string | null;
+  proof?: DealProof | null;
+}
+
+export interface DealWorkspace {
+  opportunity: Opportunity;
+  requirements: DealRequirement[];
+  summary: Record<string, number>;
+  next_actions: string[];
+}
+
+export interface RequirementResponseDraft {
+  artifact_id: string;
+  included: number;
+  skipped_unapproved: number;
+  skipped_stale: number;
+}
 
 export interface SuccessPlanResponse {
   opportunity_id: string;
