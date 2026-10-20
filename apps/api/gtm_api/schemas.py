@@ -970,6 +970,13 @@ class RequirementCreateRequest(BaseModel):
     source: str = Field(default="pasted", max_length=255)
 
 
+class RequirementUploadResponse(BaseModel):
+    filename: str
+    requirements: list["RequirementResponse"]
+    skipped_duplicates: int = 0
+    truncated: bool = False  # the document was longer than the portion we read
+
+
 class RequirementAnalyzeRequest(BaseModel):
     requirement_ids: list[uuid.UUID] | None = None  # default: requirements with no proof yet
 

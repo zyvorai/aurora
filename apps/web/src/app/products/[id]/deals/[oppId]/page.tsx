@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ClipboardList } from 'lucide-react';
@@ -37,6 +37,7 @@ export default function DealWorkspacePage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [open, setOpen] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -68,6 +69,16 @@ export default function DealWorkspacePage() {
       setText('');
       load();
     }, 'Could not add requirements');
+
+  const uploadFile = (file: File) =>
+    run('upload', () => products.uploadRequirements(id, oppId, file), (r) => {
+      const added = `Added ${r.requirements.length} requirement${r.requirements.length === 1 ? '' : 's'} from ${r.filename}`;
+      const dupes = r.skipped_duplicates ? `, skipped ${r.skipped_duplicates} already on this deal` : '';
+      showToast(r.truncated ? 'warning' : 'success', r.truncated
+        ? `${added}${dupes}. The document was longer than what could be read, so some requirements may be missing: split it and upload the rest.`
+        : `${added}${dupes}.`);
+      load();
+    }, 'Upload failed');
 
   const analyze = (ids?: string[]) =>
     run('analyze', () => products.analyzeRequirements(id, oppId, ids), (next) => {
@@ -135,7 +146,7 @@ export default function DealWorkspacePage() {
 
       <WorkspacePanel
         title="Add requirements"
-        description="Paste an RFP section, a questionnaire, or an email. Compound questions are split into separate requirements."
+        description="Paste an RFP section, questionnaire or email, or upload the file. Compound questions are split into separate requirements."
         bodyClassName="p-4 space-y-3"
       >
         <Textarea
@@ -144,9 +155,26 @@ export default function DealWorkspacePage() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Can your platform support Windows workloads, disconnected deployment and our storage backend?"
         />
-        <Button disabled={!!busy || !text.trim()} onClick={addRequirements}>
-          {busy === 'add' ? 'Adding…' : 'Add requirements'}
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button disabled={!!busy || !text.trim()} onClick={addRequirements}>
+            {busy === 'add' ? 'Adding…' : 'Add requirements'}
+          </Button>
+          <Button variant="secondary" disabled={!!busy} onClick={() => fileInput.current?.click()}>
+            {busy === 'upload' ? 'Reading file…' : 'Upload RFP file'}
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            hidden
+            accept=".txt,.md,.pdf,.docx,.pptx,.csv,.xlsx"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              if (file) uploadFile(file);
+            }}
+          />
+          <TextSmall className="text-muted">PDF, Word, PowerPoint, Excel, CSV or text, up to 10 MB.</TextSmall>
+        </div>
       </WorkspacePanel>
 
       <WorkspacePanel title="Requirement-to-proof matrix" bodyClassName="p-4">

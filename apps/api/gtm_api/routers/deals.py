@@ -1,11 +1,12 @@
 """Deal workspace: customer requirements mapped to evidence-backed proofs."""
 
+import re
 import uuid
 from collections import Counter
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gtm_api.auth import content_hash, get_current_user, require_permission
@@ -30,15 +31,19 @@ from gtm_api.schemas import (
     RequirementCreateRequest,
     RequirementResponse,
     RequirementResponseDocument,
+    RequirementUploadResponse,
 )
 from gtm_api.services.action_list import FOLLOW_UP_AFTER_DAYS, build_action_list
 from gtm_api.services.artifact_provenance import documents_for_citations, record_dependencies
 from gtm_api.services.crm import get_opportunity
 from gtm_api.services.embeddings import embedding_service
 from gtm_api.services.requirements import (
+    MAX_UPLOAD_BYTES,
     assess_requirement,
     build_response_document,
     extract_requirements,
+    extract_requirements_with_info,
+    extract_text_from_upload,
 )
 from gtm_api.services.vector_store import vector_store
 from gtm_api.tenant import audit_log, get_product_for_tenant, get_tenant_context
@@ -116,6 +121,47 @@ def _summarise(reqs, latest) -> tuple[dict[str, int], list[str]]:
     return summary, actions
 
 
+def _norm(text: str) -> str:
+    return re.sub(r"\W+", " ", text.lower()).strip()
+
+
+async def _store_requirements(
+    db, ctx, user, product_id, opportunity_id, texts: list[str], source: str
+) -> tuple[list[Requirement], int]:
+    """Insert new requirements after the opportunity's existing ones; skip exact repeats
+    (e.g. the same RFP uploaded twice). Returns (created, skipped_duplicates)."""
+    existing = (
+        await db.execute(
+            select(Requirement.text, Requirement.position).where(
+                Requirement.tenant_id == ctx.tenant_id, Requirement.opportunity_id == opportunity_id
+            )
+        )
+    ).all()
+    seen = {_norm(t) for t, _ in existing}
+    start = max((pos for _, pos in existing), default=-1) + 1
+
+    fresh = []
+    for t in texts:
+        if _norm(t) not in seen:
+            seen.add(_norm(t))
+            fresh.append(t)
+    rows = [
+        Requirement(
+            tenant_id=ctx.tenant_id, product_id=product_id, opportunity_id=opportunity_id,
+            text=t, position=start + i, source=source,
+        )
+        for i, t in enumerate(fresh)
+    ]
+    db.add_all(rows)
+    await audit_log(db, ctx.tenant_id, user.id, "requirements_added", "opportunity", str(opportunity_id))
+    await db.commit()
+    return rows, len(texts) - len(fresh)
+
+
+def _req_out(r: Requirement) -> RequirementResponse:
+    return RequirementResponse(id=r.id, text=r.text, position=r.position, source=r.source)
+
+
 @router.post(f"{_BASE}/requirements", response_model=list[RequirementResponse])
 async def add_requirements(
     product_id: uuid.UUID,
@@ -129,25 +175,46 @@ async def add_requirements(
     texts = await extract_requirements(req.text)
     if not texts:
         raise HTTPException(status_code=400, detail="No requirements found in the text")
+    rows, _ = await _store_requirements(db, ctx, user, product_id, opportunity_id, texts, req.source)
+    return [_req_out(r) for r in rows]
 
-    start = (
-        await db.execute(
-            select(func.coalesce(func.max(Requirement.position), -1)).where(
-                Requirement.opportunity_id == opportunity_id
-            )
+
+@router.post(f"{_BASE}/requirements/upload", response_model=RequirementUploadResponse)
+async def upload_requirements(
+    product_id: uuid.UUID,
+    opportunity_id: uuid.UUID,
+    file: UploadFile = File(...),
+    user: User = Depends(require_permission("write")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Extract requirements from an uploaded RFP or questionnaire (txt, md, pdf, docx, pptx,
+    csv, xlsx). The file itself is not stored; only the extracted requirements are."""
+    ctx = await get_tenant_context(user, db)
+    await _load_opportunity(db, ctx, product_id, opportunity_id)
+
+    filename = file.filename or "upload"
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413, detail=f"File is larger than {MAX_UPLOAD_BYTES // (1024 * 1024)} MB"
         )
-    ).scalar() or 0
-    rows = [
-        Requirement(
-            tenant_id=ctx.tenant_id, product_id=product_id, opportunity_id=opportunity_id,
-            text=t, position=start + 1 + i, source=req.source,
-        )
-        for i, t in enumerate(texts)
-    ]
-    db.add_all(rows)
-    await audit_log(db, ctx.tenant_id, user.id, "requirements_added", "opportunity", str(opportunity_id))
-    await db.commit()
-    return [RequirementResponse(id=r.id, text=r.text, position=r.position, source=r.source) for r in rows]
+    try:
+        text = extract_text_from_upload(filename, file.content_type, data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Could not read {filename}: {exc}") from exc
+
+    texts, truncated = await extract_requirements_with_info(text)
+    if not texts:
+        raise HTTPException(status_code=400, detail=f"No requirements found in {filename}")
+    rows, skipped = await _store_requirements(
+        db, ctx, user, product_id, opportunity_id, texts, f"upload:{filename}"[:255]
+    )
+    return RequirementUploadResponse(
+        filename=filename, requirements=[_req_out(r) for r in rows],
+        skipped_duplicates=skipped, truncated=truncated,
+    )
 
 
 @router.post(f"{_BASE}/requirements/analyze", response_model=DealWorkspaceResponse)

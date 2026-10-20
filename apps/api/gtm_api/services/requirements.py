@@ -6,9 +6,12 @@ evidence does not carry it. Roadmap wording in a cited passage forces ``roadmap`
 planned capability is never presented as available.
 """
 
+import csv
+import io
 import json
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from gtm_api.models import PROOF_VERDICTS
 from gtm_api.services.citation_gate import (
@@ -17,9 +20,12 @@ from gtm_api.services.citation_gate import (
     verify_grounding,
 )
 from gtm_api.services.llm import get_chat_model
+from gtm_api.services.loaders.file import FileLoader
 from gtm_api.services.vector_store import SearchResult
 
 MAX_REQUIREMENTS = 100
+_WINDOW_CHARS = 12000
+_MAX_WINDOWS = 8  # ~96k characters read per document
 _AGENT = "solution_architect"  # reuse existing per-agent model routing
 _ROADMAP = re.compile(
     r"\b(roadmap|planned|upcoming|coming soon|future release|not yet (?:available|supported)|"
@@ -66,16 +72,25 @@ class ProofDraft:
     confidence: float = 0.0
 
 
+_CUE = re.compile(
+    r"\b(must|shall|should|required?|requirements?|need|needs|support|supports|provide|provides|"
+    r"ability|able|capable|can|could|do you|does|will|ensure|include|includes|compatible|integrate)\b|\?",
+    re.IGNORECASE,
+)
+
+
 def split_requirements_heuristic(text: str) -> list[str]:
-    """Deterministic fallback: one requirement per list item / non-trivial line."""
+    """Deterministic fallback. List items are always requirements; free-form lines count only
+    when they carry a requirement cue (must/shall/support/?...), so background prose is skipped."""
     items: list[str] = []
-    for line in text.splitlines():
-        line = _LIST_PREFIX.sub("", line).strip()
+    for raw in text.splitlines():
+        is_list_item = bool(_LIST_PREFIX.match(raw))
+        line = _LIST_PREFIX.sub("", raw).strip()
         if len(line.split()) < 4:
             continue
         for sentence in re.split(r"(?<=[.?!])\s+(?=[A-Z])", line):
             sentence = sentence.strip()
-            if len(sentence.split()) >= 4:
+            if len(sentence.split()) >= 4 and (is_list_item or _CUE.search(sentence)):
                 items.append(sentence)
     return _dedupe(items)
 
@@ -88,7 +103,7 @@ def _dedupe(items: list[str]) -> list[str]:
         if key and key not in seen:
             seen.add(key)
             out.append(item.strip())
-    return out[:MAX_REQUIREMENTS]
+    return out
 
 
 def _parse_json(content: str):
@@ -98,23 +113,88 @@ def _parse_json(content: str):
     return json.loads(content.strip())
 
 
-async def extract_requirements(text: str) -> list[str]:
-    """LLM extraction (splits compound requirements); falls back to the heuristic."""
-    text = text.strip()
-    if not text:
-        return []
+def _windows(text: str) -> tuple[list[str], bool]:
+    """Split ``text`` on line boundaries into <= _WINDOW_CHARS windows; at most _MAX_WINDOWS.
+    Returns (windows, truncated)."""
+    windows: list[str] = []
+    current: list[str] = []
+    size = 0
+    for line in text.splitlines():
+        if size + len(line) + 1 > _WINDOW_CHARS and current:
+            windows.append("\n".join(current))
+            current, size = [], 0
+        current.append(line[:_WINDOW_CHARS])
+        size += len(line) + 1
+    if current:
+        windows.append("\n".join(current))
+    return windows[:_MAX_WINDOWS], len(windows) > _MAX_WINDOWS
+
+
+async def _extract_window(window: str) -> list[str]:
     try:
         llm = get_chat_model(_AGENT, temperature=0.0)
-        response = await llm.ainvoke(
-            [{"role": "user", "content": EXTRACT_PROMPT.format(text=text[:12000])}]
-        )
+        response = await llm.ainvoke([{"role": "user", "content": EXTRACT_PROMPT.format(text=window)}])
         parsed = _parse_json(response.content)
         items = [str(i).strip() for i in parsed if isinstance(i, str) and len(i.split()) >= 3]
         if items:
-            return _dedupe(items)
+            return items
     except Exception:
         pass
-    return split_requirements_heuristic(text)
+    return split_requirements_heuristic(window)
+
+
+async def extract_requirements_with_info(text: str) -> tuple[list[str], bool]:
+    """LLM extraction per window (splits compound requirements), heuristic fallback per window.
+    Returns (requirements, truncated) where truncated means the text exceeded what we read."""
+    text = text.strip()
+    if not text:
+        return [], False
+    windows, truncated = _windows(text)
+    items: list[str] = []
+    for window in windows:
+        items.extend(await _extract_window(window))
+    unique = _dedupe(items)
+    return unique[:MAX_REQUIREMENTS], truncated or len(unique) > MAX_REQUIREMENTS
+
+
+async def extract_requirements(text: str) -> list[str]:
+    return (await extract_requirements_with_info(text))[0]
+
+
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # RFPs are documents, not bulk source uploads
+UPLOAD_EXTENSIONS = (".txt", ".md", ".markdown", ".pdf", ".docx", ".pptx", ".csv", ".xlsx")
+
+
+def _spreadsheet_lines(data: bytes, ext: str) -> str:
+    """One line per row: the longest cell, which in a questionnaire is the requirement text
+    (the other columns are ids, categories and response slots)."""
+    rows: list[list[str]] = []
+    if ext == ".csv":
+        rows = list(csv.reader(io.StringIO(data.decode("utf-8", errors="replace"))))
+    else:
+        from openpyxl import load_workbook
+
+        wb = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+        for ws in wb.worksheets:
+            for row in ws.iter_rows(values_only=True):
+                rows.append([str(c) for c in row if c is not None])
+        wb.close()
+    lines = []
+    for row in rows:
+        cells = [c.strip() for c in row if c and c.strip()]
+        if cells:
+            lines.append(max(cells, key=len))
+    return "\n".join(lines)
+
+
+def extract_text_from_upload(filename: str, content_type: str | None, data: bytes) -> str:
+    """Plain text from an uploaded RFP/questionnaire. Raises ValueError for unsupported types."""
+    ext = Path(filename).suffix.lower()
+    if ext not in UPLOAD_EXTENSIONS:
+        raise ValueError(f"Unsupported file type '{ext or 'unknown'}'. Use: {', '.join(UPLOAD_EXTENSIONS)}")
+    if ext in (".csv", ".xlsx"):
+        return _spreadsheet_lines(data, ext)
+    return FileLoader()._extract(data, ext, (content_type or "").lower())
 
 
 def finalize_verdict(

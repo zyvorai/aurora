@@ -150,3 +150,126 @@ def test_deals_routes_registered():
     for suffix in ("/requirements", "/requirements/analyze", "/workspace",
                    "/requirements/{requirement_id}/review", "/requirements/response"):
         assert base + suffix in paths, suffix
+
+
+# --- RFP upload -------------------------------------------------------------
+
+def test_upload_text_and_markdown_pass_through():
+    from gtm_api.services.requirements import extract_text_from_upload
+
+    assert extract_text_from_upload("rfp.txt", "text/plain", b"1. Must support SSO via OIDC.") == "1. Must support SSO via OIDC."
+
+
+def test_upload_unsupported_extension_rejected():
+    from gtm_api.services.requirements import extract_text_from_upload
+
+    with pytest.raises(ValueError, match="Unsupported file type"):
+        extract_text_from_upload("rfp.exe", None, b"x")
+
+
+def test_upload_csv_takes_longest_cell_per_row():
+    from gtm_api.services.requirements import extract_text_from_upload
+
+    csv_bytes = (
+        b"ID,Requirement,Response\n"
+        b"R1,The platform must support disconnected deployment,\n"
+        b"R2,Audit logs must be exportable to a SIEM,\n"
+    )
+    text = extract_text_from_upload("q.csv", "text/csv", csv_bytes)
+    assert "The platform must support disconnected deployment" in text.splitlines()
+    assert "R1" not in text
+
+
+def test_upload_xlsx_reads_all_sheets():
+    import io
+
+    from openpyxl import Workbook
+
+    from gtm_api.services.requirements import extract_text_from_upload
+
+    wb = Workbook()
+    wb.active.append(["1", "Must support Windows guest operating systems", ""])
+    wb.create_sheet("Security").append(["2", "Data must be encrypted at rest", "n/a"])
+    buf = io.BytesIO()
+    wb.save(buf)
+    text = extract_text_from_upload("q.xlsx", None, buf.getvalue())
+    assert "Must support Windows guest operating systems" in text
+    assert "Data must be encrypted at rest" in text
+
+
+def test_windows_split_on_lines_and_flag_truncation():
+    from gtm_api.services.requirements import _MAX_WINDOWS, _WINDOW_CHARS, _windows
+
+    line = "x" * 1000
+    text = "\n".join([line] * (_WINDOW_CHARS // 1000 * (_MAX_WINDOWS + 2)))
+    windows, truncated = _windows(text)
+    assert len(windows) == _MAX_WINDOWS and truncated
+    assert all(len(w) <= _WINDOW_CHARS for w in windows)
+    short, truncated = _windows("one line")
+    assert short == ["one line"] and not truncated
+
+
+@pytest.mark.asyncio
+async def test_long_document_is_read_in_windows_not_cut_at_first():
+    from gtm_api.services.requirements import _WINDOW_CHARS, extract_requirements_with_info
+
+    filler = "\n".join(f"Background paragraph number {i} with no ask in it at all." for i in range(400))
+    assert len(filler) > _WINDOW_CHARS
+    text = filler + "\n- The platform must support our tape storage backend.\n"
+    with patch("gtm_api.services.requirements.get_chat_model", side_effect=RuntimeError("down")):
+        items, truncated = await extract_requirements_with_info(text)
+    assert not truncated
+    assert "The platform must support our tape storage backend." in items
+
+
+@pytest.mark.asyncio
+async def test_store_requirements_skips_repeats_and_continues_positions():
+    from gtm_api.routers.deals import _store_requirements
+
+    db = AsyncMock()
+    db.add_all = MagicMock()
+    existing = MagicMock()
+    existing.all.return_value = [("Must support SSO via OIDC.", 0), ("Another one here please.", 4)]
+    db.execute = AsyncMock(return_value=existing)
+    ctx = SimpleNamespace(tenant_id=uuid.uuid4())
+    user = SimpleNamespace(id=uuid.uuid4())
+    with patch("gtm_api.routers.deals.audit_log", AsyncMock()):
+        rows, skipped = await _store_requirements(
+            db, ctx, user, uuid.uuid4(), uuid.uuid4(),
+            ["must support sso via oidc", "Data must be encrypted at rest.", "Data must be encrypted at rest."],
+            "upload:rfp.pdf",
+        )
+    assert skipped == 2
+    assert [(r.text, r.position, r.source) for r in rows] == [
+        ("Data must be encrypted at rest.", 5, "upload:rfp.pdf")
+    ]
+
+
+def test_upload_route_in_openapi():
+    from gtm_api.main import app
+
+    spec = app.openapi()
+    path = "/api/v1/products/{product_id}/opportunities/{opportunity_id}/requirements/upload"
+    assert "multipart/form-data" in spec["paths"][path]["post"]["requestBody"]["content"]
+
+
+def test_heuristic_skips_prose_but_keeps_cued_lines_and_list_items():
+    text = """
+    Our company was founded in 2009 and serves many industries worldwide.
+    The platform must support our tape storage backend.
+    - Quarterly business reviews with the account team
+    """
+    assert split_requirements_heuristic(text) == [
+        "The platform must support our tape storage backend.",
+        "Quarterly business reviews with the account team",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_requirement_cap_is_reported_as_truncation():
+    from gtm_api.services.requirements import MAX_REQUIREMENTS, extract_requirements_with_info
+
+    text = "\n".join(f"- Requirement number {i} the system must satisfy" for i in range(MAX_REQUIREMENTS + 5))
+    with patch("gtm_api.services.requirements.get_chat_model", side_effect=RuntimeError("down")):
+        items, truncated = await extract_requirements_with_info(text)
+    assert len(items) == MAX_REQUIREMENTS and truncated

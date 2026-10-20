@@ -12,8 +12,10 @@ function getToken(): string | null {
 async function request<T>(path: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options;
   const token = getToken();
+  // Multipart bodies need the browser to set the Content-Type (with its boundary).
+  const isForm = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isForm ? {} : { 'Content-Type': 'application/json' }),
     ...(fetchOptions.headers as Record<string, string> | undefined),
   };
   if (token) {
@@ -629,6 +631,16 @@ export const products = {
     });
   },
 
+  uploadRequirements(id: string, opportunityId: string, file: File): Promise<RequirementUpload> {
+    const form = new FormData();
+    form.append('file', file);
+    return request(`/products/${id}/opportunities/${opportunityId}/requirements/upload`, {
+      method: 'POST',
+      body: form,
+      timeoutMs: AGENT_TIMEOUT_MS,
+    });
+  },
+
   analyzeRequirements(id: string, opportunityId: string, requirementIds?: string[]): Promise<DealWorkspace> {
     return request(`/products/${id}/opportunities/${opportunityId}/requirements/analyze`, {
       method: 'POST',
@@ -679,6 +691,13 @@ export interface DealRequirement {
   source: string;
   owner_user_id?: string | null;
   proof?: DealProof | null;
+}
+
+export interface RequirementUpload {
+  filename: string;
+  requirements: DealRequirement[];
+  skipped_duplicates: number;
+  truncated: boolean;
 }
 
 export interface DealWorkspace {
